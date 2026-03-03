@@ -1,6 +1,7 @@
 .PHONY: up down port-forward lint validate status clean help
 
-CLUSTER_NAME := goti-dev
+export CLUSTER_NAME ?= goti-dev
+export ARGOCD_NAMESPACE ?= argocd
 SHELL := /bin/bash
 
 ## 클러스터 관리
@@ -18,7 +19,7 @@ status: ## 클러스터 및 ArgoCD 상태 확인
 	@kubectl get nodes -o wide 2>/dev/null || echo "클러스터에 연결할 수 없습니다"
 	@echo ""
 	@echo "=== ArgoCD Applications ==="
-	@kubectl get applications -n argocd 2>/dev/null || echo "ArgoCD가 설치되지 않았습니다"
+	@kubectl get applications -n $(ARGOCD_NAMESPACE) 2>/dev/null || echo "ArgoCD가 설치되지 않았습니다"
 	@echo ""
 	@echo "=== Istio 상태 ==="
 	@kubectl get pods -n istio-system 2>/dev/null || echo "Istio가 설치되지 않았습니다"
@@ -35,15 +36,15 @@ validate: ## Helm template 렌더링 + dry-run 검증
 	helm dependency build charts/goti-server/
 	helm template goti-server charts/goti-server/ \
 		-f environments/dev/goti-server/values.yaml \
-		--namespace goti | kubectl apply --dry-run=client -f - 2>&1 | head -20
+		--namespace goti | kubectl apply --dry-run=client -f -
 	@echo ""
 	@echo "=== 부트스트랩 매니페스트 검증 ==="
-	kubectl apply --dry-run=client -f clusters/dev/bootstrap/ 2>&1 | head -20
+	kubectl apply --dry-run=client -f clusters/dev/bootstrap/
 
 ## 유틸리티
 clean: ## Helm dependency cache 정리
-	find charts/ -name "charts" -type d -exec rm -rf {} + 2>/dev/null || true
-	find charts/ -name "*.tgz" -delete 2>/dev/null || true
+	find charts/ -maxdepth 3 -name "charts" -type d -exec rm -rf {} + 2>/dev/null || true
+	find charts/ -maxdepth 3 -name "*.tgz" -delete 2>/dev/null || true
 
 help: ## 도움말 표시
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
