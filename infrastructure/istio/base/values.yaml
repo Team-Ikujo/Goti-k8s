@@ -1,0 +1,3 @@
+# Istio Base (CRDs) 설정
+base:
+  defaultRevision: default

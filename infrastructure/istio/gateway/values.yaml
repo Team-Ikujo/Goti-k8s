@@ -1,0 +1,14 @@
+# Istio Ingress Gateway 공통 values
+gateway:
+  replicaCount: 1
+  service:
+    type: LoadBalancer
+    ports:
+      - name: http2
+        port: 80
+        targetPort: 80
+        protocol: TCP
+      - name: https
+        port: 443
+        targetPort: 443
+        protocol: TCP

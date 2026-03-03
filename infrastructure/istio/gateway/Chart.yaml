@@ -1,0 +1,8 @@
+apiVersion: v2
+name: istio-gateway
+description: Istio Ingress Gateway Helm wrapper
+version: 0.1.0
+dependencies:
+  - name: gateway
+    version: "1.25.2"
+    repository: "https://istio-release.storage.googleapis.com/charts"
