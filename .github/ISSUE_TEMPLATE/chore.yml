@@ -1,0 +1,31 @@
+name: "CHORE - 기타 유지보수"
+description: "빌드, CI/CD, 의존성 등 유지보수 작업"
+title: "[CHORE] "
+labels: ["CHORE"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: "개요"
+      description: "어떤 유지보수 작업을 하려고 하나요?"
+      placeholder: "작업 대상과 목적을 설명해 주세요"
+    validations:
+      required: true
+  - type: textarea
+    id: tasks
+    attributes:
+      label: "작업 내용"
+      description: "구체적인 작업 항목을 작성해 주세요"
+      placeholder: |
+        - [ ] 작업 1
+        - [ ] 작업 2
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: "참고 사항"
+      description: "추가 참고 사항이 있다면 작성해 주세요"
+      placeholder: "관련 문서, 링크 등"
+    validations:
+      required: false
