@@ -1,0 +1,47 @@
+# AppProjects
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: goti-projects
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-8"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+    targetRevision: main
+    path: "gitops/projects"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+# ApplicationSets
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: goti-applicationsets
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+    targetRevision: main
+    path: "gitops/applicationsets"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
