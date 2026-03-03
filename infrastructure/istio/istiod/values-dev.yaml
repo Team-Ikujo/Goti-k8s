@@ -1,0 +1,26 @@
+# Istiod Kind 개발 환경 최적화 설정
+# NOTE: Istio 1.24부터 pilot: 네스팅 제거됨 — flat 구조 사용
+istiod:
+  # 단일 레플리카 (개발 환경)
+  replicaCount: 1
+  autoscaleEnabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # 메시 전역 설정
+  meshConfig:
+    # 접근 로그 활성화 (디버깅용)
+    accessLogFile: "/dev/stdout"
+    # 분산 트레이싱 활성화
+    enableTracing: true
+    # OTLP 트레이싱 프로바이더 (Alloy 연동)
+    extensionProviders:
+      - name: otel-tracing
+        opentelemetry:
+          service: alloy.monitoring.svc.cluster.local
+          port: 4317

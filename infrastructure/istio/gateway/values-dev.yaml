@@ -1,0 +1,23 @@
+# Istio Ingress Gateway dev-kind 최적화
+gateway:
+  replicaCount: 1
+  service:
+    type: NodePort
+    ports:
+      - name: http2
+        port: 80
+        targetPort: 80
+        nodePort: 31080
+        protocol: TCP
+      - name: https
+        port: 443
+        targetPort: 443
+        nodePort: 31443
+        protocol: TCP
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
