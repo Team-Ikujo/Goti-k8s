@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: goti
+  namespace: argocd
+spec:
+  description: "Goti 애플리케이션 프로젝트"
+  sourceRepos:
+    - "git@github.com:Team-Ikujo/Goti-k8s.git"
+    - "https://github.com/Team-Ikujo/Goti-k8s.git"
+  destinations:
+    - namespace: goti
+      server: "https://kubernetes.default.svc"
+    - namespace: goti-*
+      server: "https://kubernetes.default.svc"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: "*"
+    - group: "apps"
+      kind: "*"
+    - group: "autoscaling"
+      kind: "*"
+    - group: "policy"
+      kind: "*"
+    - group: "networking.k8s.io"
+      kind: "*"
+    - group: "networking.istio.io"
+      kind: "*"
+    - group: "security.istio.io"
+      kind: "*"

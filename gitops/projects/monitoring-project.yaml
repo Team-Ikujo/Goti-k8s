@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  description: "모니터링 스택 프로젝트"
+  sourceRepos:
+    - "git@github.com:Team-Ikujo/Goti-k8s.git"
+    - "https://github.com/Team-Ikujo/Goti-k8s.git"
+    - "https://prometheus-community.github.io/helm-charts"
+    - "https://grafana.github.io/helm-charts"
+  destinations:
+    - namespace: monitoring
+      server: "https://kubernetes.default.svc"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: "monitoring.coreos.com"
+      kind: "*"
+    - group: "apiextensions.k8s.io"
+      kind: CustomResourceDefinition
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: "*"
+    - group: "apps"
+      kind: "*"
+    - group: "monitoring.coreos.com"
+      kind: "*"
