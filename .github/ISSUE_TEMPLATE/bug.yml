@@ -1,7 +1,7 @@
 name: "BUG - 버그 리포트"
 description: "버그 발견 시 리포트 작성"
 title: "[BUG] "
-labels: ["bug"]
+labels: ["BUG"]
 body:
   - type: textarea
     id: symptom
@@ -40,6 +40,8 @@ body:
         - Kubernetes: v1.xx
         - Helm: v3.xx
         - Kind: vX.X.X
+        - ArgoCD: vX.X.X
+        - Istio: vX.X.X
     validations:
       required: true
   - type: textarea

@@ -9,5 +9,7 @@
 - [ ]
 
 ## 테스트
-- [ ] 로컬 검증
-- [ ] lint 통과
+- [ ] `helm lint` 통과
+- [ ] `helm template` 렌더링 검증
+- [ ] Kind 로컬 클러스터 배포 검증
+- [ ] ArgoCD sync 확인 (해당 시)

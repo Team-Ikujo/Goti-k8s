@@ -1,7 +1,8 @@
 # Helm
 charts/*/charts/
-charts/*/*.tgz
+*.tgz
 charts/*/tmpcharts/
+Chart.lock
 
 # IDE
 .idea/
@@ -16,8 +17,12 @@ Thumbs.db
 # Secrets
 *.pem
 *.key
+*.crt
 .env
 .env.*
+*kubeconfig*
+values-secret*.yaml
+*-secret.yaml
 
 # Claude
 .claude/
