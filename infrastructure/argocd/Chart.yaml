@@ -1,0 +1,8 @@
+apiVersion: v2
+name: argocd
+description: ArgoCD Helm wrapper for Goti GitOps
+version: 0.1.0
+dependencies:
+  - name: argo-cd
+    version: "7.8.13"
+    repository: "https://argoproj.github.io/argo-helm"

@@ -1,0 +1,5 @@
+# Istiod (컨트롤 플레인) 공통 설정
+istiod:
+  # 기본 설정 유지 - 환경별 values 파일에서 오버라이드
+  pilot:
+    autoscaleEnabled: true

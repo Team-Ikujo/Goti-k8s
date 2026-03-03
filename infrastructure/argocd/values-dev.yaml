@@ -1,0 +1,35 @@
+# ArgoCD Kind 개발 환경 최적화 설정
+argo-cd:
+  global:
+    # 리비전 히스토리 최소화 (리소스 절약)
+    revisionHistoryLimit: 1
+
+  # 컨트롤러: 단일 레플리카
+  controller:
+    replicas: 1
+
+  # 서버: 단일 레플리카 + NodePort
+  server:
+    replicas: 1
+    service:
+      type: NodePort
+      nodePortHttp: 30080
+
+  # Repo 서버: 단일 레플리카
+  repoServer:
+    replicas: 1
+
+  # 내장 Redis 사용
+  redis:
+    enabled: true
+
+  # 불필요한 컴포넌트 비활성화 (개발 환경)
+  dex:
+    enabled: false
+  notifications:
+    enabled: false
+
+  # 개발 환경에서는 insecure 모드 허용
+  configs:
+    params:
+      server.insecure: true

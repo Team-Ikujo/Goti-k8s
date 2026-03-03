@@ -1,0 +1,8 @@
+apiVersion: v2
+name: istio-base
+description: Istio base (CRDs) Helm wrapper
+version: 0.1.0
+dependencies:
+  - name: base
+    version: "1.25.2"
+    repository: "https://istio-release.storage.googleapis.com/charts"
