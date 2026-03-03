@@ -9,7 +9,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: infra
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main
@@ -24,6 +24,12 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -39,7 +45,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: infra
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main
@@ -55,6 +61,12 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -70,7 +82,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: infra
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main
@@ -86,6 +98,12 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
