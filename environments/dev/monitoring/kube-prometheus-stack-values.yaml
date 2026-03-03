@@ -3,6 +3,7 @@ prometheus:
   prometheusSpec:
     replicas: 1
     retention: 24h
+    enableRemoteWriteReceiver: true
     resources:
       requests:
         cpu: 100m
@@ -45,11 +46,13 @@ grafana:
   additionalDataSources:
     - name: Loki
       type: loki
+      uid: loki
       url: http://loki.monitoring.svc:3100
       access: proxy
       isDefault: false
     - name: Tempo
       type: tempo
+      uid: tempo
       url: http://tempo.monitoring.svc:3100
       access: proxy
       isDefault: false

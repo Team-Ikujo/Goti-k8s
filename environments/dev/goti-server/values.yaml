@@ -1,9 +1,5 @@
-replicaCount: 1
-
 image:
-  repository: goti-server
   tag: "latest"
-  pullPolicy: IfNotPresent
 
 resources:
   requests:
@@ -35,5 +31,5 @@ probes:
 env:
   - name: SPRING_PROFILES_ACTIVE
     value: "dev"
-  - name: JAVA_OPTS
+  - name: JAVA_TOOL_OPTIONS
     value: "-Xms256m -Xmx384m"
