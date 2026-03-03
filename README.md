@@ -5,7 +5,7 @@ Goti 티켓팅 서비스의 Kubernetes GitOps 레포지토리.
 ## 전제조건
 
 - [Kind](https://kind.sigs.k8s.io/) v0.31+
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) v1.33+
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) v1.34+
 - [Helm](https://helm.sh/) v3.14+
 - Docker Desktop 또는 Docker Engine
 
