@@ -1,0 +1,39 @@
+replicaCount: 1
+
+image:
+  repository: goti-server
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+gateway:
+  enabled: true
+  hosts:
+    - "goti.local"
+
+probes:
+  liveness:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+  readiness:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 5
+
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "dev"
+  - name: JAVA_OPTS
+    value: "-Xms256m -Xmx384m"
