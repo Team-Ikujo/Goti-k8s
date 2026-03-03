@@ -1,0 +1,14 @@
+Goti Server가 배포되었습니다!
+
+1. 서비스 접근:
+   kubectl port-forward svc/{{ include "goti-common.fullname" . }} 8080:{{ .Values.service.port }} -n {{ .Release.Namespace }}
+
+2. 헬스 체크:
+   curl http://localhost:8080/actuator/health
+
+{{- if .Values.gateway.enabled }}
+3. Gateway 접근:
+   {{- range .Values.gateway.hosts }}
+   http://{{ . }}
+   {{- end }}
+{{- end }}

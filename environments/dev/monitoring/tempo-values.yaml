@@ -1,0 +1,30 @@
+# Tempo dev-kind values
+tempo:
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+    zipkin:
+      endpoint: "0.0.0.0:9411"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+persistence:
+  enabled: true
+  size: 5Gi
+
+tempoQuery:
+  enabled: false

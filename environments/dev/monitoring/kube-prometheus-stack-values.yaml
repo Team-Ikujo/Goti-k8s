@@ -1,0 +1,77 @@
+# kube-prometheus-stack dev-kind values
+prometheus:
+  prometheusSpec:
+    replicas: 1
+    retention: 24h
+    enableRemoteWriteReceiver: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 5Gi
+    # Istio metrics scraping
+    additionalScrapeConfigs:
+      - job_name: 'istio-mesh'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names: ['istio-system']
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: istiod;http-monitoring
+
+alertmanager:
+  enabled: false
+
+grafana:
+  enabled: true
+  adminPassword: "admin"  # dev only
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      uid: loki
+      url: http://loki.monitoring.svc:3100
+      access: proxy
+      isDefault: false
+    - name: Tempo
+      type: tempo
+      uid: tempo
+      url: http://tempo.monitoring.svc:3100
+      access: proxy
+      isDefault: false
+      jsonData:
+        tracesToLogsV2:
+          datasourceUid: loki
+          enabled: true
+        tracesToMetrics:
+          datasourceUid: prometheus
+          enabled: true
+        serviceMap:
+          datasourceUid: prometheus
+        nodeGraph:
+          enabled: true
+        lokiSearch:
+          datasourceUid: loki
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
