@@ -6,7 +6,6 @@ metadata:
 spec:
   description: "Goti 애플리케이션 프로젝트"
   sourceRepos:
-    - "git@github.com:Team-Ikujo/Goti-k8s.git"
     - "https://github.com/Team-Ikujo/Goti-k8s.git"
   destinations:
     - namespace: goti
@@ -18,16 +17,42 @@ spec:
       kind: Namespace
   namespaceResourceWhitelist:
     - group: ""
-      kind: "*"
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: ServiceAccount
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: ""
+      kind: Endpoints
     - group: "apps"
-      kind: "*"
+      kind: Deployment
+    - group: "apps"
+      kind: StatefulSet
+    - group: "apps"
+      kind: ReplicaSet
     - group: "autoscaling"
-      kind: "*"
+      kind: HorizontalPodAutoscaler
     - group: "policy"
-      kind: "*"
+      kind: PodDisruptionBudget
     - group: "networking.k8s.io"
-      kind: "*"
+      kind: Ingress
+    - group: "networking.k8s.io"
+      kind: NetworkPolicy
     - group: "networking.istio.io"
-      kind: "*"
+      kind: Gateway
+    - group: "networking.istio.io"
+      kind: VirtualService
+    - group: "networking.istio.io"
+      kind: DestinationRule
+    - group: "networking.istio.io"
+      kind: ServiceEntry
     - group: "security.istio.io"
-      kind: "*"
+      kind: PeerAuthentication
+    - group: "security.istio.io"
+      kind: AuthorizationPolicy
+    - group: "security.istio.io"
+      kind: RequestAuthentication
