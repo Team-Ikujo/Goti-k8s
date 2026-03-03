@@ -1,0 +1,10 @@
+apiVersion: v2
+name: goti-server
+description: Goti 백엔드 서버 Helm Chart (Spring Boot)
+type: application
+version: 0.1.0
+appVersion: "0.0.1"
+dependencies:
+  - name: goti-common
+    version: "0.1.0"
+    repository: "file://../goti-common"
