@@ -1,0 +1,7 @@
+# Istiod (컨트롤 플레인) 공통 설정
+# NOTE: Istio 1.24부터 pilot: 네스팅 제거됨 — flat 구조 사용
+istiod:
+  autoscaleEnabled: true
+  autoscaleMin: 1
+  autoscaleMax: 3
+  replicaCount: 1

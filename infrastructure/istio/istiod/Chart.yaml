@@ -1,0 +1,8 @@
+apiVersion: v2
+name: istiod
+description: Istio control plane Helm wrapper
+version: 0.1.0
+dependencies:
+  - name: istiod
+    version: "1.29.0"
+    repository: "https://istio-release.storage.googleapis.com/charts"

@@ -1,0 +1,18 @@
+# ArgoCD 공통 설정
+argo-cd:
+  # 리소스 이름을 argocd로 통일 (subchart 접두사 방지)
+  fullnameOverride: argocd
+
+  # 서버 설정
+  server:
+    service:
+      type: ClusterIP
+
+  # ArgoCD 설정
+  configs:
+    cm:
+      # 리소스 동기화 주기 (3분)
+      timeout.reconciliation: "180s"
+    params:
+      # HTTPS 사용 여부 (기본값: 비활성화하지 않음)
+      server.insecure: false
