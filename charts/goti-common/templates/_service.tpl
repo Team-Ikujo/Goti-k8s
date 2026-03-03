@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "goti-common.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
       targetPort: {{ default "http" .Values.service.name }}
