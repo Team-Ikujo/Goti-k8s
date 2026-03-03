@@ -1,0 +1,5 @@
+apiVersion: v2
+name: goti-common
+description: Goti 공통 Helm Library Chart — MSA 전환 대비 공통 템플릿
+type: library
+version: 0.1.0
