@@ -1,10 +1,12 @@
 # Goti 로컬 개발 환경 Kind 클러스터 설정
 # control-plane 1개 + worker 2개 구성
+# K8s 1.34 고정 — ArgoCD v3.3이 1.35 미지원 (protobuf 이슈 #25767)
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: goti-dev
 nodes:
   - role: control-plane
+    image: kindest/node:v1.34.3
     kubeadmConfigPatches:
       - |
         kind: InitConfiguration
@@ -31,4 +33,6 @@ nodes:
         hostPort: 31443
         protocol: TCP
   - role: worker
+    image: kindest/node:v1.34.3
   - role: worker
+    image: kindest/node:v1.34.3

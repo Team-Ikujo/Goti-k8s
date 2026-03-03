@@ -33,3 +33,5 @@ argo-cd:
   configs:
     params:
       server.insecure: true
+      # chart 9.x에서 기본값 제거됨 — ApplicationSet 자동 sync 필요 시 명시
+      applicationsetcontroller.policy: sync
