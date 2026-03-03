@@ -1,0 +1,28 @@
+# Helm
+charts/*/charts/
+*.tgz
+charts/*/tmpcharts/
+Chart.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
+*.crt
+.env
+.env.*
+*kubeconfig*
+values-secret*.yaml
+*-secret.yaml
+
+# Claude
+.claude/
