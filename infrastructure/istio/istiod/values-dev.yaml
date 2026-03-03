@@ -18,11 +18,6 @@ istiod:
     accessLogFile: "/dev/stdout"
     # 분산 트레이싱 활성화
     enableTracing: true
-    defaultConfig:
-      tracing:
-        zipkin:
-          # Alloy(OpenTelemetry Collector) 엔드포인트
-          address: "alloy.monitoring.svc:9411"
     # OTLP 트레이싱 프로바이더 (Alloy 연동)
     extensionProviders:
       - name: otel-tracing
