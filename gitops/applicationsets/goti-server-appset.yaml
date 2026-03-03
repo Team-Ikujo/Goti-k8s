@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: goti-server
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: goti
+            valuesFile: environments/dev/goti-server/values.yaml
+  template:
+    metadata:
+      name: "goti-server-{{env}}"
+    spec:
+      project: goti
+      sources:
+        - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+          targetRevision: main
+          path: "charts/goti-server"
+          helm:
+            valueFiles:
+              - "$values/{{valuesFile}}"
+        - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+          targetRevision: main
+          ref: values
+      destination:
+        server: "https://kubernetes.default.svc"
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas

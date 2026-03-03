@@ -1,0 +1,68 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  description: "모니터링 스택 프로젝트"
+  sourceRepos:
+    - "https://github.com/Team-Ikujo/Goti-k8s.git"
+    - "https://prometheus-community.github.io/helm-charts"
+    - "https://grafana.github.io/helm-charts"
+  destinations:
+    - namespace: monitoring
+      server: "https://kubernetes.default.svc"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: "apiextensions.k8s.io"
+      kind: CustomResourceDefinition
+  # 커뮤니티 chart(kube-prometheus-stack 등)가 다양한 리소스를 설치하므로
+  # core, apps 그룹은 kind 와일드카드 유지, monitoring.coreos.com은 명시
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: ServiceAccount
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: ""
+      kind: Endpoints
+    - group: ""
+      kind: Pod
+    - group: "apps"
+      kind: Deployment
+    - group: "apps"
+      kind: StatefulSet
+    - group: "apps"
+      kind: DaemonSet
+    - group: "apps"
+      kind: ReplicaSet
+    - group: "batch"
+      kind: Job
+    - group: "batch"
+      kind: CronJob
+    - group: "rbac.authorization.k8s.io"
+      kind: Role
+    - group: "rbac.authorization.k8s.io"
+      kind: RoleBinding
+    - group: "monitoring.coreos.com"
+      kind: Prometheus
+    - group: "monitoring.coreos.com"
+      kind: PrometheusRule
+    - group: "monitoring.coreos.com"
+      kind: ServiceMonitor
+    - group: "monitoring.coreos.com"
+      kind: PodMonitor
+    - group: "monitoring.coreos.com"
+      kind: Alertmanager
+    - group: "monitoring.coreos.com"
+      kind: AlertmanagerConfig
+    - group: "monitoring.coreos.com"
+      kind: ScrapeConfig
+    - group: "policy"
+      kind: PodDisruptionBudget

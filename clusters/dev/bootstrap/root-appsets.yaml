@@ -1,0 +1,65 @@
+# AppProjects — Istio CRD 설치 이후 배포 (sync-wave: -2)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: goti-projects
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "gitops/projects"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+# ApplicationSets
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: goti-applicationsets
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "gitops/applicationsets"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
