@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# 백그라운드 프로세스 정리
+cleanup() {
+  echo ""
+  echo "포트포워딩 종료..."
+  kill $(jobs -p) 2>/dev/null || true
+  wait 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
 echo "=== 포트포워딩 시작 ==="
-echo "ArgoCD:     https://localhost:30080 (NodePort, 포트포워딩 불필요)"
-echo "Grafana:    http://localhost:3000"
-echo "Prometheus: http://localhost:9090"
+echo "ArgoCD:      http://localhost:30080 (NodePort, 포트포워딩 불필요)"
+echo "Grafana:     http://localhost:3000"
+echo "Prometheus:  http://localhost:9090"
 echo "goti-server: http://localhost:8080"
 echo ""
 echo "종료: Ctrl+C"
