@@ -1,0 +1,109 @@
+# Istio Base (CRDs)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-base
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "infrastructure/istio/base"
+      helm:
+        valueFiles:
+          - values.yaml
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+# Istiod (Control Plane)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istiod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-4"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "infrastructure/istio/istiod"
+      helm:
+        valueFiles:
+          - values.yaml
+          - values-dev.yaml
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+# Istio Ingress Gateway
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "infrastructure/istio/gateway"
+      helm:
+        valueFiles:
+          - values.yaml
+          - values-dev.yaml
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
