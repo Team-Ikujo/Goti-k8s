@@ -4,9 +4,9 @@ Goti 티켓팅 서비스의 Kubernetes GitOps 레포지토리.
 
 ## 전제조건
 
-- [Kind](https://kind.sigs.k8s.io/) v0.20+
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) v1.28+
-- [Helm](https://helm.sh/) v3.12+
+- [Kind](https://kind.sigs.k8s.io/) v0.31+
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) v1.33+
+- [Helm](https://helm.sh/) v3.14+
 - Docker Desktop 또는 Docker Engine
 
 ## 빠른 시작
@@ -29,7 +29,7 @@ make down
 
 | 서비스 | URL | 비고 |
 |--------|-----|------|
-| ArgoCD | https://localhost:30080 | admin / (초기 비밀번호) |
+| ArgoCD | http://localhost:30080 | admin / (초기 비밀번호) |
 | Grafana | http://localhost:3000 | admin / admin |
 | Prometheus | http://localhost:9090 | - |
 | goti-server | http://localhost:8080 | port-forward 필요 |
