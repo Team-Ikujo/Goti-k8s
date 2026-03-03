@@ -1,0 +1,52 @@
+name: "BUG - 버그 리포트"
+description: "버그 발견 시 리포트 작성"
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: symptom
+    attributes:
+      label: "현상"
+      description: "어떤 문제가 발생했는지 설명해 주세요"
+      placeholder: "발생한 버그의 증상을 상세히 작성해 주세요"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: "재현 방법"
+      description: "버그를 재현할 수 있는 단계를 작성해 주세요"
+      placeholder: |
+        1. '...'로 이동
+        2. '...'를 실행
+        3. 에러 발생
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "기대 결과"
+      description: "정상적으로 동작했을 때 기대하는 결과를 작성해 주세요"
+      placeholder: "어떻게 동작해야 하나요?"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: "환경 정보"
+      description: "버그가 발생한 환경 정보를 작성해 주세요"
+      placeholder: |
+        - OS: macOS / Linux / Windows
+        - Kubernetes: v1.xx
+        - Helm: v3.xx
+        - Kind: vX.X.X
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: "참고 사항"
+      description: "추가 참고 사항이 있다면 작성해 주세요"
+      placeholder: "관련 로그, 스크린샷 등"
+    validations:
+      required: false

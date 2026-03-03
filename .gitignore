@@ -1,0 +1,23 @@
+# Helm
+charts/*/charts/
+charts/*/*.tgz
+charts/*/tmpcharts/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
+.env
+.env.*
+
+# Claude
+.claude/
