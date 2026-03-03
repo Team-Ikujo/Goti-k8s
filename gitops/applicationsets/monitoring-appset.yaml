@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: monitoring-stack
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - env: dev
+          - list:
+              elements:
+                - component: kube-prometheus-stack
+                  chartRepo: https://prometheus-community.github.io/helm-charts
+                  chartName: kube-prometheus-stack
+                  chartVersion: "82.4.3"
+                  valuesFile: environments/dev/monitoring/kube-prometheus-stack-values.yaml
+                - component: loki
+                  chartRepo: https://grafana.github.io/helm-charts
+                  chartName: loki
+                  chartVersion: "6.53.0"
+                  valuesFile: environments/dev/monitoring/loki-values.yaml
+                - component: tempo
+                  chartRepo: https://grafana.github.io/helm-charts
+                  chartName: tempo
+                  chartVersion: "1.24.4"
+                  valuesFile: environments/dev/monitoring/tempo-values.yaml
+                - component: alloy
+                  chartRepo: https://grafana.github.io/helm-charts
+                  chartName: alloy
+                  chartVersion: "1.6.1"
+                  valuesFile: environments/dev/monitoring/alloy-values.yaml
+  template:
+    metadata:
+      name: "{{component}}-{{env}}"
+    spec:
+      project: monitoring
+      sources:
+        - repoURL: "{{chartRepo}}"
+          chart: "{{chartName}}"
+          targetRevision: "{{chartVersion}}"
+          helm:
+            valueFiles:
+              - "$values/{{valuesFile}}"
+        - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+          targetRevision: main
+          ref: values
+      destination:
+        server: "https://kubernetes.default.svc"
+        namespace: monitoring
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
