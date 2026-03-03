@@ -1,0 +1,67 @@
+replicaCount: 1
+
+image:
+  repository: goti-server
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+
+gateway:
+  enabled: false
+  hosts:
+    - "goti.local"
+
+probes:
+  liveness:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: false
+  minAvailable: 1
+
+env: []
+envFrom: []
+
+configMap:
+  enabled: false
+  data: {}
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
