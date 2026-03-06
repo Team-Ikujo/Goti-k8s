@@ -1,0 +1,15 @@
+# Pyroscope dev-kind values
+pyroscope:
+  extraArgs:
+    storage.retention-period: "3d"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+persistence:
+  enabled: true
+  size: 5Gi
