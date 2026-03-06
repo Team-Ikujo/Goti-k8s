@@ -1,5 +1,6 @@
 # Monitoring Istio Gateway — raw manifest 배포
 # monitoring-appset은 Helm chart 전용이므로 별도 Application으로 관리
+# applicationsets/ 디렉토리에 위치하지만 raw YAML 배포용 Application
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -27,4 +28,5 @@ spec:
         factor: 2
         maxDuration: 3m
     syncOptions:
-      - CreateNamespace=true
+      - CreateNamespace=false
+      - ServerSideApply=true
