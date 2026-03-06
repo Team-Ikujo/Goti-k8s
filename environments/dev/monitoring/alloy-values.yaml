@@ -1,9 +1,25 @@
 # Grafana Alloy dev-kind values
-# OTLP receiver → batch → Prometheus/Loki/Tempo routing
+# 통합 텔레메트리 파이프라인 v2 (Goti-monitoring config.alloy 동기화)
+# Spring Boot → Alloy (OTLP) → Prometheus / Loki / Tempo
 alloy:
   configMap:
     content: |
-      // OTLP receiver
+      // =============================================================================
+      // Grafana Alloy - 통합 텔레메트리 파이프라인 v2
+      // Spring Boot → Alloy (OTLP) → Prometheus / Loki / Tempo
+      //
+      // 파이프라인 흐름:
+      //   receiver.otlp
+      //     → processor.memory_limiter (OOM 방지)
+      //     → processor.attributes (공통 속성 upsert + 불필요 속성 제거)
+      //     ├─ metrics → processor.batch → exporter.prometheus
+      //     ├─ logs   → processor.batch → processor.transform (log_type 라우팅 + 마스킹) → exporter.loki
+      //     └─ traces → processor.tail_sampling → processor.batch "traces" → exporter.otlp (tempo)
+      // =============================================================================
+
+      // -----------------------------------------------------------------------------
+      // 1. OTLP Receiver: Spring Boot에서 메트릭, 로그, 트레이스 수신
+      // -----------------------------------------------------------------------------
       otelcol.receiver.otlp "default" {
         grpc {
           endpoint = "0.0.0.0:4317"
@@ -11,25 +27,174 @@ alloy:
         http {
           endpoint = "0.0.0.0:4318"
         }
+
+        output {
+          metrics = [otelcol.processor.memory_limiter.default.input]
+          logs    = [otelcol.processor.memory_limiter.default.input]
+          traces  = [otelcol.processor.memory_limiter.default.input]
+        }
+      }
+
+      // -----------------------------------------------------------------------------
+      // 2. Memory Limiter: OOM 방지
+      //    - limit: 384MiB (Alloy 컨테이너 512MB의 75%)
+      //    - spike_limit: 128MiB (버스트 트래픽 허용)
+      //    - check_interval: 1s
+      // -----------------------------------------------------------------------------
+      otelcol.processor.memory_limiter "default" {
+        check_interval = "1s"
+        limit          = "384MiB"
+        spike_limit    = "128MiB"
+
+        output {
+          metrics = [otelcol.processor.attributes.default.input]
+          logs    = [otelcol.processor.attributes.default.input]
+          traces  = [otelcol.processor.attributes.default.input]
+        }
+      }
+
+      // -----------------------------------------------------------------------------
+      // 3. Attributes Processor: 공통 속성 관리
+      // -----------------------------------------------------------------------------
+      otelcol.processor.attributes "default" {
+        action {
+          key    = "deployment.environment"
+          value  = "dev"
+          action = "upsert"
+        }
+        action {
+          key    = "service.namespace"
+          value  = "goti"
+          action = "upsert"
+        }
+        action {
+          key    = "telemetry.sdk.name"
+          action = "delete"
+        }
+        action {
+          key    = "telemetry.sdk.version"
+          action = "delete"
+        }
+        action {
+          key    = "telemetry.sdk.language"
+          action = "delete"
+        }
+
         output {
           metrics = [otelcol.processor.batch.default.input]
           logs    = [otelcol.processor.batch.default.input]
-          traces  = [otelcol.processor.batch.default.input]
+          traces  = [otelcol.processor.tail_sampling.default.input]
         }
       }
 
-      // Batch processor
+      // -----------------------------------------------------------------------------
+      // 4. Batch Processor: 메트릭/로그용 배치 처리
+      // -----------------------------------------------------------------------------
       otelcol.processor.batch "default" {
-        timeout = "5s"
-        send_batch_size = 1000
+        timeout         = "5s"
+        send_batch_size = 1024
+
         output {
           metrics = [otelcol.exporter.prometheus.default.input]
-          logs    = [otelcol.exporter.loki.default.input]
-          traces  = [otelcol.exporter.otlp.tempo.input]
+          logs    = [otelcol.processor.transform.default.input]
         }
       }
 
-      // Prometheus remote write
+      // -----------------------------------------------------------------------------
+      // 5a. Tail Sampling: 트레이스 샘플링 정책
+      // -----------------------------------------------------------------------------
+      otelcol.processor.tail_sampling "default" {
+        decision_wait = "5s"
+        num_traces    = 1000
+
+        // 정책 1: ERROR 트레이스 100% 보존
+        policy {
+          name = "errors"
+          type = "status_code"
+          status_code {
+            status_codes = ["ERROR"]
+          }
+        }
+
+        // 정책 2: 500ms 이상 느린 트레이스 100% 보존
+        policy {
+          name = "slow-traces"
+          type = "latency"
+          latency {
+            threshold_ms = 500
+          }
+        }
+
+        // 정책 3: 나머지 트레이스 (dev: 100%, prod 전환 시 10~20%로 조정)
+        policy {
+          name = "probabilistic"
+          type = "probabilistic"
+          probabilistic {
+            sampling_percentage = 100
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.traces.input]
+        }
+      }
+
+      // -----------------------------------------------------------------------------
+      // 5b. Batch Processor (traces 전용)
+      // -----------------------------------------------------------------------------
+      otelcol.processor.batch "traces" {
+        timeout         = "5s"
+        send_batch_size = 512
+
+        output {
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+
+      // -----------------------------------------------------------------------------
+      // 5c. Transform Processor: 로그 라우팅 + PII 마스킹 safety net
+      // -----------------------------------------------------------------------------
+      otelcol.processor.transform "default" {
+        error_mode = "ignore"
+
+        log_statements {
+          context = "log"
+          statements = [
+            // log_type 기본값: MDC에서 설정하지 않은 로그는 "app"으로 분류
+            `set(attributes["log_type"], "app") where attributes["log_type"] == nil`,
+            // log_type allowlist 검증: 허용값(app/payment/audit) 외에는 "app"으로 강제
+            `set(attributes["log_type"], "app") where attributes["log_type"] != "app" and attributes["log_type"] != "payment" and attributes["log_type"] != "audit"`,
+
+            // PII 마스킹 safety net (순서 중요: 주민번호 → 카드번호 → 전화번호)
+            // 1. 주민등록번호 (하이픈 포함: 960101-1234567)
+            `replace_pattern(body, "([0-9]{6})-([0-9]{7})", "$$1-*******")`,
+            // 2. 주민등록번호 (하이픈 없음: 9601011234567)
+            `replace_pattern(body, "\\b([0-9]{6})([1-4][0-9]{6})\\b", "$$1-*******")`,
+            // 3. 카드번호 (BIN 6자리 보존 + 중간 마스킹 + last4 보존)
+            `replace_pattern(body, "\\b([0-9]{6})[0-9]{6}([0-9]{4})\\b", "$$1****$$2")`,
+            // 4. 휴대전화번호 (010-****-1234)
+            `replace_pattern(body, "\\b(01[016789])-?([0-9]{4})-?([0-9]{4})\\b", "$$1-****-$$3")`,
+          ]
+        }
+
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["loki.resource.labels"], "service.name,service.namespace,deployment.environment")`,
+            `set(attributes["loki.attribute.labels"], "log_type")`,
+          ]
+        }
+
+        output {
+          logs = [otelcol.exporter.loki.default.input]
+        }
+      }
+
+      // -----------------------------------------------------------------------------
+      // 6. Exporters
+      // -----------------------------------------------------------------------------
+
+      // 6a. Prometheus Exporter
       otelcol.exporter.prometheus "default" {
         forward_to = [prometheus.remote_write.default.receiver]
       }
@@ -37,10 +202,11 @@ alloy:
       prometheus.remote_write "default" {
         endpoint {
           url = "http://kube-prometheus-stack-prometheus.monitoring.svc:9090/api/v1/write"
+          send_exemplars = true
         }
       }
 
-      // Loki exporter
+      // 6b. Loki Exporter
       otelcol.exporter.loki "default" {
         forward_to = [loki.write.default.receiver]
       }
@@ -51,20 +217,20 @@ alloy:
         }
       }
 
-      // Tempo exporter (OTLP)
+      // 6c. Tempo Exporter (OTLP gRPC)
       otelcol.exporter.otlp "tempo" {
         client {
           endpoint = "tempo.monitoring.svc:4317"
           tls {
-            insecure = true
+            insecure = true  // dev 환경 전용
           }
         }
       }
 
   resources:
     requests:
-      cpu: 50m
-      memory: 64Mi
+      cpu: 100m
+      memory: 256Mi
     limits:
-      cpu: 200m
-      memory: 128Mi
+      cpu: 500m
+      memory: 512Mi
