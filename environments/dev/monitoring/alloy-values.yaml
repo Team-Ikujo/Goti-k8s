@@ -102,10 +102,13 @@ alloy:
 
       // -----------------------------------------------------------------------------
       // 5a. Tail Sampling: 트레이스 샘플링 정책
+      // dev: 100% 통과 (디버깅 우선). tail sampling은 메모리에 트레이스를 버퍼링하므로
+      //      prod 전환 시 sampling_percentage를 10~20%로 낮추고 num_traces를 10000+ 상향할 것
+      // TODO(prod): sampling_percentage 조정, num_traces 상향
       // -----------------------------------------------------------------------------
       otelcol.processor.tail_sampling "default" {
         decision_wait = "5s"
-        num_traces    = 1000
+        num_traces    = 5000
 
         // 정책 1: ERROR 트레이스 100% 보존
         policy {
@@ -165,14 +168,10 @@ alloy:
             // log_type allowlist 검증: 허용값(app/payment/audit) 외에는 "app"으로 강제
             `set(attributes["log_type"], "app") where attributes["log_type"] != "app" and attributes["log_type"] != "payment" and attributes["log_type"] != "audit"`,
 
-            // PII 마스킹 safety net (순서 중요: 주민번호 → 카드번호 → 전화번호)
-            // 1. 주민등록번호 (하이픈 포함: 960101-1234567)
-            `replace_pattern(body, "([0-9]{6})-([0-9]{7})", "$$1-*******")`,
-            // 2. 주민등록번호 (하이픈 없음: 9601011234567)
-            `replace_pattern(body, "\\b([0-9]{6})([1-4][0-9]{6})\\b", "$$1-*******")`,
-            // 3. 카드번호 (BIN 6자리 보존 + 중간 마스킹 + last4 보존)
-            `replace_pattern(body, "\\b([0-9]{6})[0-9]{6}([0-9]{4})\\b", "$$1****$$2")`,
-            // 4. 휴대전화번호 (010-****-1234)
+            // PII 마스킹 safety net
+            // 주민번호: 수집 자체가 불법 (개인정보보호법) — 패턴 불필요
+            // 카드번호: PG사/카드사 API 처리, 서버에 원문 미도달 — 패턴 불필요
+            // 휴대전화번호 (010-****-1234)
             `replace_pattern(body, "\\b(01[016789])-?([0-9]{4})-?([0-9]{4})\\b", "$$1-****-$$3")`,
           ]
         }

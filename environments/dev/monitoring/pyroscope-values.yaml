@@ -9,7 +9,6 @@ pyroscope:
     limits:
       cpu: 500m
       memory: 512Mi
-
-persistence:
-  enabled: true
-  size: 5Gi
+  persistence:
+    enabled: true
+    size: 5Gi
