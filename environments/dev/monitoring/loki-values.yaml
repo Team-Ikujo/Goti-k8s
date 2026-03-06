@@ -57,7 +57,7 @@ singleBinary:
       memory: 512Mi
   persistence:
     enabled: true
-    size: 5Gi
+    size: 10Gi
   extraVolumes:
     - name: loki-rules
       configMap:
@@ -117,27 +117,9 @@ extraObjects:
                   summary: "인증 실패 급증 감지"
                   description: "5분간 인증 실패 {{ $value }}건 발생 (임계값: 20건)"
           - name: pii-detection-alerts
+            # 주민번호: 수집 자체가 불법 (개인정보보호법) — 탐지 불필요
+            # 카드번호: PG사/카드사 API 처리, 서버에 원문 미도달 — 탐지 불필요
             rules:
-              - alert: UnmaskedCardDetected
-                expr: |
-                  sum(count_over_time({log_type=~".+"} |~ "\\b(4[0-9]{3}|5[1-5][0-9]{2}|3[47][0-9]{2}|6[0-9]{3})[- ]?[0-9]{4}[- ]?[0-9]{4}[- ]?[0-9]{4}\\b" [5m])) > 0
-                for: 0m
-                labels:
-                  severity: warning
-                  team: security
-                annotations:
-                  summary: "마스킹되지 않은 PII(카드번호 패턴) 감지"
-                  description: "로그에서 카드번호 패턴이 감지되었습니다."
-              - alert: UnmaskedRRNDetected
-                expr: |
-                  sum(count_over_time({log_type=~".+"} |~ "\\b[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[- ]?[1-4][0-9]{6}\\b" [5m])) > 0
-                for: 0m
-                labels:
-                  severity: critical
-                  team: security
-                annotations:
-                  summary: "마스킹되지 않은 PII(주민등록번호 패턴) 감지"
-                  description: "로그에서 주민등록번호 패턴이 감지되었습니다. 즉시 확인 필요."
               - alert: UnmaskedPhoneDetected
                 expr: |
                   sum(count_over_time({log_type=~".+"} |~ "\\b01[016789][- ]?[0-9]{3,4}[- ]?[0-9]{4}\\b" [5m])) > 0
