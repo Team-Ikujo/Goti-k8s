@@ -1,0 +1,30 @@
+# Monitoring Istio Gateway — raw manifest 배포
+# monitoring-appset은 Helm chart 전용이므로 별도 Application으로 관리
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-gateway
+  namespace: argocd
+spec:
+  project: monitoring
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "environments/dev/monitoring"
+      directory:
+        include: "monitoring-gateway.yaml"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true

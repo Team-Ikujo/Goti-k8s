@@ -4,6 +4,8 @@ prometheus:
     replicas: 1
     retention: 24h
     enableRemoteWriteReceiver: true
+    externalUrl: "/prometheus"
+    routePrefix: "/prometheus"
     resources:
       requests:
         cpu: 100m
@@ -36,6 +38,10 @@ alertmanager:
 grafana:
   enabled: true
   adminPassword: "admin"  # dev only
+  grafana.ini:
+    server:
+      root_url: "https://kind.go-ti.shop/grafana/"
+      serve_from_sub_path: true
   resources:
     requests:
       cpu: 50m
