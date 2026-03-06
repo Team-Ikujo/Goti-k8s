@@ -1,10 +1,12 @@
 # Goti 로컬 개발 환경 Kind 클러스터 설정
-# control-plane 1개 + worker 2개 구성
+# control-plane 3개 (HA) + worker 4개 (대규모 트래픽 테스트 + HPA 여유)
 # K8s 1.34 고정 — ArgoCD v3.3이 1.35 미지원 (protobuf 이슈 #25767)
+# 호스트 PC: Ryzen 5 7500F 6C/12T, RAM 30GB
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: goti-dev
 nodes:
+  # 첫 번째 control-plane에만 extraPortMappings (hostPort 충돌 방지)
   - role: control-plane
     image: kindest/node:v1.34.3
     kubeadmConfigPatches:
@@ -26,6 +28,14 @@ nodes:
       - containerPort: 30080
         hostPort: 30080
         protocol: TCP
+  - role: control-plane
+    image: kindest/node:v1.34.3
+  - role: control-plane
+    image: kindest/node:v1.34.3
+  - role: worker
+    image: kindest/node:v1.34.3
+  - role: worker
+    image: kindest/node:v1.34.3
   - role: worker
     image: kindest/node:v1.34.3
   - role: worker
