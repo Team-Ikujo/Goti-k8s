@@ -14,23 +14,17 @@ nodes:
           kubeletExtraArgs:
             node-labels: "ingress-ready=true"
     extraPortMappings:
-      # HTTP/HTTPS (Ingress)
-      - containerPort: 80
+      # HTTP → Istio Gateway NodePort (CloudFront Origin은 80으로 접근)
+      - containerPort: 31080
         hostPort: 80
         protocol: TCP
-      - containerPort: 443
+      # HTTPS → Istio Gateway NodePort
+      - containerPort: 31443
         hostPort: 443
         protocol: TCP
       # ArgoCD NodePort (HTTP only, insecure mode in dev)
       - containerPort: 30080
         hostPort: 30080
-        protocol: TCP
-      # Istio Gateway NodePort
-      - containerPort: 31080
-        hostPort: 31080
-        protocol: TCP
-      - containerPort: 31443
-        hostPort: 31443
         protocol: TCP
   - role: worker
     image: kindest/node:v1.34.3
