@@ -4,15 +4,17 @@ prometheus:
     replicas: 1
     retention: 24h
     enableRemoteWriteReceiver: true
+    enableFeatures:
+      - exemplar-storage
     externalUrl: "/prometheus"
     routePrefix: "/prometheus"
     resources:
       requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: 500m
+        cpu: 200m
         memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
     storageSpec:
       volumeClaimTemplate:
         spec:
@@ -33,15 +35,309 @@ prometheus:
             regex: istiod;http-monitoring
 
 alertmanager:
-  enabled: false
+  enabled: true
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: "null"
+      group_by: ["alertname", "severity"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      routes:
+        - receiver: "null"
+          matchers:
+            - severity = critical
+        - receiver: "null"
+          matchers:
+            - severity = warning
+    inhibit_rules:
+      - source_matchers:
+          - severity = critical
+        target_matchers:
+          - severity = warning
+        equal: ["alertname"]
+    receivers:
+      - name: "null"
+      # TODO: Slack webhook 또는 email receiver 추가 예정
+      # - name: slack
+      #   slack_configs:
+      #     - api_url: <webhook-url>
+      #       channel: '#goti-alerts'
+
+additionalPrometheusRulesMap:
+  goti-application-rules:
+    groups:
+      - name: goti-server
+        rules:
+          - alert: MetricsNotReceived
+            expr: |
+              absent_over_time(
+                jvm_memory_used_bytes{job="goti-server", jvm_memory_type="heap"}[10m]
+              )
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Goti Server 메트릭 수신 중단"
+              description: "10분 이상 goti-server로부터 메트릭이 수신되지 않고 있습니다."
+          - alert: HighErrorRate
+            expr: |
+              sum(rate(http_server_request_duration_seconds_count{job="goti-server", http_response_status_code=~"5.."}[5m]))
+              / sum(rate(http_server_request_duration_seconds_count{job="goti-server"}[5m]))
+              > 0.05
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "높은 에러율 감지"
+              description: "5xx 에러율이 {{ $value | humanizePercentage }} 입니다 (임계값: 5%)."
+          - alert: SlowResponseTime
+            expr: |
+              histogram_quantile(0.95,
+                sum(rate(http_server_request_duration_seconds_bucket{job="goti-server"}[5m])) by (le)
+              ) > 2
+            for: 3m
+            labels:
+              severity: warning
+            annotations:
+              summary: "느린 API 응답시간"
+              description: "p95 응답시간이 {{ $value | humanizeDuration }} 입니다 (임계값: 2s)."
+          - alert: HighHeapUsage
+            expr: |
+              sum(jvm_memory_used_bytes{job="goti-server", jvm_memory_type="heap"})
+              / sum(jvm_memory_limit_bytes{job="goti-server", jvm_memory_type="heap"})
+              > 0.85
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "JVM Heap 사용률 높음"
+              description: "Heap 사용률이 {{ $value | humanizePercentage }} 입니다 (임계값: 85%)."
+          - alert: CriticalHeapUsage
+            expr: |
+              sum(jvm_memory_used_bytes{job="goti-server", jvm_memory_type="heap"})
+              / sum(jvm_memory_limit_bytes{job="goti-server", jvm_memory_type="heap"})
+              > 0.95
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "JVM Heap 사용률 위험"
+              description: "Heap 사용률이 {{ $value | humanizePercentage }} 입니다 (임계값: 95%)."
+  goti-infra-rules:
+    groups:
+      - name: infrastructure
+        rules:
+          - alert: PrometheusTargetMissing
+            expr: up == 0
+            for: 3m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Prometheus 타겟 응답 없음"
+              description: "{{ $labels.job }} / {{ $labels.instance }}이(가) 3분 이상 다운입니다."
+          - alert: PrometheusConfigReloadFailed
+            expr: prometheus_config_last_reload_successful == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Prometheus 설정 리로드 실패"
+              description: "Prometheus 설정 파일 리로드에 실패했습니다."
+          - alert: PrometheusTSDBNearFull
+            expr: predict_linear(prometheus_tsdb_storage_blocks_bytes[6h], 24 * 3600) > 10e9
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Prometheus TSDB 용량 부족 예상"
+              description: "현재 증가 추세로 24시간 내 TSDB가 10GB를 초과할 것으로 예상됩니다."
+          - alert: AlloyExporterFailed
+            expr: |
+              rate(otelcol_exporter_send_failed_metric_points_total[5m]) > 0.1
+              or rate(otelcol_exporter_send_failed_log_records_total[5m]) > 0.1
+              or rate(otelcol_exporter_send_failed_spans_total[5m]) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Alloy exporter 전송 실패 발생"
+              description: "Alloy에서 메트릭/로그/트레이스 전송이 5분 이상 실패하고 있습니다."
+          - alert: AlloyMemoryPressure
+            expr: |
+              rate(otelcol_processor_refused_metric_points_total[5m]) > 0
+              or rate(otelcol_processor_refused_log_records_total[5m]) > 0
+              or rate(otelcol_processor_refused_spans_total[5m]) > 0
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Alloy 메모리 압력 — 데이터 거부 발생"
+              description: "memory_limiter에 의해 데이터가 거부되고 있습니다."
+          - alert: LokiIngestionStopped
+            expr: |
+              rate(loki_distributor_lines_received_total[10m]) < 0.001
+              and up{job="loki"} == 1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Loki 로그 수집 중단"
+              description: "Loki가 정상 동작 중이나 10분간 로그 수신이 없습니다."
+  goti-recording-rules:
+    groups:
+      - name: goti-sli-recording-short
+        interval: 30s
+        rules:
+          - record: goti:sli:availability:5m
+            expr: |
+              1 - (
+                sum(rate(http_server_request_duration_seconds_count{job="goti-server", http_response_status_code=~"5.."}[5m]))
+                /
+                (sum(rate(http_server_request_duration_seconds_count{job="goti-server"}[5m])) > 0)
+              )
+          - record: goti:sli:latency_p99:5m
+            expr: |
+              histogram_quantile(0.99,
+                sum(rate(http_server_request_duration_seconds_bucket{job="goti-server"}[5m])) by (le)
+              )
+          - record: goti:apdex:score
+            expr: |
+              (
+                sum(rate(http_server_request_duration_seconds_bucket{job="goti-server", le="0.5"}[5m]))
+                +
+                (
+                  sum(rate(http_server_request_duration_seconds_bucket{job="goti-server", le="2.0"}[5m]))
+                  -
+                  sum(rate(http_server_request_duration_seconds_bucket{job="goti-server", le="0.5"}[5m]))
+                ) / 2
+              )
+              /
+              (sum(rate(http_server_request_duration_seconds_count{job="goti-server"}[5m])) > 0)
+      - name: goti-sli-recording-long
+        interval: 5m
+        rules:
+          - record: goti:sli:availability:1h
+            expr: |
+              1 - (
+                sum(rate(http_server_request_duration_seconds_count{job="goti-server", http_response_status_code=~"5.."}[1h]))
+                /
+                (sum(rate(http_server_request_duration_seconds_count{job="goti-server"}[1h])) > 0)
+              )
+          - record: goti:sli:availability:6h
+            expr: |
+              1 - (
+                sum(rate(http_server_request_duration_seconds_count{job="goti-server", http_response_status_code=~"5.."}[6h]))
+                /
+                (sum(rate(http_server_request_duration_seconds_count{job="goti-server"}[6h])) > 0)
+              )
+          - record: goti:sli:availability:24h
+            expr: |
+              1 - (
+                sum(rate(http_server_request_duration_seconds_count{job="goti-server", http_response_status_code=~"5.."}[24h]))
+                /
+                (sum(rate(http_server_request_duration_seconds_count{job="goti-server"}[24h])) > 0)
+              )
+          - record: goti:sli:availability:3d
+            expr: |
+              1 - (
+                sum(rate(http_server_request_duration_seconds_count{job="goti-server", http_response_status_code=~"5.."}[3d]))
+                /
+                (sum(rate(http_server_request_duration_seconds_count{job="goti-server"}[3d])) > 0)
+              )
+          - record: goti:error_budget:remaining
+            expr: |
+              1 - (
+                (1 - goti:sli:availability:24h)
+                /
+                (1 - 0.999)
+              )
+  # =============================================
+  # SLO 정의 (변경 시 아래 모든 rule의 값도 동기화)
+  # - SLO Target: 99.9% (0.999)
+  # - Error Budget Rate: 0.1% (0.001)
+  # - Fast burn window: 1h/6h, multiplier: 14.4x/6x
+  # - Slow burn window: 24h/3d, multiplier: 3x/1x
+  # =============================================
+  goti-slo-rules:
+    groups:
+      - name: goti-slo-burn-rate
+        rules:
+          - alert: SLOBurnRateFast
+            expr: |
+              (1 - goti:sli:availability:1h) > (14.4 * 0.001)
+              and
+              (1 - goti:sli:availability:6h) > (6 * 0.001)
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "SLO burn rate 급증 — 에러 버짓 빠르게 소진 중"
+              description: |
+                1시간 에러율이 SLO 버짓의 14.4배를 초과합니다.
+                현재 1h 에러율: {{ $value | humanizePercentage }}
+                즉각적인 원인 파악 및 대응이 필요합니다.
+          - alert: SLOBurnRateSlow
+            expr: |
+              (1 - goti:sli:availability:24h) > (3 * 0.001)
+              and
+              (1 - goti:sli:availability:3d) > (1 * 0.001)
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: "SLO burn rate 지속 상승 — 에러 버짓 점진적 소진 중"
+              description: |
+                24시간 에러율이 SLO 버짓의 3배를 초과하고 있습니다.
+                현재 24h 에러율: {{ $value | humanizePercentage }}
+                근본 원인 분석 및 계획적 개선이 필요합니다.
+          - alert: ErrorBudgetNearExhaustion
+            expr: goti:error_budget:remaining < 0.30
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "에러 버짓 잔여 30% 미만"
+              description: |
+                현재 에러 버짓 잔여율: {{ $value | humanizePercentage }}
+                추가 장애 발생 시 SLO 위반 가능성이 높습니다.
+          - alert: ErrorBudgetExhausted
+            expr: goti:error_budget:remaining < 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "에러 버짓 소진 — SLO 위반 상태"
+              description: |
+                에러 버짓이 완전히 소진되었습니다.
+                현재 잔여율: {{ $value | humanizePercentage }}
+                신규 기능 배포를 중단하고 안정성 복구에 집중하세요.
 
 grafana:
   enabled: true
-  adminPassword: "admin"  # dev only
+  admin:
+    existingSecret: grafana-admin-secret
+    userKey: admin-user
+    passwordKey: admin-password
   grafana.ini:
     server:
       root_url: "https://kind.go-ti.shop/grafana/"
       serve_from_sub_path: true
+  sidecar:
+    datasources:
+      exemplarTraceIdDestinations:
+        datasourceUid: tempo
+        traceIdLabelName: trace_id
   resources:
     requests:
       cpu: 50m
@@ -56,25 +352,70 @@ grafana:
       url: http://loki.monitoring.svc:3100
       access: proxy
       isDefault: false
+      jsonData:
+        maxLines: 1000
+        derivedFields:
+          - datasourceUid: tempo
+            matcherRegex: "traceId=(\\w+)"
+            name: TraceID (logfmt)
+            url: "$${__value.raw}"
+            urlDisplayLabel: "View Trace"
+          - datasourceUid: tempo
+            matcherRegex: "\"traceId\":\"(\\w+)\""
+            name: TraceID (JSON)
+            url: "$${__value.raw}"
+            urlDisplayLabel: "View Trace"
+          - datasourceUid: tempo
+            matcherRegex: "([a-f0-9]{16,32})"
+            matcherType: "label"
+            name: TraceID (label)
+            url: "$${__value.raw}"
+            urlDisplayLabel: "View Trace"
     - name: Tempo
       type: tempo
       uid: tempo
-      url: http://tempo.monitoring.svc:3100
+      url: http://tempo.monitoring.svc:3200
       access: proxy
       isDefault: false
       jsonData:
         tracesToLogsV2:
           datasourceUid: loki
-          enabled: true
+          filterByTraceID: true
+          filterBySpanID: true
+          tags:
+            - key: "service.name"
+              value: "service_name"
+          customQuery: true
+          query: '{service_name="${__span.tags["service.name"]}"} | traceId="${__trace.traceId}"'
         tracesToMetrics:
           datasourceUid: prometheus
-          enabled: true
+          tags:
+            - key: "service.name"
+              value: "job"
+          queries:
+            - name: "Request Rate"
+              query: "sum(rate(http_server_request_duration_seconds_count{job=\"${__tags}\"}[5m]))"
+            - name: "Error Rate"
+              query: "sum(rate(http_server_request_duration_seconds_count{job=\"${__tags}\", http_response_status_code=~\"5..\"}[5m])) / sum(rate(http_server_request_duration_seconds_count{job=\"${__tags}\"}[5m]))"
+        tracesToProfiles:
+          datasourceUid: pyroscope
+          profileTypeId: "process_cpu:cpu:nanoseconds:cpu:nanoseconds"
+          tags:
+            - key: "service.name"
+              value: "service_name"
+          customQuery: false
         serviceMap:
           datasourceUid: prometheus
-        nodeGraph:
-          enabled: true
         lokiSearch:
           datasourceUid: loki
+        nodeGraph:
+          enabled: true
+    - name: Pyroscope
+      type: grafana-pyroscope-datasource
+      uid: pyroscope
+      access: proxy
+      url: http://pyroscope.monitoring.svc:4040
+      editable: false
 
 nodeExporter:
   enabled: true
