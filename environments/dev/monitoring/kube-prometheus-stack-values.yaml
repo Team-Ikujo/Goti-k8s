@@ -6,6 +6,8 @@ prometheus:
     enableRemoteWriteReceiver: true
     enableFeatures:
       - exemplar-storage
+    externalUrl: "/prometheus"
+    routePrefix: "/prometheus"
     resources:
       requests:
         cpu: 200m
@@ -327,6 +329,10 @@ grafana:
     existingSecret: grafana-admin-secret
     userKey: admin-user
     passwordKey: admin-password
+  grafana.ini:
+    server:
+      root_url: "https://kind.go-ti.shop/grafana/"
+      serve_from_sub_path: true
   sidecar:
     datasources:
       exemplarTraceIdDestinations:

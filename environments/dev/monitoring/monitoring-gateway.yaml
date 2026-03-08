@@ -1,0 +1,58 @@
+# Monitoring Istio Gateway + VirtualService
+# CloudFront → kind.go-ti.shop → Kind PC(31080) → Istio Gateway → monitoring 서비스
+# CloudFront가 TLS 종단, Gateway↔Origin 구간은 HTTP
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: monitoring-gateway
+  namespace: monitoring
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "kind.go-ti.shop"
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: monitoring-routes
+  namespace: monitoring
+spec:
+  hosts:
+    - "kind.go-ti.shop"
+  gateways:
+    - monitoring-gateway
+  http:
+    - match:
+        - uri:
+            exact: /grafana
+        - uri:
+            prefix: /grafana/
+      route:
+        - destination:
+            host: kube-prometheus-stack-grafana.monitoring.svc.cluster.local
+            port:
+              number: 80
+      timeout: 30s
+      retries:
+        attempts: 2
+        perTryTimeout: 10s
+    - match:
+        - uri:
+            exact: /prometheus
+        - uri:
+            prefix: /prometheus/
+      route:
+        - destination:
+            host: kube-prometheus-stack-prometheus.monitoring.svc.cluster.local
+            port:
+              number: 9090
+      timeout: 30s
+      retries:
+        attempts: 2
+        perTryTimeout: 10s
