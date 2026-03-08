@@ -1,12 +1,15 @@
 # Goti 로컬 개발 환경 Kind 클러스터 설정
-# control-plane 1개 + worker 2개 구성
+# control-plane 3개 (HA) + worker 4개 (대규모 트래픽 테스트 + HPA 여유)
 # K8s 1.34 고정 — ArgoCD v3.3이 1.35 미지원 (protobuf 이슈 #25767)
+# 최소 권장 스펙: CPU 6C+, RAM 16GB+ (7노드 기준)
+# 클러스터 재생성 필요: kind delete cluster → kind create cluster --config
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: goti-dev
 nodes:
+  # 첫 번째 control-plane에만 extraPortMappings (hostPort 충돌 방지)
   - role: control-plane
-    image: kindest/node:v1.34.3
+    image: &nodeImage kindest/node:v1.34.3
     kubeadmConfigPatches:
       - |
         kind: InitConfiguration
@@ -14,25 +17,29 @@ nodes:
           kubeletExtraArgs:
             node-labels: "ingress-ready=true"
     extraPortMappings:
-      # HTTP/HTTPS (Ingress)
-      - containerPort: 80
+      # HTTP → Istio Gateway NodePort (CloudFront Origin은 80으로 접근)
+      # 호스트 curl localhost:80 → 실제로 NodePort 31080으로 포워딩
+      - containerPort: 31080
         hostPort: 80
         protocol: TCP
-      - containerPort: 443
+      # HTTPS → Istio Gateway NodePort
+      - containerPort: 31443
         hostPort: 443
         protocol: TCP
       # ArgoCD NodePort (HTTP only, insecure mode in dev)
       - containerPort: 30080
         hostPort: 30080
         protocol: TCP
-      # Istio Gateway NodePort
-      - containerPort: 31080
-        hostPort: 31080
-        protocol: TCP
-      - containerPort: 31443
-        hostPort: 31443
-        protocol: TCP
+  # 2-3번 CP: extraPortMappings/labels 불필요 (첫 번째 CP만 외부 트래픽 수신)
+  - role: control-plane
+    image: *nodeImage
+  - role: control-plane
+    image: *nodeImage
   - role: worker
-    image: kindest/node:v1.34.3
+    image: *nodeImage
   - role: worker
-    image: kindest/node:v1.34.3
+    image: *nodeImage
+  - role: worker
+    image: *nodeImage
+  - role: worker
+    image: *nodeImage
