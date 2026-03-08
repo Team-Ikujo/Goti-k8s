@@ -64,5 +64,9 @@ spec:
       kind: AlertmanagerConfig
     - group: "monitoring.coreos.com"
       kind: ScrapeConfig
+    - group: "networking.istio.io"
+      kind: Gateway
+    - group: "networking.istio.io"
+      kind: VirtualService
     - group: "policy"
       kind: PodDisruptionBudget
