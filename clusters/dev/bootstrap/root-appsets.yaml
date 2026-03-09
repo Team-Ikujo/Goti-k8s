@@ -9,7 +9,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: infra
+  project: default
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main
