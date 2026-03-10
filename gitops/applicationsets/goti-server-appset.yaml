@@ -18,6 +18,11 @@ spec:
         argocd-image-updater.argoproj.io/server.update-strategy: latest
         argocd-image-updater.argoproj.io/server.allow-tags: "regexp:^dev-"
         argocd-image-updater.argoproj.io/write-back-method: git
+        argocd-image-updater.argoproj.io/git-branch: main
+        argocd-image-updater.argoproj.io/git-repository: "https://github.com/Team-Ikujo/Goti-k8s.git"
+        argocd-image-updater.argoproj.io/write-back-target: "helmvalues:/{{valuesFile}}"
+        argocd-image-updater.argoproj.io/server.helm.image-name: image.repository
+        argocd-image-updater.argoproj.io/server.helm.image-tag: image.tag
     spec:
       project: goti
       sources:
