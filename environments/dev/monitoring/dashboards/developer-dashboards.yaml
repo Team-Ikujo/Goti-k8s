@@ -1,0 +1,1718 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-developer
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "Developer"
+data:
+  api-red-metrics.json: |
+    {
+      "uid": "goti-api",
+      "title": "Goti - API RED Metrics",
+      "tags": ["goti", "api", "spring-boot", "developer"],
+      "timezone": "Asia/Seoul",
+      "editable": true,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "service_name",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(http_server_request_duration_seconds_count, job)",
+            "current": { "text": "goti/goti-server", "value": "goti/goti-server" },
+            "refresh": 2
+          },
+          {
+            "name": "http_route",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(http_server_request_duration_seconds_count{job=\"$service_name\"}, http_route)",
+            "includeAll": true,
+            "multi": true,
+            "refresh": 2
+          },
+          {
+            "name": "http_request_method",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(http_server_request_duration_seconds_count{job=\"$service_name\"}, http_request_method)",
+            "includeAll": true,
+            "multi": true,
+            "refresh": 2
+          },
+          {
+            "name": "interval",
+            "type": "interval",
+            "query": "5m,15m,1h",
+            "current": { "text": "5m", "value": "5m" }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 100,
+          "title": "요약",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "collapsed": false
+        },
+        {
+          "id": 1,
+          "title": "총 RPS",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 5, "x": 0, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[$interval]))",
+              "legendFormat": "Total"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" }
+          }
+        },
+        {
+          "id": 2,
+          "title": "에러율 (%)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 5, "x": 5, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[$interval])) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[$interval])) > 0) * 100",
+              "legendFormat": "Error %"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 1, "color": "yellow" }, { "value": 5, "color": "red" }] }
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "평균 응답시간",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 5, "x": 10, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_sum{job=\"$service_name\"}[$interval])) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[$interval])) > 0)",
+              "legendFormat": "Avg"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 0.5, "color": "yellow" }, { "value": 1, "color": "red" }] }
+            }
+          }
+        },
+        {
+          "id": 17,
+          "title": "Active Requests",
+          "description": "현재 처리 중인 HTTP 요청 수. 서버 배포 후 활성화.",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 15, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "goti_http_server_active_requests{job=\"$service_name\"}",
+              "legendFormat": "Active"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 50, "color": "yellow" }, { "value": 100, "color": "red" }] }
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Apdex Score",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 5, "x": 19, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "goti:apdex:score",
+              "legendFormat": "Apdex"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "min": 0,
+              "max": 1,
+              "decimals": 3,
+              "thresholds": { "steps": [{ "value": 0, "color": "red" }, { "value": 0.7, "color": "yellow" }, { "value": 0.85, "color": "green" }] }
+            }
+          }
+        },
+        {
+          "id": 101,
+          "title": "Rate (요청률)",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "collapsed": false
+        },
+        {
+          "id": 5,
+          "title": "요청률 (method x uri)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 16, "x": 0, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_request_method=~\"$http_request_method\", http_route=~\"$http_route\"}[$interval])) by (http_request_method, http_route)",
+              "legendFormat": "{{http_request_method}} {{http_route}}",
+              "exemplar": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" }
+          },
+          "options": {
+            "exemplars": true
+          }
+        },
+        {
+          "id": 6,
+          "title": "요청 Method 분포",
+          "type": "piechart",
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(increase(http_server_request_duration_seconds_count{job=\"$service_name\"}[1h])) by (http_request_method)",
+              "legendFormat": "{{http_request_method}}"
+            }
+          ]
+        },
+        {
+          "id": 102,
+          "title": "Error (에러)",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+          "collapsed": false
+        },
+        {
+          "id": 7,
+          "title": "에러율 추이 (4xx vs 5xx)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"4..\"}[$interval]))",
+              "legendFormat": "4xx",
+              "exemplar": true
+            },
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[$interval]))",
+              "legendFormat": "5xx",
+              "exemplar": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" }
+          },
+          "options": {
+            "exemplars": true
+          }
+        },
+        {
+          "id": 8,
+          "title": "Status Code 분포",
+          "type": "piechart",
+          "gridPos": { "h": 8, "w": 4, "x": 12, "y": 15 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(increase(http_server_request_duration_seconds_count{job=\"$service_name\"}[1h])) by (http_response_status_code)",
+              "legendFormat": "{{http_response_status_code}}"
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "title": "5xx 에러 엔드포인트 Top 10",
+          "type": "bargauge",
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[5m])) by (http_route))",
+              "legendFormat": "{{http_route}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" }
+          },
+          "options": {
+            "orientation": "horizontal",
+            "displayMode": "gradient"
+          }
+        },
+        {
+          "id": 14,
+          "title": "4xx 에러 엔드포인트 Top 10",
+          "type": "bargauge",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"4..\"}[5m])) by (http_route))",
+              "legendFormat": "{{http_route}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" }
+          },
+          "options": {
+            "orientation": "horizontal",
+            "displayMode": "gradient"
+          }
+        },
+        {
+          "id": 15,
+          "title": "엔드포인트별 에러율 (%)",
+          "description": "각 엔드포인트의 5xx 에러 비율. 특정 API에 에러가 집중되는지 확인.",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[5m])) by (http_route) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[5m])) by (http_route) > 0) * 100)",
+              "format": "table",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "percent" }
+          }
+        },
+        {
+          "id": 16,
+          "title": "Status Group별 처리량 추이 (2xx / 4xx / 5xx)",
+          "description": "언제부터 4xx/5xx가 늘었는지 시계열로 파악. 배포 후 에러 급증 감지.",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 31 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"2..\"}[$interval]))",
+              "legendFormat": "2xx"
+            },
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"4..\"}[$interval]))",
+              "legendFormat": "4xx"
+            },
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[$interval]))",
+              "legendFormat": "5xx"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "2xx" },
+                "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+              },
+              {
+                "matcher": { "id": "byName", "options": "4xx" },
+                "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }]
+              },
+              {
+                "matcher": { "id": "byName", "options": "5xx" },
+                "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+              }
+            ]
+          }
+        },
+        {
+          "id": 103,
+          "title": "Duration (응답시간)",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 39 },
+          "collapsed": false
+        },
+        {
+          "id": 10,
+          "title": "p50 / p95 / p99 응답시간",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[5m])) by (le))",
+              "legendFormat": "p50",
+              "exemplar": true
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[5m])) by (le))",
+              "legendFormat": "p95",
+              "exemplar": true
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[5m])) by (le))",
+              "legendFormat": "p99",
+              "exemplar": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "s" }
+          },
+          "options": {
+            "exemplars": true
+          }
+        },
+        {
+          "id": 11,
+          "title": "엔드포인트별 p99",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "topk(10, histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[5m])) by (le, http_route)))",
+              "format": "table",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "s" }
+          }
+        },
+        {
+          "id": 12,
+          "title": "응답시간 분포 히트맵",
+          "type": "heatmap",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 48 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[$interval])) by (le)",
+              "format": "heatmap",
+              "legendFormat": "{{le}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "s" }
+          },
+          "options": {
+            "calculate": false,
+            "yAxis": { "unit": "s" },
+            "color": { "scheme": "Oranges" },
+            "exemplars": true
+          }
+        },
+        {
+          "id": 104,
+          "title": "상세",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 56 },
+          "collapsed": false
+        },
+        {
+          "id": 13,
+          "title": "Slowest Endpoints (Top 10)",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 57 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_sum{job=\"$service_name\"}[5m])) by (http_request_method, http_route) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[5m])) by (http_request_method, http_route) > 0))",
+              "format": "table",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "s" }
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }
+  jvm-deep-dive.json: |
+    {
+      "uid": "goti-jvm",
+      "title": "Goti - JVM Deep Dive",
+      "tags": ["goti", "jvm", "spring-boot", "developer"],
+      "timezone": "Asia/Seoul",
+      "editable": true,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "service_name",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(jvm_memory_used_bytes, job)",
+            "current": { "text": "goti/goti-server", "value": "goti/goti-server" },
+            "refresh": 2
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 100,
+          "title": "메모리 개요",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "collapsed": false
+        },
+        {
+          "id": 1,
+          "title": "Heap 사용률 (%)",
+          "type": "gauge",
+          "gridPos": { "h": 6, "w": 8, "x": 0, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(jvm_memory_used_bytes{job=\"$service_name\", jvm_memory_type=\"heap\"}) / sum(jvm_memory_limit_bytes{job=\"$service_name\", jvm_memory_type=\"heap\"})",
+              "legendFormat": "Heap Usage"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "max": 1,
+              "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 0.7, "color": "yellow" }, { "value": 0.9, "color": "red" }] }
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "Non-Heap 사용량",
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 8, "x": 8, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(jvm_memory_used_bytes{job=\"$service_name\", jvm_memory_type=\"non_heap\"})",
+              "legendFormat": "Non-Heap"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "bytes" }
+          }
+        },
+        {
+          "id": 101,
+          "title": "Heap 상세",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+          "collapsed": false
+        },
+        {
+          "id": 5,
+          "title": "Heap 영역별 사용량",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "jvm_memory_used_bytes{job=\"$service_name\", jvm_memory_type=\"heap\"}",
+              "legendFormat": "{{jvm_memory_pool_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "bytes" }
+          }
+        },
+        {
+          "id": 6,
+          "title": "Non-Heap 영역별 사용량",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "jvm_memory_used_bytes{job=\"$service_name\", jvm_memory_type=\"non_heap\"}",
+              "legendFormat": "{{jvm_memory_pool_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "bytes" }
+          }
+        },
+        {
+          "id": 7,
+          "title": "Heap 사용률 추이",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(jvm_memory_used_bytes{job=\"$service_name\", jvm_memory_type=\"heap\"}) / sum(jvm_memory_limit_bytes{job=\"$service_name\", jvm_memory_type=\"heap\"}) * 100",
+              "legendFormat": "Heap Usage %"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "max": 100,
+              "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 70, "color": "yellow" }, { "value": 90, "color": "red" }] }
+            }
+          }
+        },
+        {
+          "id": 20,
+          "title": "Heap Used vs Committed",
+          "description": "Used와 Committed 격차가 크면 메모리 프래그멘테이션 가능성. Committed가 Limit에 가까우면 OOM 위험.",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(jvm_memory_used_bytes{job=\"$service_name\", jvm_memory_type=\"heap\"})",
+              "legendFormat": "Used"
+            },
+            {
+              "expr": "sum(jvm_memory_committed_bytes{job=\"$service_name\", jvm_memory_type=\"heap\"})",
+              "legendFormat": "Committed"
+            },
+            {
+              "expr": "sum(jvm_memory_limit_bytes{job=\"$service_name\", jvm_memory_type=\"heap\"})",
+              "legendFormat": "Limit"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "bytes" },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "Limit" },
+                "properties": [
+                  { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+                  { "id": "custom.fillOpacity", "value": 0 }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 21,
+          "title": "Memory After GC (누수 감지)",
+          "description": "GC 후에도 줄어들지 않고 지속 증가하면 메모리 누수 의심. Heap 타입만 표시.",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(jvm_memory_used_after_last_gc_bytes{job=\"$service_name\", jvm_memory_type=\"heap\"}) by (jvm_memory_pool_name)",
+              "legendFormat": "{{jvm_memory_pool_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": { "fillOpacity": 10 }
+            }
+          }
+        },
+        {
+          "id": 102,
+          "title": "GC",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+          "collapsed": false
+        },
+        {
+          "id": 8,
+          "title": "GC Pause Duration (평균)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 33 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "rate(jvm_gc_duration_seconds_sum{job=\"$service_name\"}[5m]) / (rate(jvm_gc_duration_seconds_count{job=\"$service_name\"}[5m]) > 0)",
+              "legendFormat": "{{jvm_gc_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "s" }
+          }
+        },
+        {
+          "id": 9,
+          "title": "GC Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 33 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "rate(jvm_gc_duration_seconds_count{job=\"$service_name\"}[5m])",
+              "legendFormat": "{{jvm_gc_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "ops" }
+          }
+        },
+        {
+          "id": 10,
+          "title": "GC 총 소요시간 비율",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 33 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "rate(jvm_gc_duration_seconds_sum{job=\"$service_name\"}[5m])",
+              "legendFormat": "{{jvm_gc_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "s" }
+          }
+        },
+        {
+          "id": 22,
+          "title": "GC Pause p95 / p99",
+          "description": "간헐적으로 발생하는 긴 GC pause를 탐지. 평균은 정상이어도 p99가 높으면 꼬리 지연 발생.",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 41 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(jvm_gc_duration_seconds_bucket{job=\"$service_name\"}[5m])) by (le, jvm_gc_name))",
+              "legendFormat": "p95 {{jvm_gc_name}}"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(jvm_gc_duration_seconds_bucket{job=\"$service_name\"}[5m])) by (le, jvm_gc_name))",
+              "legendFormat": "p99 {{jvm_gc_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "s" }
+          }
+        },
+        {
+          "id": 103,
+          "title": "스레드",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 49 },
+          "collapsed": false
+        },
+        {
+          "id": 11,
+          "title": "Live Threads",
+          "type": "stat",
+          "gridPos": { "h": 8, "w": 6, "x": 0, "y": 50 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "jvm_thread_count{job=\"$service_name\"}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short" }
+          }
+        },
+        {
+          "id": 12,
+          "title": "Daemon Threads",
+          "type": "stat",
+          "gridPos": { "h": 8, "w": 6, "x": 6, "y": 50 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "jvm_thread_count{job=\"$service_name\", jvm_thread_daemon=\"true\"}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short" }
+          }
+        },
+        {
+          "id": 23,
+          "title": "Thread Count 추이",
+          "description": "전체 스레드 수의 시계열 추이. 지속 증가하면 thread leak 의심.",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 58 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(jvm_thread_count{job=\"$service_name\"})",
+              "legendFormat": "Total Threads"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short" }
+          }
+        },
+        {
+          "id": 14,
+          "title": "Thread States 분포",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 58 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "jvm_thread_count{job=\"$service_name\"}",
+              "legendFormat": "{{jvm_thread_state}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short" },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "blocked" },
+                "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+              }
+            ]
+          }
+        },
+        {
+          "id": 104,
+          "title": "CPU",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 66 },
+          "collapsed": false
+        },
+        {
+          "id": 15,
+          "title": "Process CPU Usage",
+          "type": "gauge",
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 67 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "jvm_cpu_recent_utilization_ratio{job=\"$service_name\"}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "max": 1,
+              "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 0.7, "color": "yellow" }, { "value": 0.9, "color": "red" }] }
+            }
+          }
+        },
+        {
+          "id": 24,
+          "title": "Available CPUs",
+          "description": "JVM이 인식하는 CPU 수. K8s CPU limit이 제대로 반영되는지 확인용.",
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 67 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "jvm_cpu_count{job=\"$service_name\"}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short" }
+          }
+        },
+        {
+          "id": 25,
+          "title": "CPU Time Rate",
+          "description": "초당 CPU 사용 시간. 1.0이면 1코어 풀사용, 2.0이면 2코어 풀사용.",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 12, "x": 12, "y": 67 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "rate(jvm_cpu_time_seconds_total{job=\"$service_name\"}[5m])",
+              "legendFormat": "CPU Time Rate"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short" }
+          }
+        },
+        {
+          "id": 17,
+          "title": "CPU 사용률 추이 (Process vs System)",
+          "description": "Process CPU: JVM 프로세스만. System CPU: 호스트 전체 (experimental, 서버 배포 후 활성화).",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 24, "x": 0, "y": 73 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "jvm_cpu_recent_utilization_ratio{job=\"$service_name\"}",
+              "legendFormat": "Process CPU"
+            },
+            {
+              "expr": "jvm_system_cpu_utilization_ratio{job=\"$service_name\"}",
+              "legendFormat": "System CPU"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit" },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "System CPU" },
+                "properties": [
+                  { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+                  { "id": "custom.fillOpacity", "value": 0 }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 106,
+          "title": "Buffer Pool (experimental)",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 79 },
+          "collapsed": false
+        },
+        {
+          "id": 26,
+          "title": "Buffer Pool 사용량",
+          "description": "Direct/Mapped 버퍼 메모리. Netty, NIO 사용 시 off-heap 메모리 추적. Experimental 메트릭 — 서버 배포 후 활성화.",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 12, "x": 0, "y": 80 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "jvm_buffer_memory_used_bytes{job=\"$service_name\"}",
+              "legendFormat": "Used - {{jvm_buffer_pool_name}}"
+            },
+            {
+              "expr": "jvm_buffer_memory_limit_bytes{job=\"$service_name\"}",
+              "legendFormat": "Limit - {{jvm_buffer_pool_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "bytes" }
+          }
+        },
+        {
+          "id": 27,
+          "title": "Buffer Pool Count",
+          "description": "버퍼 풀별 버퍼 수. 지속 증가 시 누수 의심.",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 12, "x": 12, "y": 80 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "jvm_buffer_count{job=\"$service_name\"}",
+              "legendFormat": "{{jvm_buffer_pool_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short" }
+          }
+        },
+        {
+          "id": 105,
+          "title": "클래스 로딩",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 86 },
+          "collapsed": false
+        },
+        {
+          "id": 18,
+          "title": "Loaded Classes",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 87 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "jvm_class_count{job=\"$service_name\"}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short" }
+          }
+        },
+        {
+          "id": 19,
+          "title": "Class Load/Unload Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 4, "w": 18, "x": 6, "y": 87 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "rate(jvm_class_loaded_total{job=\"$service_name\"}[5m])",
+              "legendFormat": "Loaded/s"
+            },
+            {
+              "expr": "rate(jvm_class_unloaded_total{job=\"$service_name\"}[5m])",
+              "legendFormat": "Unloaded/s"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "ops" }
+          }
+        },
+        {
+          "id": 107,
+          "title": "HikariCP 커넥션 풀",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 91 },
+          "collapsed": false
+        },
+        {
+          "id": 28,
+          "title": "Connection Pool 상태",
+          "description": "Used/Idle/Pending 커넥션 수. OTel HikariCP 계측 기반. Max 대비 Used가 높으면 풀 고갈 위험.",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 92 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "db_client_connections_usage{job=\"$service_name\", state=\"used\"}",
+              "legendFormat": "Active"
+            },
+            {
+              "expr": "db_client_connections_usage{job=\"$service_name\", state=\"idle\"}",
+              "legendFormat": "Idle"
+            },
+            {
+              "expr": "db_client_connections_pending_requests{job=\"$service_name\"}",
+              "legendFormat": "Pending"
+            },
+            {
+              "expr": "db_client_connections_max{job=\"$service_name\"}",
+              "legendFormat": "Max"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "short" },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "Max" },
+                "properties": [
+                  { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } },
+                  { "id": "custom.fillOpacity", "value": 0 }
+                ]
+              },
+              {
+                "matcher": { "id": "byName", "options": "Pending" },
+                "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+              }
+            ]
+          }
+        },
+        {
+          "id": 29,
+          "title": "Connection Acquire Time (p95)",
+          "description": "커넥션 획득 소요시간. 높으면 풀 고갈 또는 DB 응답 지연.",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 92 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(db_client_connections_wait_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "legendFormat": "p95 Acquire"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(db_client_connections_wait_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "legendFormat": "p99 Acquire"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "ms" }
+          }
+        },
+        {
+          "id": 30,
+          "title": "Connection Usage Time (p95)",
+          "description": "커넥션 사용 시간. 오래 점유하면 풀 고갈 원인.",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 100 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(db_client_connections_use_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "legendFormat": "p95 Usage"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(db_client_connections_use_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "legendFormat": "p99 Usage"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "ms" }
+          }
+        },
+        {
+          "id": 31,
+          "title": "Connection Create Time (p95)",
+          "description": "새 커넥션 생성 소요시간. 높으면 DB 연결 지연. OTel Java agent 기본 제공 메트릭.",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 100 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(db_client_connections_create_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "legendFormat": "p95 Create"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(db_client_connections_create_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "legendFormat": "p99 Create"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms"
+            }
+          }
+        },
+        {
+          "id": 108,
+          "title": "HTTP Active Requests",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 108 },
+          "collapsed": false
+        },
+        {
+          "id": 32,
+          "title": "Active HTTP Requests",
+          "description": "현재 처리 중인 HTTP 요청 수. 커스텀 계측 — 서버 배포 후 활성화.",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 24, "x": 0, "y": 109 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "goti_http_server_active_requests{job=\"$service_name\"}",
+              "legendFormat": "Active Requests"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 50, "color": "yellow" }, { "value": 100, "color": "red" }] }
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }
+  distributed-tracing.json: |
+    {
+      "uid": "goti-dev-tracing",
+      "title": "Goti - 분산 추적 상세",
+      "tags": ["goti", "trace", "tempo", "developer"],
+      "timezone": "Asia/Seoul",
+      "editable": true,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "service_name",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(http_server_request_duration_seconds_count, job)",
+            "current": { "text": "goti/goti-server", "value": "goti/goti-server" },
+            "refresh": 2
+          },
+          {
+            "name": "svc",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(http_server_request_duration_seconds_count, job)",
+            "regex": ".*/(.+)",
+            "current": { "text": "goti-server", "value": "goti-server" },
+            "refresh": 2,
+            "hide": 2
+          },
+          {
+            "name": "min_duration",
+            "type": "custom",
+            "query": "100ms,500ms,1s,5s",
+            "current": { "text": "500ms", "value": "500ms" }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 100,
+          "title": "트레이스 검색",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "collapsed": false
+        },
+        {
+          "id": 1,
+          "title": "TraceQL 검색 결과",
+          "type": "table",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 1 },
+          "datasource": { "type": "tempo", "uid": "tempo" },
+          "targets": [
+            {
+              "queryType": "traceql",
+              "query": "{resource.service.name=\"$svc\" && duration > $min_duration}",
+              "limit": 20
+            }
+          ],
+          "fieldConfig": {
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "traceID" },
+                "properties": [
+                  {
+                    "id": "links",
+                    "value": [
+                      {
+                        "title": "트레이스 상세 보기",
+                        "url": "",
+                        "internal": {
+                          "datasourceUid": "tempo",
+                          "datasourceName": "Tempo",
+                          "query": {
+                            "queryType": "traceql",
+                            "query": "${__value.raw}"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 101,
+          "title": "Span 메트릭",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 11 },
+          "collapsed": false
+        },
+        {
+          "id": 2,
+          "title": "서비스별 Span Duration p95",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 12 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket[5m])) by (le, service))",
+              "legendFormat": "{{service}}",
+              "exemplar": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "s" }
+          },
+          "options": {
+            "exemplars": true
+          }
+        },
+        {
+          "id": 3,
+          "title": "서비스별 Span Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 12 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(traces_spanmetrics_calls_total[5m])) by (service)",
+              "legendFormat": "{{service}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "ops" }
+          }
+        },
+        {
+          "id": 4,
+          "title": "서비스별 Span 에러율",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 12 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(traces_spanmetrics_calls_total{status_code=\"STATUS_CODE_ERROR\"}[5m])) by (service) / (sum(rate(traces_spanmetrics_calls_total[5m])) by (service) > 0)",
+              "legendFormat": "{{service}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit" }
+          }
+        },
+        {
+          "id": 102,
+          "title": "느린 Span 분석",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 },
+          "collapsed": false
+        },
+        {
+          "id": 5,
+          "title": "Span Duration 분포",
+          "type": "heatmap",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 21 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(traces_spanmetrics_latency_bucket[5m])) by (le)",
+              "format": "heatmap",
+              "legendFormat": "{{le}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "s" }
+          },
+          "options": {
+            "calculate": false,
+            "yAxis": { "unit": "s" },
+            "color": { "scheme": "Oranges" },
+            "exemplars": true
+          }
+        },
+        {
+          "id": 103,
+          "title": "에러 트레이스",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
+          "collapsed": false
+        },
+        {
+          "id": 6,
+          "title": "에러 Span 검색 (TraceQL)",
+          "type": "table",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 30 },
+          "datasource": { "type": "tempo", "uid": "tempo" },
+          "targets": [
+            {
+              "queryType": "traceql",
+              "query": "{resource.service.name=\"$svc\" && status=error}",
+              "limit": 20
+            }
+          ],
+          "fieldConfig": {
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "traceID" },
+                "properties": [
+                  {
+                    "id": "links",
+                    "value": [
+                      {
+                        "title": "트레이스 상세 보기",
+                        "url": "",
+                        "internal": {
+                          "datasourceUid": "tempo",
+                          "datasourceName": "Tempo",
+                          "query": {
+                            "queryType": "traceql",
+                            "query": "${__value.raw}"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 104,
+          "title": "Operation 분석",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
+          "collapsed": false
+        },
+        {
+          "id": 7,
+          "title": "DB Span 검색",
+          "description": "DB 호출만 필터링하여 쿼리 병목을 찾습니다. db.system 속성이 있는 span만 표시.",
+          "type": "table",
+          "gridPos": { "h": 10, "w": 12, "x": 0, "y": 41 },
+          "datasource": { "type": "tempo", "uid": "tempo" },
+          "targets": [
+            {
+              "queryType": "traceql",
+              "query": "{resource.service.name=\"$svc\" && span.db.system != nil && duration > $min_duration}",
+              "limit": 20
+            }
+          ],
+          "fieldConfig": {
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "traceID" },
+                "properties": [
+                  {
+                    "id": "links",
+                    "value": [
+                      {
+                        "title": "트레이스 상세 보기",
+                        "url": "",
+                        "internal": {
+                          "datasourceUid": "tempo",
+                          "datasourceName": "Tempo",
+                          "query": {
+                            "queryType": "traceql",
+                            "query": "${__value.raw}"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 8,
+          "title": "느린 Operation Top 10",
+          "description": "duration이 1s를 초과하는 span을 검색. 어떤 operation이 느린지 파악.",
+          "type": "table",
+          "gridPos": { "h": 10, "w": 12, "x": 12, "y": 41 },
+          "datasource": { "type": "tempo", "uid": "tempo" },
+          "targets": [
+            {
+              "queryType": "traceql",
+              "query": "{resource.service.name=\"$svc\" && duration > 1s} | select(span.http.route, duration)",
+              "limit": 10
+            }
+          ],
+          "fieldConfig": {
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "traceID" },
+                "properties": [
+                  {
+                    "id": "links",
+                    "value": [
+                      {
+                        "title": "트레이스 상세 보기",
+                        "url": "",
+                        "internal": {
+                          "datasourceUid": "tempo",
+                          "datasourceName": "Tempo",
+                          "query": {
+                            "queryType": "traceql",
+                            "query": "${__value.raw}"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }
+  error-analysis.json: |
+    {
+      "uid": "goti-dev-errors",
+      "title": "Goti - 에러 분석",
+      "tags": ["goti", "error", "developer"],
+      "timezone": "Asia/Seoul",
+      "editable": true,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "service_name",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(http_server_request_duration_seconds_count, job)",
+            "current": { "text": "goti/goti-server", "value": "goti/goti-server" },
+            "refresh": 2
+          },
+          {
+            "name": "svc",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(http_server_request_duration_seconds_count, job)",
+            "regex": ".*/(.+)",
+            "current": { "text": "goti-server", "value": "goti-server" },
+            "refresh": 2,
+            "hide": 2
+          },
+          {
+            "name": "interval",
+            "type": "interval",
+            "query": "5m,15m,1h",
+            "current": { "text": "5m", "value": "5m" }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 100,
+          "title": "에러 요약",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "collapsed": false
+        },
+        {
+          "id": 1,
+          "title": "5xx 건수 (1h)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(increase(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[1h])) or vector(0)",
+              "legendFormat": "5xx"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 1, "color": "yellow" }, { "value": 10, "color": "red" }] }
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "에러율 (%)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "(sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[$interval])) or on() vector(0)) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[$interval])) > 0) * 100",
+              "legendFormat": "Error %"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "noValue": "0",
+              "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 0.1, "color": "yellow" }, { "value": 1, "color": "red" }] }
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "4xx 건수 (1h)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(increase(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"4..\"}[1h])) or vector(0)",
+              "legendFormat": "4xx"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": { "steps": [{ "value": 0, "color": "green" }, { "value": 10, "color": "yellow" }, { "value": 100, "color": "red" }] }
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "가장 빈번한 에러 Status",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "topk(1, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[5m])) by (http_response_status_code))",
+              "legendFormat": "{{http_response_status_code}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps", "noValue": "-" }
+          }
+        },
+        {
+          "id": 101,
+          "title": "에러 추이",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "collapsed": false
+        },
+        {
+          "id": 5,
+          "title": "4xx Status Code별 추이",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"4..\"}[$interval])) by (http_response_status_code)",
+              "legendFormat": "{{http_response_status_code}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" }
+          }
+        },
+        {
+          "id": 6,
+          "title": "5xx Status Code별 추이",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[$interval])) by (http_response_status_code)",
+              "legendFormat": "{{http_response_status_code}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" }
+          }
+        },
+        {
+          "id": 102,
+          "title": "에러 엔드포인트",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+          "collapsed": false
+        },
+        {
+          "id": 7,
+          "title": "5xx 엔드포인트별 분포",
+          "type": "bargauge",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[5m])) by (http_request_method, http_route))",
+              "legendFormat": "{{http_request_method}} {{http_route}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps", "noValue": "5xx 없음" }
+          },
+          "options": {
+            "orientation": "horizontal",
+            "displayMode": "gradient"
+          }
+        },
+        {
+          "id": 8,
+          "title": "4xx 엔드포인트별 분포",
+          "type": "bargauge",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"4..\"}[5m])) by (http_request_method, http_route))",
+              "legendFormat": "{{http_request_method}} {{http_route}}",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" }
+          },
+          "options": {
+            "orientation": "horizontal",
+            "displayMode": "gradient"
+          }
+        },
+        {
+          "id": 104,
+          "title": "에러 로그",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+          "collapsed": false
+        },
+        {
+          "id": 10,
+          "title": "5xx 에러 로그 (ERROR)",
+          "type": "logs",
+          "gridPos": { "h": 10, "w": 12, "x": 0, "y": 24 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "expr": "{service_name=\"$svc\"} | detected_level=\"ERROR\"",
+              "legendFormat": ""
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "enableLogDetails": true,
+            "sortOrder": "Descending",
+            "dedupStrategy": "none"
+          }
+        },
+        {
+          "id": 11,
+          "title": "4xx 경고 로그 (WARN)",
+          "type": "logs",
+          "gridPos": { "h": 10, "w": 12, "x": 12, "y": 24 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "expr": "{service_name=\"$svc\"} | detected_level=\"WARN\"",
+              "legendFormat": ""
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "enableLogDetails": true,
+            "sortOrder": "Descending",
+            "dedupStrategy": "none"
+          }
+        },
+        {
+          "id": 103,
+          "title": "에러 ↔ 트레이스 연결",
+          "type": "row",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 35 },
+          "collapsed": false
+        },
+        {
+          "id": 9,
+          "title": "에러 트레이스 검색",
+          "type": "table",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 36 },
+          "datasource": { "type": "tempo", "uid": "tempo" },
+          "targets": [
+            {
+              "queryType": "traceql",
+              "query": "{resource.service.name=\"$svc\" && status=error}",
+              "limit": 20
+            }
+          ],
+          "fieldConfig": {
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "traceID" },
+                "properties": [
+                  {
+                    "id": "links",
+                    "value": [
+                      {
+                        "title": "트레이스 상세 보기",
+                        "url": "",
+                        "internal": {
+                          "datasourceUid": "tempo",
+                          "datasourceName": "Tempo",
+                          "query": {
+                            "queryType": "traceql",
+                            "query": "${__value.raw}"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }
