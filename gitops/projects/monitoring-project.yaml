@@ -23,6 +23,10 @@ spec:
       kind: ClusterRole
     - group: "rbac.authorization.k8s.io"
       kind: ClusterRoleBinding
+    - group: "admissionregistration.k8s.io"
+      kind: MutatingWebhookConfiguration
+    - group: "admissionregistration.k8s.io"
+      kind: ValidatingWebhookConfiguration
   # 커뮤니티 chart(kube-prometheus-stack 등)가 다양한 리소스를 설치하므로
   # core, apps 그룹은 kind 와일드카드 유지, monitoring.coreos.com은 명시
   namespaceResourceWhitelist:
