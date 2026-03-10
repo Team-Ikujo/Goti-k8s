@@ -1,12 +1,11 @@
 # ESO 설치 완료 후 ClusterSecretStore 등 설정을 배포하는 Application
-# syncPolicy.automated + retry로 ESO CRD 준비 전 실패 시 자동 재시도
+# ESO operator(external-secrets)와 별도 Application이므로 sync-wave로 순서 보장 불가
+# retry backoff로 CRD 미준비 시 자동 수렴 (최대 10회, 30s~5m)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: external-secrets-config
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
@@ -19,6 +18,8 @@ spec:
     automated:
       selfHeal: true
       prune: true
+    syncOptions:
+      - SkipDryRunOnMissingResource=true
     retry:
       limit: 10
       backoff:
