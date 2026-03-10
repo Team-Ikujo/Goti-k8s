@@ -1,7 +1,7 @@
 config:
   registries:
     - name: ECR
-      api_url: https://<ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com
-      prefix: <ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com
+      api_url: https://707925622666.dkr.ecr.ap-northeast-2.amazonaws.com
+      prefix: 707925622666.dkr.ecr.ap-northeast-2.amazonaws.com
       credentials: secret:argocd/ecr-creds#.dockerconfigjson
       credentialsType: pullsecret
