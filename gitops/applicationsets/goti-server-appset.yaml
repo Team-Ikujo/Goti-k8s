@@ -13,6 +13,11 @@ spec:
   template:
     metadata:
       name: "goti-server-{{env}}"
+      annotations:
+        argocd-image-updater.argoproj.io/image-list: "server=<ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/goti-server"
+        argocd-image-updater.argoproj.io/server.update-strategy: latest
+        argocd-image-updater.argoproj.io/server.allow-tags: "regexp:^dev-"
+        argocd-image-updater.argoproj.io/write-back-method: git
     spec:
       project: goti
       sources:

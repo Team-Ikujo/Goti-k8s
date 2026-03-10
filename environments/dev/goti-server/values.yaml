@@ -1,5 +1,10 @@
 image:
-  tag: "latest"
+  repository: "<ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/goti-server"
+  tag: "dev-latest"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: ecr-creds
 
 resources:
   requests:
