@@ -5,6 +5,8 @@ image:
   tag: "latest"
   pullPolicy: IfNotPresent
 
+imagePullSecrets: []
+
 serviceAccount:
   create: true
   name: ""
@@ -60,6 +62,15 @@ envFrom: []
 configMap:
   enabled: false
   data: {}
+
+externalSecret:
+  enabled: false
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: ""
+    kind: ClusterSecretStore
+  remoteRef:
+    path: ""
 
 podAnnotations: {}
 nodeSelector: {}

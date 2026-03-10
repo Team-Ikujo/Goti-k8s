@@ -1,5 +1,10 @@
 image:
-  tag: "latest"
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-server"
+  tag: "dev-latest"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: ecr-creds
 
 resources:
   requests:
@@ -33,3 +38,16 @@ env:
     value: "dev"
   - name: JAVA_TOOL_OPTIONS
     value: "-Xms256m -Xmx384m"
+
+envFrom:
+  - secretRef:
+      name: goti-server-secrets    # ExternalSecret이 SSM에서 자동 생성
+
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-parameter-store
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /dev/server
