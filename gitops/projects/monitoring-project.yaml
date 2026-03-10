@@ -78,5 +78,7 @@ spec:
       kind: Gateway
     - group: "networking.istio.io"
       kind: VirtualService
+    - group: "security.istio.io"
+      kind: PeerAuthentication
     - group: "policy"
       kind: PodDisruptionBudget

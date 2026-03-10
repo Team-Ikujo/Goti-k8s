@@ -56,3 +56,5 @@ spec:
       kind: AuthorizationPolicy
     - group: "security.istio.io"
       kind: RequestAuthentication
+    - group: "external-secrets.io"
+      kind: ExternalSecret

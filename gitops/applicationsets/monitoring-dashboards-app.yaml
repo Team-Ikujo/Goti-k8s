@@ -1,0 +1,30 @@
+# Grafana 대시보드 ConfigMap 배포
+# EC2 Goti-monitoring과 동일한 대시보드를 Kind Grafana에 sidecar로 자동 주입
+# ConfigMap label: grafana_dashboard=1 → Grafana sidecar가 감지 후 대시보드 등록
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-dashboards
+  namespace: argocd
+spec:
+  project: monitoring
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "environments/dev/monitoring/dashboards"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

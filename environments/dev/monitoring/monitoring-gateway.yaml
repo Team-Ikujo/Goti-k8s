@@ -56,3 +56,15 @@ spec:
       retries:
         attempts: 2
         perTryTimeout: 10s
+---
+# monitoring NS에 sidecar injection 없음 (현재도 향후도 유지)
+# mesh-wide STRICT mTLS 전환 시에도 OTel 수신(goti-server → Alloy) 깨지지 않도록
+# 명시적 PERMISSIVE 선언
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: monitoring-permissive
+  namespace: monitoring
+spec:
+  mtls:
+    mode: PERMISSIVE
