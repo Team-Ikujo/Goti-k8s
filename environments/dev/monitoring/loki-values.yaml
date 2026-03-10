@@ -103,7 +103,7 @@ extraObjects:
                   team: backend
                 annotations:
                   summary: "결제 에러 급증 감지"
-                  description: "5분간 결제 에러 로그 {{ $value }}건 발생 (임계값: 10건)"
+                  description: "5분간 결제 에러 로그 {{ "{{" }} $value {{ "}}" }}건 발생 (임계값: 10건)"
           - name: auth-log-alerts
             rules:
               - alert: AuthFailureSpike
@@ -115,7 +115,7 @@ extraObjects:
                   team: security
                 annotations:
                   summary: "인증 실패 급증 감지"
-                  description: "5분간 인증 실패 {{ $value }}건 발생 (임계값: 20건)"
+                  description: "5분간 인증 실패 {{ "{{" }} $value {{ "}}" }}건 발생 (임계값: 20건)"
           - name: pii-detection-alerts
             # 주민번호: 수집 자체가 불법 (개인정보보호법) — 탐지 불필요
             # 카드번호: PG사/카드사 API 처리, 서버에 원문 미도달 — 탐지 불필요
