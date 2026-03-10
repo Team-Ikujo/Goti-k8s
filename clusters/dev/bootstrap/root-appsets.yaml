@@ -31,6 +31,41 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
 ---
+# Infrastructure Apps (external-secrets, argocd-image-updater 등)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: goti-infrastructure
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infra
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "infrastructure"
+      directory:
+        recurse: true
+        include: "*application.yaml"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+---
 # ApplicationSets
 apiVersion: argoproj.io/v1alpha1
 kind: Application
