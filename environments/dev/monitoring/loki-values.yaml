@@ -1,6 +1,9 @@
 # Loki dev-kind values — SingleBinary mode
 deploymentMode: SingleBinary
 
+serviceAccount:
+  automountServiceAccountToken: false
+
 loki:
   auth_enabled: false
   commonConfig:
