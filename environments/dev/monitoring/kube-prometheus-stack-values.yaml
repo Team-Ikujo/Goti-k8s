@@ -3,7 +3,7 @@ prometheus:
   prometheusSpec:
     replicas: 1
     retention: 24h
-    retentionSize: "3GB"  # retention/retentionSize 중 먼저 도달하는 조건 트리거. PVC 5Gi 중 WAL 여유 확보
+    retentionSize: "3GiB"  # retention/retentionSize 중 먼저 도달하는 조건 트리거. PVC 5Gi: WAL ~1GiB + blocks 3GiB + compaction headroom ~1GiB
     enableRemoteWriteReceiver: true
     enableFeatures:
       - exemplar-storage
