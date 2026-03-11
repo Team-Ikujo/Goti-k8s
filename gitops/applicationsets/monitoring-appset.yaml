@@ -18,22 +18,22 @@ spec:
                   chartVersion: "82.4.3"
                   valuesFile: environments/dev/monitoring/kube-prometheus-stack-values.yaml
                 - component: loki
-                  chartRepo: https://grafana.github.io/helm-charts
+                  chartRepo: https://grafana.github.io/helm-charts  # NOTE: Loki는 grafana.github.io 유지 (community 미이관, 2026-03 확인)
                   chartName: loki
                   chartVersion: "6.53.0"
                   valuesFile: environments/dev/monitoring/loki-values.yaml
                 - component: tempo
-                  chartRepo: https://grafana.github.io/helm-charts
+                  chartRepo: https://grafana-community.github.io/helm-charts
                   chartName: tempo
                   chartVersion: "1.24.4"
                   valuesFile: environments/dev/monitoring/tempo-values.yaml
                 - component: alloy
-                  chartRepo: https://grafana.github.io/helm-charts
+                  chartRepo: https://grafana.github.io/helm-charts  # NOTE: Alloy는 grafana.github.io 유지 (community 미이관)
                   chartName: alloy
                   chartVersion: "1.6.1"
                   valuesFile: environments/dev/monitoring/alloy-values.yaml
                 - component: pyroscope
-                  chartRepo: https://grafana.github.io/helm-charts
+                  chartRepo: https://grafana.github.io/helm-charts  # NOTE: Pyroscope는 grafana.github.io 유지 (community 미이관)
                   chartName: pyroscope
                   chartVersion: "1.18.1"
                   valuesFile: environments/dev/monitoring/pyroscope-values.yaml
@@ -50,7 +50,7 @@ spec:
             valueFiles:
               - "$values/{{valuesFile}}"
         - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-          targetRevision: main
+          targetRevision: main  # dev only: HEAD tracking. prod MUST pin to tag/SHA
           ref: values
       destination:
         server: "https://kubernetes.default.svc"

@@ -67,7 +67,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "(1 - sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[5m])) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[5m])) > 0)) * 100",
+              "expr": "(1 - sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[$interval])) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[$interval])) > 0)) * 100",
               "legendFormat": "Success %"
             }
           ],
@@ -86,7 +86,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "sum(rate(http_server_request_duration_seconds_sum{job=\"$service_name\"}[5m])) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[5m])) > 0)",
+              "expr": "sum(rate(http_server_request_duration_seconds_sum{job=\"$service_name\"}[$interval])) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[$interval])) > 0)",
               "legendFormat": "Avg"
             }
           ],
@@ -183,7 +183,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "topk(15, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[5m])) by (http_route))",
+              "expr": "topk(15, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[$interval])) by (http_route))",
               "legendFormat": "{{http_route}}",
               "instant": true
             }
@@ -204,7 +204,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "topk(15, sum(rate(http_server_request_duration_seconds_sum{job=\"$service_name\"}[5m])) by (http_route) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[5m])) by (http_route) > 0))",
+              "expr": "topk(15, sum(rate(http_server_request_duration_seconds_sum{job=\"$service_name\"}[$interval])) by (http_route) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[$interval])) by (http_route) > 0))",
               "legendFormat": "{{http_route}}",
               "instant": true
             }

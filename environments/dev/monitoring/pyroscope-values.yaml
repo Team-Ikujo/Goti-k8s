@@ -5,9 +5,9 @@ pyroscope:
       backend: filesystem
       filesystem:
         dir: /data
-    compactor:
-      blocks_retention:
-        period: 3d
+  # compactor.blocks_retention deprecated → CLI flag 사용
+  extraArgs:
+    pyroscopedb.retention-period: 72h
   resources:
     requests:
       cpu: 100m
