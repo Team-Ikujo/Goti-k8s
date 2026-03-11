@@ -3,6 +3,7 @@ prometheus:
   prometheusSpec:
     replicas: 1
     retention: 24h
+    retentionSize: "3GiB"  # retention/retentionSize 중 먼저 도달하는 조건 트리거. PVC 5Gi: WAL ~1GiB + blocks 3GiB + compaction headroom ~1GiB
     enableRemoteWriteReceiver: true
     enableFeatures:
       - exemplar-storage
@@ -378,7 +379,7 @@ grafana:
       memory: 128Mi
     limits:
       cpu: 200m
-      memory: 256Mi
+      memory: 384Mi
   additionalDataSources:
     - name: Loki
       type: loki
