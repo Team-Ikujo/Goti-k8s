@@ -37,14 +37,14 @@ alloy:
 
       // -----------------------------------------------------------------------------
       // 2. Memory Limiter: OOM 방지
-      //    - limit: 384MiB (Alloy 컨테이너 512MB의 75%)
-      //    - spike_limit: 128MiB (버스트 트래픽 허용)
+      //    - limit: 480MiB (Alloy 컨테이너 640MB의 75%)
+      //    - spike_limit: 160MiB (버스트 트래픽 허용)
       //    - check_interval: 1s
       // -----------------------------------------------------------------------------
       otelcol.processor.memory_limiter "default" {
         check_interval = "1s"
-        limit          = "384MiB"
-        spike_limit    = "128MiB"
+        limit          = "480MiB"
+        spike_limit    = "160MiB"
 
         output {
           metrics = [otelcol.processor.attributes.default.input]

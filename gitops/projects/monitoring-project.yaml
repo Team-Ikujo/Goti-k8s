@@ -9,6 +9,7 @@ spec:
     - "https://github.com/Team-Ikujo/Goti-k8s.git"
     - "https://prometheus-community.github.io/helm-charts"
     - "https://grafana.github.io/helm-charts"
+    - "https://grafana-community.github.io/helm-charts"  # Loki, Tempo community chart 이관
   destinations:
     - namespace: monitoring
       server: "https://kubernetes.default.svc"
