@@ -1,5 +1,7 @@
 # kube-prometheus-stack dev-kind values
 prometheus:
+  serviceAccount:
+    automountServiceAccountToken: true  # Prometheus는 scraping RBAC에 SA token 필요
   prometheusSpec:
     replicas: 1
     retention: 24h
@@ -37,6 +39,8 @@ prometheus:
 
 alertmanager:
   enabled: true
+  serviceAccount:
+    automountServiceAccountToken: false
   alertmanagerSpec:
     resources:
       requests:
@@ -351,6 +355,7 @@ additionalPrometheusRulesMap:
 
 grafana:
   enabled: true
+  automountServiceAccountToken: false
   admin:
     existingSecret: grafana-admin-secret
     userKey: admin-user
