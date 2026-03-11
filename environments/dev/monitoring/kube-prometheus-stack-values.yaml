@@ -355,7 +355,8 @@ additionalPrometheusRulesMap:
 
 grafana:
   enabled: true
-  automountServiceAccountToken: false
+  serviceAccount:
+    automountServiceAccountToken: false
   admin:
     existingSecret: grafana-admin-secret
     userKey: admin-user
