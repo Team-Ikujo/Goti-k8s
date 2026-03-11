@@ -1,5 +1,9 @@
 # Pyroscope dev-kind values
 pyroscope:
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
   structuredConfig:
     storage:
       backend: filesystem

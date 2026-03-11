@@ -17,6 +17,16 @@ data:
       "editable": true,
       "refresh": "30s",
       "time": { "from": "now-1h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "interval",
+            "type": "interval",
+            "query": "5m,15m,1h",
+            "current": { "text": "5m", "value": "5m" }
+          }
+        ]
+      },
       "panels": [
         {
           "id": 100,
@@ -157,7 +167,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(prometheus_tsdb_head_samples_appended_total[5m])",
+              "expr": "rate(prometheus_tsdb_head_samples_appended_total[$interval])",
               "legendFormat": "Samples/s"
             }
           ],
@@ -196,7 +206,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(loki_distributor_lines_received_total[5m])",
+              "expr": "rate(loki_distributor_lines_received_total[$interval])",
               "legendFormat": "Lines/s"
             }
           ],
@@ -232,7 +242,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(tempo_distributor_spans_received_total[5m])",
+              "expr": "rate(tempo_distributor_spans_received_total[$interval])",
               "legendFormat": "Spans/s"
             }
           ],
@@ -248,7 +258,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(tempo_discarded_spans_total[5m])",
+              "expr": "rate(tempo_discarded_spans_total[$interval])",
               "legendFormat": "{{reason}}"
             }
           ],
@@ -301,7 +311,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(process_cpu_seconds_total{job=\"alloy\"}[5m])",
+              "expr": "rate(process_cpu_seconds_total{job=\"alloy\"}[$interval])",
               "legendFormat": "CPU Usage"
             }
           ],
@@ -317,15 +327,15 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(otelcol_exporter_send_failed_metric_points_total[5m])",
+              "expr": "rate(otelcol_exporter_send_failed_metric_points_total[$interval])",
               "legendFormat": "Failed Metrics"
             },
             {
-              "expr": "rate(otelcol_exporter_send_failed_log_records_total[5m])",
+              "expr": "rate(otelcol_exporter_send_failed_log_records_total[$interval])",
               "legendFormat": "Failed Logs"
             },
             {
-              "expr": "rate(otelcol_exporter_send_failed_spans_total[5m])",
+              "expr": "rate(otelcol_exporter_send_failed_spans_total[$interval])",
               "legendFormat": "Failed Spans"
             }
           ],
@@ -353,6 +363,12 @@ data:
             "query": "critical,warning",
             "includeAll": true,
             "current": { "text": "All", "value": "$__all" }
+          },
+          {
+            "name": "interval",
+            "type": "interval",
+            "query": "5m,15m,1h",
+            "current": { "text": "5m", "value": "5m" }
           }
         ]
       },
@@ -518,6 +534,16 @@ data:
       "editable": true,
       "refresh": "30s",
       "time": { "from": "now-1h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "interval",
+            "type": "interval",
+            "query": "5m,15m,1h",
+            "current": { "text": "5m", "value": "5m" }
+          }
+        ]
+      },
       "panels": [
         {
           "id": 100,
@@ -534,11 +560,11 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(otelcol_receiver_accepted_metric_points_total[5m])",
+              "expr": "rate(otelcol_receiver_accepted_metric_points_total[$interval])",
               "legendFormat": "Accepted"
             },
             {
-              "expr": "rate(otelcol_receiver_refused_metric_points_total[5m])",
+              "expr": "rate(otelcol_receiver_refused_metric_points_total[$interval])",
               "legendFormat": "Refused"
             }
           ],
@@ -554,11 +580,11 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(otelcol_receiver_accepted_log_records_total[5m])",
+              "expr": "rate(otelcol_receiver_accepted_log_records_total[$interval])",
               "legendFormat": "Accepted"
             },
             {
-              "expr": "rate(otelcol_receiver_refused_log_records_total[5m])",
+              "expr": "rate(otelcol_receiver_refused_log_records_total[$interval])",
               "legendFormat": "Refused"
             }
           ],
@@ -574,11 +600,11 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(otelcol_receiver_accepted_spans_total[5m])",
+              "expr": "rate(otelcol_receiver_accepted_spans_total[$interval])",
               "legendFormat": "Accepted"
             },
             {
-              "expr": "rate(otelcol_receiver_refused_spans_total[5m])",
+              "expr": "rate(otelcol_receiver_refused_spans_total[$interval])",
               "legendFormat": "Refused"
             }
           ],
@@ -601,7 +627,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(otelcol_processor_batch_batch_send_size_sum[5m])",
+              "expr": "rate(otelcol_processor_batch_batch_send_size_sum[$interval])",
               "legendFormat": "Batch Size/s"
             }
           ],
@@ -617,15 +643,15 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(otelcol_processor_refused_metric_points_total[5m])",
+              "expr": "rate(otelcol_processor_refused_metric_points_total[$interval])",
               "legendFormat": "Metrics Refused"
             },
             {
-              "expr": "rate(otelcol_processor_refused_log_records_total[5m])",
+              "expr": "rate(otelcol_processor_refused_log_records_total[$interval])",
               "legendFormat": "Logs Refused"
             },
             {
-              "expr": "rate(otelcol_processor_refused_spans_total[5m])",
+              "expr": "rate(otelcol_processor_refused_spans_total[$interval])",
               "legendFormat": "Spans Refused"
             }
           ],
@@ -641,7 +667,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(otelcol_processor_tail_sampling_count_traces_sampled[5m])",
+              "expr": "rate(otelcol_processor_tail_sampling_count_traces_sampled[$interval])",
               "legendFormat": "{{policy}}"
             }
           ],
@@ -664,15 +690,15 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(otelcol_exporter_sent_metric_points_total[5m])",
+              "expr": "rate(otelcol_exporter_sent_metric_points_total[$interval])",
               "legendFormat": "Metrics"
             },
             {
-              "expr": "rate(otelcol_exporter_sent_log_records_total[5m])",
+              "expr": "rate(otelcol_exporter_sent_log_records_total[$interval])",
               "legendFormat": "Logs"
             },
             {
-              "expr": "rate(otelcol_exporter_sent_spans_total[5m])",
+              "expr": "rate(otelcol_exporter_sent_spans_total[$interval])",
               "legendFormat": "Spans"
             }
           ],
@@ -688,15 +714,15 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(otelcol_exporter_send_failed_metric_points_total[5m])",
+              "expr": "rate(otelcol_exporter_send_failed_metric_points_total[$interval])",
               "legendFormat": "Failed Metrics"
             },
             {
-              "expr": "rate(otelcol_exporter_send_failed_log_records_total[5m])",
+              "expr": "rate(otelcol_exporter_send_failed_log_records_total[$interval])",
               "legendFormat": "Failed Logs"
             },
             {
-              "expr": "rate(otelcol_exporter_send_failed_spans_total[5m])",
+              "expr": "rate(otelcol_exporter_send_failed_spans_total[$interval])",
               "legendFormat": "Failed Spans"
             }
           ],
@@ -752,7 +778,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(process_cpu_seconds_total{job=\"alloy\"}[5m])",
+              "expr": "rate(process_cpu_seconds_total{job=\"alloy\"}[$interval])",
               "legendFormat": "CPU Usage"
             }
           ],
@@ -772,6 +798,16 @@ data:
       "editable": true,
       "refresh": "30s",
       "time": { "from": "now-1h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "interval",
+            "type": "interval",
+            "query": "5m,15m,1h",
+            "current": { "text": "5m", "value": "5m" }
+          }
+        ]
+      },
       "panels": [
         {
           "id": 100,
@@ -807,7 +843,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(traces_service_graph_request_total[5m])",
+              "expr": "rate(traces_service_graph_request_total[$interval])",
               "legendFormat": "{{client}} → {{server}}"
             }
           ],
@@ -823,7 +859,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(traces_service_graph_request_failed_total[5m]) / (rate(traces_service_graph_request_total[5m]) > 0)",
+              "expr": "rate(traces_service_graph_request_failed_total[$interval]) / (rate(traces_service_graph_request_total[$interval]) > 0)",
               "legendFormat": "{{client}} → {{server}}"
             }
           ],
@@ -846,7 +882,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, rate(traces_service_graph_request_server_seconds_bucket[5m]))",
+              "expr": "histogram_quantile(0.95, rate(traces_service_graph_request_server_seconds_bucket[$interval]))",
               "legendFormat": "{{server}}"
             }
           ],
@@ -873,6 +909,12 @@ data:
             "type": "custom",
             "query": "1h,6h,24h,3d",
             "current": { "text": "1h", "value": "1h" }
+          },
+          {
+            "name": "interval",
+            "type": "interval",
+            "query": "5m,15m,1h",
+            "current": { "text": "5m", "value": "5m" }
           }
         ]
       },
@@ -1086,11 +1128,11 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket[5m])) by (le))",
+              "expr": "histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket[$interval])) by (le))",
               "legendFormat": "p50"
             },
             {
-              "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket[5m])) by (le))",
+              "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket[$interval])) by (le))",
               "legendFormat": "p95"
             },
             {
@@ -1125,6 +1167,12 @@ data:
             "refresh": 2,
             "includeAll": true,
             "multi": true
+          },
+          {
+            "name": "interval",
+            "type": "interval",
+            "query": "5m,15m,1h",
+            "current": { "text": "5m", "value": "5m" }
           }
         ]
       },
@@ -1150,7 +1198,7 @@ data:
           "datasource": { "type": "loki", "uid": "loki" },
           "targets": [
             {
-              "expr": "sum(count_over_time({log_type=\"payment\", service_name=~\"$service\"} | detected_level=\"ERROR\" [5m])) / (sum(count_over_time({log_type=\"payment\", service_name=~\"$service\"} [5m])) > 0) * 100",
+              "expr": "sum(count_over_time({log_type=\"payment\", service_name=~\"$service\"} | detected_level=\"ERROR\" [$interval])) / (sum(count_over_time({log_type=\"payment\", service_name=~\"$service\"} [$interval])) > 0) * 100",
               "legendFormat": "Error %"
             }
           ],
@@ -1295,6 +1343,12 @@ data:
             "refresh": 2,
             "includeAll": true,
             "multi": true
+          },
+          {
+            "name": "interval",
+            "type": "interval",
+            "query": "5m,15m,1h",
+            "current": { "text": "5m", "value": "5m" }
           }
         ]
       },
@@ -1439,6 +1493,12 @@ data:
             "includeAll": true,
             "multi": true,
             "current": { "text": "All", "value": "$__all" }
+          },
+          {
+            "name": "interval",
+            "type": "interval",
+            "query": "5m,15m,1h",
+            "current": { "text": "5m", "value": "5m" }
           }
         ]
       },
