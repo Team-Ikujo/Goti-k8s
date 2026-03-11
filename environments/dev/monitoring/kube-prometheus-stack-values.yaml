@@ -3,6 +3,7 @@ prometheus:
   prometheusSpec:
     replicas: 1
     retention: 24h
+    retentionSize: "4GB"
     enableRemoteWriteReceiver: true
     enableFeatures:
       - exemplar-storage
@@ -378,7 +379,7 @@ grafana:
       memory: 128Mi
     limits:
       cpu: 200m
-      memory: 256Mi
+      memory: 384Mi
   additionalDataSources:
     - name: Loki
       type: loki

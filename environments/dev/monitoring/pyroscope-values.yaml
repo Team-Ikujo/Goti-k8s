@@ -5,9 +5,8 @@ pyroscope:
       backend: filesystem
       filesystem:
         dir: /data
-    compactor:
-      blocks_retention:
-        period: 3d
+  extraArgs:
+    pyroscopedb.retention-period: "72h"
   resources:
     requests:
       cpu: 100m

@@ -18,12 +18,12 @@ spec:
                   chartVersion: "82.4.3"
                   valuesFile: environments/dev/monitoring/kube-prometheus-stack-values.yaml
                 - component: loki
-                  chartRepo: https://grafana.github.io/helm-charts
+                  chartRepo: https://grafana-community.github.io/helm-charts
                   chartName: loki
                   chartVersion: "6.53.0"
                   valuesFile: environments/dev/monitoring/loki-values.yaml
                 - component: tempo
-                  chartRepo: https://grafana.github.io/helm-charts
+                  chartRepo: https://grafana-community.github.io/helm-charts
                   chartName: tempo
                   chartVersion: "1.24.4"
                   valuesFile: environments/dev/monitoring/tempo-values.yaml
