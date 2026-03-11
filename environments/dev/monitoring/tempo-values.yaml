@@ -1,5 +1,12 @@
 # Tempo dev-kind values
+serviceAccount:
+  automountServiceAccountToken: false
+
 tempo:
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
   storage:
     trace:
       backend: local

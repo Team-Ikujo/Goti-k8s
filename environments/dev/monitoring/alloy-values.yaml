@@ -226,6 +226,12 @@ alloy:
         }
       }
 
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+    readOnlyRootFilesystem: true
+
   resources:
     requests:
       cpu: 100m
@@ -233,3 +239,6 @@ alloy:
     limits:
       cpu: 500m
       memory: 640Mi
+
+serviceAccount:
+  automountServiceAccountToken: false
