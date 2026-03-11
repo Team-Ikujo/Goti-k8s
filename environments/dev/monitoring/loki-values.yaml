@@ -30,7 +30,7 @@ loki:
           priority: 2
           period: 336h    # 14d (dev) — prod: 17520h (2년, 개인정보보호법)
     compactor:
-      working_directory: /loki/compactor
+      working_directory: /var/loki/compactor
       compaction_interval: 10m
       retention_enabled: true
       delete_request_store: filesystem
@@ -38,8 +38,8 @@ loki:
       storage:
         type: local
         local:
-          directory: /loki/rules
-      rule_path: /loki/rules-temp
+          directory: /var/loki/rules
+      rule_path: /var/loki/rules-temp
       alertmanager_url: http://kube-prometheus-stack-alertmanager.monitoring.svc:9093
       ring:
         kvstore:
@@ -64,7 +64,7 @@ singleBinary:
         name: loki-alert-rules
   extraVolumeMounts:
     - name: loki-rules
-      mountPath: /loki/rules/fake
+      mountPath: /var/loki/rules/fake
       readOnly: true
 
 gateway:

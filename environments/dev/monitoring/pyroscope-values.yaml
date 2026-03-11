@@ -1,7 +1,13 @@
 # Pyroscope dev-kind values
 pyroscope:
-  extraArgs:
-    storage.retention-period: "3d"
+  structuredConfig:
+    storage:
+      backend: filesystem
+      filesystem:
+        dir: /data
+    compactor:
+      blocks_retention:
+        period: 3d
   resources:
     requests:
       cpu: 100m
