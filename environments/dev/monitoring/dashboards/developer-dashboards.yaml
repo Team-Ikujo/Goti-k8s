@@ -250,7 +250,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[5m])) by (http_route))",
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[$interval])) by (http_route))",
               "legendFormat": "{{http_route}}",
               "instant": true
             }
@@ -271,7 +271,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"4..\"}[5m])) by (http_route))",
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"4..\"}[$interval])) by (http_route))",
               "legendFormat": "{{http_route}}",
               "instant": true
             }
@@ -293,7 +293,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[5m])) by (http_route) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[5m])) by (http_route) > 0) * 100)",
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[$interval])) by (http_route) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[$interval])) by (http_route) > 0) * 100)",
               "format": "table",
               "instant": true
             }
@@ -356,17 +356,17 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[$interval])) by (le))",
               "legendFormat": "p50",
               "exemplar": true
             },
             {
-              "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[$interval])) by (le))",
               "legendFormat": "p95",
               "exemplar": true
             },
             {
-              "expr": "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[$interval])) by (le))",
               "legendFormat": "p99",
               "exemplar": true
             }
@@ -386,7 +386,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "topk(10, histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[5m])) by (le, http_route)))",
+              "expr": "topk(10, histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{job=\"$service_name\", http_route=~\"$http_route\"}[$interval])) by (le, http_route)))",
               "format": "table",
               "instant": true
             }
@@ -433,7 +433,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_sum{job=\"$service_name\"}[5m])) by (http_request_method, http_route) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[5m])) by (http_request_method, http_route) > 0))",
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_sum{job=\"$service_name\"}[$interval])) by (http_request_method, http_route) / (sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\"}[$interval])) by (http_request_method, http_route) > 0))",
               "format": "table",
               "instant": true
             }
@@ -638,7 +638,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(jvm_gc_duration_seconds_sum{job=\"$service_name\"}[5m]) / (rate(jvm_gc_duration_seconds_count{job=\"$service_name\"}[5m]) > 0)",
+              "expr": "rate(jvm_gc_duration_seconds_sum{job=\"$service_name\"}[$interval]) / (rate(jvm_gc_duration_seconds_count{job=\"$service_name\"}[$interval]) > 0)",
               "legendFormat": "{{jvm_gc_name}}"
             }
           ],
@@ -654,7 +654,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(jvm_gc_duration_seconds_count{job=\"$service_name\"}[5m])",
+              "expr": "rate(jvm_gc_duration_seconds_count{job=\"$service_name\"}[$interval])",
               "legendFormat": "{{jvm_gc_name}}"
             }
           ],
@@ -670,7 +670,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(jvm_gc_duration_seconds_sum{job=\"$service_name\"}[5m])",
+              "expr": "rate(jvm_gc_duration_seconds_sum{job=\"$service_name\"}[$interval])",
               "legendFormat": "{{jvm_gc_name}}"
             }
           ],
@@ -687,11 +687,11 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(jvm_gc_duration_seconds_bucket{job=\"$service_name\"}[5m])) by (le, jvm_gc_name))",
+              "expr": "histogram_quantile(0.95, sum(rate(jvm_gc_duration_seconds_bucket{job=\"$service_name\"}[$interval])) by (le, jvm_gc_name))",
               "legendFormat": "p95 {{jvm_gc_name}}"
             },
             {
-              "expr": "histogram_quantile(0.99, sum(rate(jvm_gc_duration_seconds_bucket{job=\"$service_name\"}[5m])) by (le, jvm_gc_name))",
+              "expr": "histogram_quantile(0.99, sum(rate(jvm_gc_duration_seconds_bucket{job=\"$service_name\"}[$interval])) by (le, jvm_gc_name))",
               "legendFormat": "p99 {{jvm_gc_name}}"
             }
           ],
@@ -826,7 +826,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(jvm_cpu_time_seconds_total{job=\"$service_name\"}[5m])",
+              "expr": "rate(jvm_cpu_time_seconds_total{job=\"$service_name\"}[$interval])",
               "legendFormat": "CPU Time Rate"
             }
           ],
@@ -939,11 +939,11 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "rate(jvm_class_loaded_total{job=\"$service_name\"}[5m])",
+              "expr": "rate(jvm_class_loaded_total{job=\"$service_name\"}[$interval])",
               "legendFormat": "Loaded/s"
             },
             {
-              "expr": "rate(jvm_class_unloaded_total{job=\"$service_name\"}[5m])",
+              "expr": "rate(jvm_class_unloaded_total{job=\"$service_name\"}[$interval])",
               "legendFormat": "Unloaded/s"
             }
           ],
@@ -1009,11 +1009,11 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(db_client_connections_wait_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.95, sum(rate(db_client_connections_wait_time_milliseconds_bucket{job=\"$service_name\"}[$interval])) by (le))",
               "legendFormat": "p95 Acquire"
             },
             {
-              "expr": "histogram_quantile(0.99, sum(rate(db_client_connections_wait_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.99, sum(rate(db_client_connections_wait_time_milliseconds_bucket{job=\"$service_name\"}[$interval])) by (le))",
               "legendFormat": "p99 Acquire"
             }
           ],
@@ -1030,11 +1030,11 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(db_client_connections_use_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.95, sum(rate(db_client_connections_use_time_milliseconds_bucket{job=\"$service_name\"}[$interval])) by (le))",
               "legendFormat": "p95 Usage"
             },
             {
-              "expr": "histogram_quantile(0.99, sum(rate(db_client_connections_use_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.99, sum(rate(db_client_connections_use_time_milliseconds_bucket{job=\"$service_name\"}[$interval])) by (le))",
               "legendFormat": "p99 Usage"
             }
           ],
@@ -1051,11 +1051,11 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(db_client_connections_create_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.95, sum(rate(db_client_connections_create_time_milliseconds_bucket{job=\"$service_name\"}[$interval])) by (le))",
               "legendFormat": "p95 Create"
             },
             {
-              "expr": "histogram_quantile(0.99, sum(rate(db_client_connections_create_time_milliseconds_bucket{job=\"$service_name\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.99, sum(rate(db_client_connections_create_time_milliseconds_bucket{job=\"$service_name\"}[$interval])) by (le))",
               "legendFormat": "p99 Create"
             }
           ],
@@ -1195,7 +1195,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket[5m])) by (le, service))",
+              "expr": "histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket[$interval])) by (le, service))",
               "legendFormat": "{{service}}",
               "exemplar": true
             }
@@ -1215,7 +1215,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "sum(rate(traces_spanmetrics_calls_total[5m])) by (service)",
+              "expr": "sum(rate(traces_spanmetrics_calls_total[$interval])) by (service)",
               "legendFormat": "{{service}}"
             }
           ],
@@ -1231,7 +1231,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "sum(rate(traces_spanmetrics_calls_total{status_code=\"STATUS_CODE_ERROR\"}[5m])) by (service) / (sum(rate(traces_spanmetrics_calls_total[5m])) by (service) > 0)",
+              "expr": "sum(rate(traces_spanmetrics_calls_total{status_code=\"STATUS_CODE_ERROR\"}[$interval])) by (service) / (sum(rate(traces_spanmetrics_calls_total[$interval])) by (service) > 0)",
               "legendFormat": "{{service}}"
             }
           ],
@@ -1254,7 +1254,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "sum(rate(traces_spanmetrics_latency_bucket[5m])) by (le)",
+              "expr": "sum(rate(traces_spanmetrics_latency_bucket[$interval])) by (le)",
               "format": "heatmap",
               "legendFormat": "{{le}}"
             }
@@ -1519,7 +1519,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "topk(1, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[5m])) by (http_response_status_code))",
+              "expr": "topk(1, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[$interval])) by (http_response_status_code))",
               "legendFormat": "{{http_response_status_code}}"
             }
           ],
@@ -1581,7 +1581,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[5m])) by (http_request_method, http_route))",
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"5..\"}[$interval])) by (http_request_method, http_route))",
               "legendFormat": "{{http_request_method}} {{http_route}}",
               "instant": true
             }
@@ -1602,7 +1602,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "targets": [
             {
-              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"4..\"}[5m])) by (http_request_method, http_route))",
+              "expr": "topk(10, sum(rate(http_server_request_duration_seconds_count{job=\"$service_name\", http_response_status_code=~\"4..\"}[$interval])) by (http_request_method, http_route))",
               "legendFormat": "{{http_request_method}} {{http_route}}",
               "instant": true
             }
