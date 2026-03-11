@@ -1,5 +1,13 @@
 # Pyroscope dev-kind values
+serviceAccount:
+  automountServiceAccountToken: false
+
 pyroscope:
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+    readOnlyRootFilesystem: true
   structuredConfig:
     storage:
       backend: filesystem
