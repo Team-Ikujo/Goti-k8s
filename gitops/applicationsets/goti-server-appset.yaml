@@ -25,16 +25,13 @@ spec:
         argocd-image-updater.argoproj.io/server.helm.image-tag: image.tag
     spec:
       project: goti
-      sources:
-        - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-          targetRevision: main
-          path: "charts/goti-server"
-          helm:
-            valueFiles:
-              - "$values/{{valuesFile}}"
-        - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-          targetRevision: main
-          ref: values
+      source:
+        repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+        targetRevision: main
+        path: "charts/goti-server"
+        helm:
+          valueFiles:
+            - "../../{{valuesFile}}"
       destination:
         server: "https://kubernetes.default.svc"
         namespace: "{{namespace}}"
