@@ -41,7 +41,7 @@ env:
 
 envFrom:
   - secretRef:
-      name: goti-server-secrets    # ExternalSecret이 SSM에서 자동 생성
+      name: goti-server-dev-secrets    # ExternalSecret이 SSM에서 자동 생성 (release명에 -dev- 포함)
 
 externalSecret:
   enabled: true
