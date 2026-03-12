@@ -8,11 +8,13 @@ metadata:
   namespace: monitoring
   labels:
     app.kubernetes.io/part-of: goti-monitoring
-    app.kubernetes.io/managed-by: goti-monitoring-ssot
 spec:
   groups:
     - name: goti-server
       rules:
+        # 메트릭 수신 중단 (OTLP push 기반)
+        # JVM 메트릭(항상 push)으로 서버 생존 여부를 판단한다
+        # dev 환경: 배포/재시작 고려하여 for 5m으로 설정
         - alert: MetricsNotReceived
           expr: |
             absent_over_time(
@@ -24,6 +26,9 @@ spec:
           annotations:
             summary: "Goti Server 메트릭 수신 중단"
             description: "15분 이상 goti-server로부터 JVM 메트릭이 수신되지 않고 있습니다."
+  
+        # 높은 에러율 (5xx > 5%)
+        # 트래픽이 있을 때만 평가 (분모 > 0 보장)
         - alert: HighErrorRate
           expr: |
             (
@@ -37,6 +42,8 @@ spec:
           annotations:
             summary: "높은 에러율 감지"
             description: "5xx 에러율이 {{ $value | humanizePercentage }} 입니다 (임계값: 5%)."
+  
+        # 느린 응답시간 (p95 > 2s)
         - alert: SlowResponseTime
           expr: |
             histogram_quantile(0.95,
@@ -49,6 +56,9 @@ spec:
           annotations:
             summary: "느린 API 응답시간"
             description: "p95 응답시간이 {{ $value | humanizeDuration }} 입니다 (임계값: 2s)."
+  
+        # JVM Heap 사용률 > 85%
+        # jvm_memory_limit_bytes는 -Xmx 설정 시에만 존재
         - alert: HighHeapUsage
           expr: |
             (
@@ -62,6 +72,8 @@ spec:
           annotations:
             summary: "JVM Heap 사용률 높음"
             description: "Heap 사용률이 {{ $value | humanizePercentage }} 입니다 (임계값: 85%)."
+  
+        # JVM Heap 사용률 > 95%
         - alert: CriticalHeapUsage
           expr: |
             (

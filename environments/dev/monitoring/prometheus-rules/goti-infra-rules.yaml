@@ -8,11 +8,11 @@ metadata:
   namespace: monitoring
   labels:
     app.kubernetes.io/part-of: goti-monitoring
-    app.kubernetes.io/managed-by: goti-monitoring-ssot
 spec:
   groups:
     - name: infrastructure
       rules:
+        # Prometheus 스크랩 실패
         - alert: PrometheusTargetMissing
           expr: up == 0
           for: 3m
@@ -21,6 +21,8 @@ spec:
           annotations:
             summary: "Prometheus 타겟 응답 없음"
             description: "{{ $labels.job }} / {{ $labels.instance }}이(가) 3분 이상 다운입니다."
+  
+        # Prometheus TSDB 리로드 실패
         - alert: PrometheusConfigReloadFailed
           expr: prometheus_config_last_reload_successful == 0
           for: 1m
@@ -29,6 +31,8 @@ spec:
           annotations:
             summary: "Prometheus 설정 리로드 실패"
             description: "Prometheus 설정 파일 리로드에 실패했습니다."
+  
+        # Prometheus TSDB 용량 예측 (24시간 내 10GB 초과 예상)
         - alert: PrometheusTSDBNearFull
           expr: predict_linear(prometheus_tsdb_storage_blocks_bytes[6h], 24 * 3600) > 10e9
           for: 15m
@@ -37,6 +41,8 @@ spec:
           annotations:
             summary: "Prometheus TSDB 용량 부족 예상"
             description: "현재 증가 추세로 24시간 내 TSDB가 10GB를 초과할 것으로 예상됩니다. 24시간 후 예측 크기: {{ $value | humanize1024 }}B"
+  
+        # Alloy exporter 전송 실패 (지속적 실패만 감지)
         - alert: AlloyExporterFailed
           expr: |
             rate(otelcol_exporter_send_failed_metric_points_total[5m]) > 0.1
@@ -48,6 +54,8 @@ spec:
           annotations:
             summary: "Alloy exporter 전송 실패 발생"
             description: "Alloy에서 메트릭/로그/트레이스 전송이 5분 이상 실패하고 있습니다. 백엔드(Prometheus/Loki/Tempo) 상태를 확인하세요."
+  
+        # Alloy memory pressure (memory_limiter에 의한 데이터 거부)
         - alert: AlloyMemoryPressure
           expr: |
             rate(otelcol_processor_refused_metric_points_total[5m]) > 0
@@ -59,6 +67,9 @@ spec:
           annotations:
             summary: "Alloy 메모리 압력 — 데이터 거부 발생"
             description: "memory_limiter에 의해 데이터가 거부되고 있습니다. Alloy 컨테이너 메모리 증설 또는 트래픽 조절이 필요합니다."
+  
+        # Loki 로그 수집 중단
+        # dev 환경: 서버 미가동 시 로그 없을 수 있으므로 for 10m으로 완화
         - alert: LokiIngestionStopped
           expr: |
             rate(loki_distributor_lines_received_total[10m]) < 0.001
