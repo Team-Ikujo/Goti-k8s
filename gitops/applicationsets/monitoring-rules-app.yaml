@@ -1,17 +1,19 @@
-# Grafana 대시보드 ConfigMap 배포
-# EC2 Goti-monitoring과 동일한 대시보드를 Kind Grafana에 sidecar로 자동 주입
-# ConfigMap label: grafana_dashboard=1 → Grafana sidecar가 감지 후 대시보드 등록
+# PrometheusRule CRD 배포
+# Goti-monitoring SSOT에서 생성된 PrometheusRule을 monitoring namespace에 배포
+# Prometheus Operator가 자동 발견하여 Prometheus에 rule 등록
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: monitoring-dashboards
+  name: monitoring-rules
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"  # kps(CRD 제공) 이후 sync
 spec:
   project: monitoring
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main  # dev only: prod는 semver tag 사용
-      path: "environments/dev/monitoring/dashboards"
+      path: "environments/dev/monitoring/prometheus-rules"
   destination:
     server: "https://kubernetes.default.svc"
     namespace: monitoring

@@ -4,6 +4,9 @@ deploymentMode: SingleBinary
 serviceAccount:
   automountServiceAccountToken: false
 
+# container securityContext — Loki SingleBinary chart 기본 securityContext 사용
+# readOnlyRootFilesystem: Loki는 /var/loki에 WAL/compactor 쓰기 필요 → false 유지 (chart 기본)
+
 loki:
   auth_enabled: false
   commonConfig:
