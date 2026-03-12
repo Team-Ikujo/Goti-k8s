@@ -77,6 +77,10 @@ write:
 backend:
   replicas: 0
 monitoring:
+  serviceMonitor:
+    enabled: true
+    metricsInstance:
+      enabled: false
   selfMonitoring:
     enabled: false
   lokiCanary:

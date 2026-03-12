@@ -175,6 +175,16 @@ grafana:
           datasourceUid: loki
         nodeGraph:
           enabled: true
+    - name: Alertmanager
+      type: alertmanager
+      uid: alertmanager
+      url: http://kube-prometheus-stack-dev-alertmanager.monitoring.svc:9093
+      access: proxy
+      isDefault: false
+      jsonData:
+        implementation: prometheus
+        handleGrafanaManagedAlerts: false
+
 nodeExporter:
   enabled: true
 

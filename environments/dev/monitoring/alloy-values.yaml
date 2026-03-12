@@ -261,5 +261,8 @@ controller:
       - name: tmp
         emptyDir: {}
 
+serviceMonitor:
+  enabled: true
+
 serviceAccount:
   automountServiceAccountToken: false
