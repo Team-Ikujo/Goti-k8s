@@ -10,7 +10,7 @@ spec:
   project: monitoring
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-      targetRevision: main
+      targetRevision: main  # dev only: prod는 semver tag 사용
       path: "environments/dev/monitoring/dashboards"
   destination:
     server: "https://kubernetes.default.svc"

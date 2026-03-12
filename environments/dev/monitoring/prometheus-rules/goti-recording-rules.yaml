@@ -8,6 +8,7 @@ metadata:
   namespace: monitoring
   labels:
     app.kubernetes.io/part-of: goti-monitoring
+    app.kubernetes.io/managed-by: goti-monitoring-ssot
 spec:
   groups:
     - name: goti-sli-recording-short

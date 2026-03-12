@@ -38,6 +38,10 @@ prometheus:
             action: keep
             regex: istiod;http-monitoring
 
+  # container securityContext — upstream chart 기본값에 위임
+  # kps는 prometheus/alertmanager/grafana 각각 chart 레벨에서 관리
+  # runAsNonRoot/fsGroup은 pod securityContext로 chart가 자동 설정
+
 alertmanager:
   enabled: true
   serviceAccount:

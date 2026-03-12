@@ -3,7 +3,7 @@ serviceAccount:
   automountServiceAccountToken: false
 
 # container-level securityContext (최상위 키)
-# readOnlyRootFilesystem: chart 공식 주석 "fails if true, do not enable"
+# readOnlyRootFilesystem: tempo chart v1.x "fails if true, do not enable". TODO: 업그레이드 시 재검토
 securityContext:
   allowPrivilegeEscalation: false
   capabilities:
