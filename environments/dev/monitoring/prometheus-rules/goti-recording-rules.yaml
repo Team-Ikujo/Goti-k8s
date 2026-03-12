@@ -8,12 +8,18 @@ metadata:
   namespace: monitoring
   labels:
     app.kubernetes.io/part-of: goti-monitoring
-    app.kubernetes.io/managed-by: goti-monitoring-ssot
 spec:
   groups:
+    # =========================================================================
+    # 단기 윈도우 SLI (30s 간격 evaluation)
+    # =========================================================================
     - name: goti-sli-recording-short
       interval: 30s
       rules:
+        # NOTE: 현재 goti-server 단일 서비스 기준. MSA 전환 시 by (service_name) 그루핑 추가 필요.
+        # NOTE: 5xx가 없으면 sum(rate({5..})) 가 empty를 반환하므로 or on() vector(0) 필수.
+        #       on() 명시: MSA 전환 시 by 그루핑 추가해도 레이블 매칭 안전.
+  
         - record: goti:sli:availability:5m
           expr: |
             1 - (
@@ -21,11 +27,22 @@ spec:
               /
               (sum(rate(http_server_request_duration_seconds_count{job="goti/goti-server"}[5m])) > 0)
             )
+  
+        # -----------------------------------------------------------------------
+        # 지연시간 SLI: p99 응답시간
+        # -----------------------------------------------------------------------
         - record: goti:sli:latency_p99:5m
           expr: |
             histogram_quantile(0.99,
               sum(rate(http_server_request_duration_seconds_bucket{job="goti/goti-server"}[5m])) by (le)
             )
+  
+        # -----------------------------------------------------------------------
+        # Apdex Score
+        # threshold: 0.5s (satisfied), 2.5s (tolerating)
+        # OTel 기본 히스토그램 버킷에 le="2.0" 없음 → le="2.5" 사용
+        # Apdex = (satisfied + tolerating/2) / total
+        # -----------------------------------------------------------------------
         - record: goti:apdex:score
           expr: |
             (
@@ -39,6 +56,11 @@ spec:
             )
             /
             (sum(rate(http_server_request_duration_seconds_count{job="goti/goti-server"}[5m])) > 0)
+  
+    # =========================================================================
+    # 장기 윈도우 SLI (5m 간격 evaluation)
+    # NOTE: 아래 4개 availability rule은 동일 구조, 윈도우만 상이. 수정 시 모두 동기화 필요.
+    # =========================================================================
     - name: goti-sli-recording-long
       interval: 5m
       rules:
@@ -49,6 +71,7 @@ spec:
               /
               (sum(rate(http_server_request_duration_seconds_count{job="goti/goti-server"}[1h])) > 0)
             )
+  
         - record: goti:sli:availability:6h
           expr: |
             1 - (
@@ -56,6 +79,7 @@ spec:
               /
               (sum(rate(http_server_request_duration_seconds_count{job="goti/goti-server"}[6h])) > 0)
             )
+  
         - record: goti:sli:availability:24h
           expr: |
             1 - (
@@ -63,6 +87,7 @@ spec:
               /
               (sum(rate(http_server_request_duration_seconds_count{job="goti/goti-server"}[24h])) > 0)
             )
+  
         - record: goti:sli:availability:3d
           expr: |
             1 - (
@@ -70,6 +95,12 @@ spec:
               /
               (sum(rate(http_server_request_duration_seconds_count{job="goti/goti-server"}[3d])) > 0)
             )
+  
+        # -----------------------------------------------------------------------
+        # 에러 버짓 순간 소진율 (24h 윈도우 기준)
+        # SLO 99.9% 대비 24시간 에러율의 소진 비율
+        # remaining = 1 - (실제 에러율 / 허용 에러율)
+        # -----------------------------------------------------------------------
         - record: goti:error_budget:remaining
           expr: |
             1 - (
