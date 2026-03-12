@@ -1,7 +1,7 @@
 # Loki dev-kind values — SingleBinary mode
 deploymentMode: SingleBinary
 serviceAccount:
-  automountServiceAccountToken: false
+  automountServiceAccountToken: true
 # container securityContext — Loki SingleBinary chart 기본 securityContext 사용
 # readOnlyRootFilesystem: Loki는 /var/loki에 WAL/compactor 쓰기 필요 → false 유지 (chart 기본)
 loki:
@@ -43,7 +43,7 @@ loki:
         local:
           directory: /var/loki/rules
       rule_path: /var/loki/rules-temp
-      alertmanager_url: http://kube-prometheus-stack-alertmanager.monitoring.svc:9093
+      alertmanager_url: http://kube-prometheus-stack-dev-alertmanager.monitoring.svc:9093
       ring:
         kvstore:
           store: inmemory

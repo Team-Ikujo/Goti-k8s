@@ -32,11 +32,6 @@ spec:
                   chartName: alloy
                   chartVersion: "1.6.1"
                   valuesFile: environments/dev/monitoring/alloy-values.yaml
-                - component: pyroscope
-                  chartRepo: https://grafana.github.io/helm-charts  # NOTE: Pyroscope는 grafana.github.io 유지 (community 미이관)
-                  chartName: pyroscope
-                  chartVersion: "1.18.1"
-                  valuesFile: environments/dev/monitoring/pyroscope-values.yaml
   template:
     metadata:
       name: "{{component}}-{{env}}"
