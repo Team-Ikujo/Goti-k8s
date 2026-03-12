@@ -121,7 +121,7 @@ grafana:
     - name: Loki
       type: loki
       uid: loki
-      url: http://loki.monitoring.svc:3100
+      url: http://loki-dev.monitoring.svc:3100
       access: proxy
       isDefault: false
       jsonData:
@@ -146,7 +146,7 @@ grafana:
     - name: Tempo
       type: tempo
       uid: tempo
-      url: http://tempo.monitoring.svc:3200
+      url: http://tempo-dev.monitoring.svc:3200
       access: proxy
       isDefault: false
       jsonData:
@@ -169,26 +169,12 @@ grafana:
               query: "sum(rate(http_server_request_duration_seconds_count{job=\"${__tags}\"}[5m]))"
             - name: "Error Rate"
               query: "sum(rate(http_server_request_duration_seconds_count{job=\"${__tags}\", http_response_status_code=~\"5..\"}[5m])) / sum(rate(http_server_request_duration_seconds_count{job=\"${__tags}\"}[5m]))"
-        tracesToProfiles:
-          datasourceUid: pyroscope
-          profileTypeId: "process_cpu:cpu:nanoseconds:cpu:nanoseconds"
-          tags:
-            - key: "service.name"
-              value: "service_name"
-          customQuery: false
         serviceMap:
           datasourceUid: prometheus
         lokiSearch:
           datasourceUid: loki
         nodeGraph:
           enabled: true
-    - name: Pyroscope
-      type: grafana-pyroscope-datasource
-      uid: pyroscope
-      access: proxy
-      url: http://pyroscope.monitoring.svc:4040
-      editable: false
-
 nodeExporter:
   enabled: true
 

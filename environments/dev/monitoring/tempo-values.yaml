@@ -29,7 +29,7 @@ tempo:
     config:
       storage:
         remote_write:
-          - url: "http://kube-prometheus-stack-prometheus.monitoring.svc:9090/api/v1/write"
+          - url: "http://kube-prometheus-stack-dev-prometheus.monitoring.svc:9090/api/v1/write"
             send_exemplars: true
     processors:
       - service-graphs
