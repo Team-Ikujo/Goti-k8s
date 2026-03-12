@@ -51,3 +51,4 @@ externalSecret:
     kind: ClusterSecretStore
   remoteRef:
     path: /dev/server
+    overridePath: /dev/kind/server
