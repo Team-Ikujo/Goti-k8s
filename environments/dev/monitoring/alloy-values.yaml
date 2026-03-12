@@ -200,7 +200,7 @@ alloy:
 
       prometheus.remote_write "default" {
         endpoint {
-          url = "http://kube-prometheus-stack-prometheus.monitoring.svc:9090/api/v1/write"
+          url = "http://kube-prometheus-stack-dev-prometheus.monitoring.svc:9090/api/v1/write"
           send_exemplars = true
         }
       }
@@ -212,14 +212,14 @@ alloy:
 
       loki.write "default" {
         endpoint {
-          url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+          url = "http://loki-dev.monitoring.svc:3100/loki/api/v1/push"
         }
       }
 
       // 6c. Tempo Exporter (OTLP gRPC)
       otelcol.exporter.otlp "tempo" {
         client {
-          endpoint = "tempo.monitoring.svc:4317"
+          endpoint = "tempo-dev.monitoring.svc:4317"
           tls {
             insecure = true  // dev 환경 전용
           }
@@ -239,6 +239,24 @@ alloy:
     limits:
       cpu: 500m
       memory: 640Mi
+
+  extraVolumes:
+    - name: tmp
+      emptyDir: {}
+  extraVolumeMounts:
+    - name: tmp
+      mountPath: /tmp
+
+service:
+  additionalPorts:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
 
 serviceAccount:
   automountServiceAccountToken: false
