@@ -63,7 +63,7 @@ singleBinary:
   extraVolumes:
     - name: loki-rules
       configMap:
-        name: loki-alert-rules
+        name: loki-alerting-rules
   extraVolumeMounts:
     - name: loki-rules
       mountPath: /var/loki/rules/fake
