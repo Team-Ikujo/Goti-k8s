@@ -240,15 +240,12 @@ alloy:
       cpu: 500m
       memory: 640Mi
 
-  extraVolumes:
-    - name: tmp
-      emptyDir: {}
-  extraVolumeMounts:
-    - name: tmp
-      mountPath: /tmp
+  mounts:
+    extra:
+      - name: tmp
+        mountPath: /tmp
 
-service:
-  additionalPorts:
+  extraPorts:
     - name: otlp-grpc
       port: 4317
       targetPort: 4317
@@ -257,6 +254,12 @@ service:
       port: 4318
       targetPort: 4318
       protocol: TCP
+
+controller:
+  volumes:
+    extra:
+      - name: tmp
+        emptyDir: {}
 
 serviceAccount:
   automountServiceAccountToken: false
