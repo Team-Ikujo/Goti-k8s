@@ -105,7 +105,7 @@ extraObjects:
                   team: backend
                 annotations:
                   summary: "결제 에러 급증 감지"
-                  description: "5분간 결제 에러 로그 {{ $value }}건 발생 (임계값: 10건)"
+                  description: '5분간 결제 에러 로그 {{ "{{" }} $value {{ "}}" }}건 발생 (임계값: 10건)'
                   runbook: "TODO: https://wiki.goti.io/runbook/payment-error-spike"
 
           - name: auth-log-alerts
@@ -120,7 +120,7 @@ extraObjects:
                   team: security
                 annotations:
                   summary: "인증 실패 급증 감지"
-                  description: "5분간 인증 실패 {{ $value }}건 발생 (임계값: 20건). 무차별 대입 공격 가능성 확인 필요"
+                  description: '5분간 인증 실패 {{ "{{" }} $value {{ "}}" }}건 발생 (임계값: 20건). 무차별 대입 공격 가능성 확인 필요'
                   runbook: "TODO: https://wiki.goti.io/runbook/auth-failure-spike"
 
           - name: pii-detection-alerts
