@@ -6,7 +6,6 @@ metadata:
 spec:
   description: "모니터링 스택 프로젝트"
   sourceRepos:
-    - "https://github.com/Team-Ikujo/Goti-k8s.git"
     - "https://github.com/Team-Ikujo/Goti-monitoring.git"
     - "https://prometheus-community.github.io/helm-charts"
     - "https://grafana.github.io/helm-charts"
