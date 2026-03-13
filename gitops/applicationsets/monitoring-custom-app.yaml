@@ -1,19 +1,22 @@
-# PrometheusRule CRD 배포
-# Goti-monitoring SSOT에서 생성된 PrometheusRule을 monitoring namespace에 배포
-# Prometheus Operator가 자동 발견하여 Prometheus에 rule 등록
+# Goti 커스텀 모니터링 리소스 (대시보드 + Prometheus Rules + Istio Gateway)
+# Source: Goti-monitoring repo의 Helm chart
+# 기존 monitoring-dashboards-app, monitoring-rules-app, monitoring-gateway-app을 통합
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: monitoring-rules
+  name: monitoring-custom
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "2"  # kps(CRD 제공) 이후 sync
 spec:
   project: monitoring
   sources:
-    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+    - repoURL: "https://github.com/Team-Ikujo/Goti-monitoring.git"
       targetRevision: main  # dev only: prod는 semver tag 사용
-      path: "environments/dev/monitoring/prometheus-rules"
+      path: "charts/goti-monitoring"
+      helm:
+        valueFiles:
+          - values-dev.yaml
   destination:
     server: "https://kubernetes.default.svc"
     namespace: monitoring
@@ -28,5 +31,5 @@ spec:
         factor: 2
         maxDuration: 3m
     syncOptions:
-      - CreateNamespace=false
+      - CreateNamespace=false  # monitoring namespace는 monitoring-appset(kps)이 생성
       - ServerSideApply=true
