@@ -6,6 +6,8 @@ kind: Application
 metadata:
   name: monitoring-custom
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"  # kps(CRD 제공) 이후 sync
 spec:
   project: monitoring
   sources:
@@ -29,5 +31,5 @@ spec:
         factor: 2
         maxDuration: 3m
     syncOptions:
-      - CreateNamespace=false
+      - CreateNamespace=false  # monitoring namespace는 monitoring-appset(kps)이 생성
       - ServerSideApply=true
