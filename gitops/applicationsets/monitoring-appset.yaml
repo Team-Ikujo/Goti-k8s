@@ -37,6 +37,11 @@ spec:
                   chartName: mimir-distributed
                   chartVersion: "6.0.5"
                   valuesFile: values-stacks/dev/mimir-values.yaml
+                - component: pyroscope
+                  chartRepo: https://grafana.github.io/helm-charts  # NOTE: Pyroscope는 grafana.github.io 유지
+                  chartName: pyroscope
+                  chartVersion: "1.18.1"
+                  valuesFile: values-stacks/dev/pyroscope-values.yaml
   template:
     metadata:
       name: "{{component}}-{{env}}"

@@ -38,3 +38,12 @@ spec:
       # log exporter
       - name: OTEL_LOGS_EXPORTER
         value: otlp
+      # Pyroscope — continuous profiling (4th pillar)
+      - name: PYROSCOPE_APPLICATION_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['app.kubernetes.io/name']
+      - name: PYROSCOPE_SERVER_ADDRESS
+        value: http://pyroscope-dev.monitoring.svc:4040
+      - name: PYROSCOPE_LABELS
+        value: service_namespace=goti,deployment_environment=dev
