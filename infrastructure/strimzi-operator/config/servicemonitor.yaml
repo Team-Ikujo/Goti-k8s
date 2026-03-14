@@ -1,27 +1,5 @@
-# Kafka 메트릭 수집 — Service + ServiceMonitor
-# Strimzi는 메트릭 포트(9404)를 기본 Service에 노출하지 않으므로
-# 메트릭 전용 headless Service를 생성하여 ServiceMonitor가 타겟할 수 있게 함
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kafka-metrics
-  namespace: kafka
-  labels:
-    strimzi.io/cluster: goti-kafka
-    strimzi.io/kind: Kafka
-    app.kubernetes.io/component: metrics
-spec:
-  clusterIP: None
-  selector:
-    strimzi.io/cluster: goti-kafka
-    strimzi.io/kind: Kafka
-  ports:
-    - name: tcp-prometheus
-      port: 9404
-      targetPort: 9404
-      protocol: TCP
----
+# Kafka JMX 메트릭 → Alloy 스크래핑
+# metrics-service.yaml의 headless Service를 통해 Pod의 JMX Exporter(9404) 수집
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
