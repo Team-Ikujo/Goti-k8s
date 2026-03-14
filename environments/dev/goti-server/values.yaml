@@ -6,13 +6,16 @@ image:
 imagePullSecrets:
   - name: ecr-creds
 
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+
 resources:
   requests:
     cpu: 100m
-    memory: 256Mi
+    memory: 384Mi
   limits:
     cpu: 500m
-    memory: 768Mi
+    memory: 1Gi
 
 gateway:
   enabled: true
