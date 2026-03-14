@@ -1,0 +1,22 @@
+# Kafka 메트릭 전용 headless Service
+# Strimzi는 메트릭 포트(9404)를 기본 Service에 노출하지 않으므로
+# ServiceMonitor 타겟용 별도 Service 생성
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-metrics
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: goti-kafka
+    strimzi.io/kind: Kafka
+    app.kubernetes.io/component: metrics
+spec:
+  clusterIP: None
+  selector:
+    strimzi.io/cluster: goti-kafka
+    strimzi.io/kind: Kafka
+  ports:
+    - name: tcp-prometheus
+      port: 9404
+      targetPort: 9404
+      protocol: TCP
