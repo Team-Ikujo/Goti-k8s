@@ -1,0 +1,22 @@
+# Instrumentation CR 등 OTel Operator 관련 K8s 리소스
+# external-secrets/config-application.yaml 패턴과 동일
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opentelemetry-config
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
+    targetRevision: main
+    path: infrastructure/opentelemetry-operator/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: goti
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=false

@@ -1,0 +1,40 @@
+# Instrumentation CR — Java auto-instrumentation 설정
+# goti namespace의 모든 Java 서비스에 적용
+# 사용법: Deployment annotation에 추가
+#   instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: goti-java
+  namespace: goti
+spec:
+  exporter:
+    endpoint: http://alloy-dev.monitoring.svc:4317
+  propagators:
+    - tracecontext
+    - baggage
+  sampler:
+    type: parentbased_always_on
+  java:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.25.0
+    env:
+      # service.name은 app.kubernetes.io/name label에서 자동 추출
+      - name: OTEL_SERVICE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['app.kubernetes.io/name']
+      # 공통 resource attributes
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: service.namespace=goti,deployment.environment=dev
+      # log_type MDC → OTel log attribute 매핑 (Logback MDC → OTel)
+      - name: OTEL_INSTRUMENTATION_LOG4J_APPENDER_ENABLED
+        value: "true"
+      # metric exporter — Alloy가 OTLP로 받아서 Mimir로 전송
+      - name: OTEL_METRICS_EXPORTER
+        value: otlp
+      # trace exporter
+      - name: OTEL_TRACES_EXPORTER
+        value: otlp
+      # log exporter
+      - name: OTEL_LOGS_EXPORTER
+        value: otlp
