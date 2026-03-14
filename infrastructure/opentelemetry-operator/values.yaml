@@ -1,0 +1,22 @@
+# OpenTelemetry Operator dev-kind values
+# auto-instrumentation 전용 — Collector는 Alloy가 담당
+manager:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# CRD 설치
+crds:
+  create: true
+
+# Collector는 사용하지 않음 (Alloy가 담당)
+# Operator는 Instrumentation CR 관리 + webhook injection만 수행
+
+# admission webhook — cert-manager가 인증서 관리
+admissionWebhooks:
+  certManager:
+    enabled: true
