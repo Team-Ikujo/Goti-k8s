@@ -1,0 +1,22 @@
+# Kafka JMX 메트릭 → Alloy 스크래핑
+# Strimzi JMX Prometheus Exporter (포트 9404)에서 메트릭 수집
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kafka-metrics
+  namespace: kafka
+  labels:
+    release: kube-prometheus-stack-dev    # Alloy serviceMonitorSelector 매칭
+    strimzi.io/cluster: goti-kafka
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/cluster: goti-kafka
+      strimzi.io/kind: Kafka
+  namespaceSelector:
+    matchNames:
+      - kafka
+  endpoints:
+    - port: tcp-prometheus
+      path: /metrics
+      interval: 30s
