@@ -26,6 +26,9 @@ spec:
       # 공통 resource attributes
       - name: OTEL_RESOURCE_ATTRIBUTES
         value: service.namespace=goti,deployment.environment=dev
+      # gRPC 프로토콜 명시 (Java agent 2.25.0 기본값이 http/protobuf로 변경됨)
+      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: grpc
       # log_type MDC → OTel log attribute 매핑 (Logback MDC → OTel)
       - name: OTEL_INSTRUMENTATION_LOG4J_APPENDER_ENABLED
         value: "true"
