@@ -1,0 +1,127 @@
+# KafkaTopic CRs — 도메인별 이벤트 토픽
+# 네이밍: {domain}.{event-type}.{version}
+# MSA 전환 시 서비스 간 비동기 이벤트 처리용
+---
+# === 티켓 도메인 ===
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: ticket.order-created.v1
+  labels:
+    strimzi.io/cluster: goti-kafka
+    domain: ticket
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 604800000      # 7일
+    cleanup.policy: delete
+    min.insync.replicas: 2
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: ticket.payment-completed.v1
+  labels:
+    strimzi.io/cluster: goti-kafka
+    domain: ticket
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 604800000
+    cleanup.policy: delete
+    min.insync.replicas: 2
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: ticket.seat-reserved.v1
+  labels:
+    strimzi.io/cluster: goti-kafka
+    domain: ticket
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 604800000
+    cleanup.policy: delete
+    min.insync.replicas: 2
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: ticket.issued.v1
+  labels:
+    strimzi.io/cluster: goti-kafka
+    domain: ticket
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 2592000000     # 30일
+    cleanup.policy: delete
+    min.insync.replicas: 2
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: ticket.cancelled.v1
+  labels:
+    strimzi.io/cluster: goti-kafka
+    domain: ticket
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+    min.insync.replicas: 2
+---
+# === 사용자 도메인 ===
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: user.registered.v1
+  labels:
+    strimzi.io/cluster: goti-kafka
+    domain: user
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: delete
+    min.insync.replicas: 2
+---
+# === 알림 도메인 ===
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: notification.email-requested.v1
+  labels:
+    strimzi.io/cluster: goti-kafka
+    domain: notification
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 259200000      # 3일
+    cleanup.policy: delete
+    min.insync.replicas: 2
+---
+# === 양도 도메인 ===
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: resale.listed.v1
+  labels:
+    strimzi.io/cluster: goti-kafka
+    domain: resale
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 604800000
+    cleanup.policy: delete
+    min.insync.replicas: 2

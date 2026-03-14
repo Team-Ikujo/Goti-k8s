@@ -1,0 +1,27 @@
+# Strimzi Kafka Operator values
+# Chart: strimzi-kafka-operator 0.51.x
+# Docs: https://strimzi.io/docs/operators/latest/deploying
+
+# Operator가 감시할 네임스페이스 (빈 값 = 모든 네임스페이스)
+watchNamespaces: []
+
+# Operator 리소스 제한
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Kafka 브로커 기본 이미지 (Strimzi 관리, 보통 변경 불필요)
+# kafka:
+#   image:
+#     registry: quay.io
+
+# Feature Gates (Strimzi 0.51 기준)
+# KRaft 모드와 NodePool이 기본 활성화되어 별도 설정 불필요
+featureGates: ""
+
+# 로그 레벨
+logLevel: INFO

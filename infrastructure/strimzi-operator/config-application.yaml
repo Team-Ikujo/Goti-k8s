@@ -1,0 +1,30 @@
+# Kafka 클러스터 + 토픽 CRs — Strimzi Operator CRD 의존
+# external-secrets/config-application.yaml 패턴과 동일
+# retry backoff로 CRD 미준비 시 자동 수렴 (최대 10회, 30s~5m)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kafka-cluster
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
+    targetRevision: main
+    path: infrastructure/strimzi-operator/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kafka
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true
+    retry:
+      limit: 10
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
