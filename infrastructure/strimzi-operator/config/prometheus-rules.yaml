@@ -1,0 +1,56 @@
+# Kafka 알림 규칙
+# 현재: Mimir ruler 연동 대기 (Alloy mimir.rules.kubernetes 버그)
+# 향후: Alloy 업데이트 후 Mimir ruler가 자동 수집
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kafka-alerts
+  namespace: kafka
+  labels:
+    release: kube-prometheus-stack-dev
+spec:
+  groups:
+    - name: kafka_broker
+      rules:
+        - alert: KafkaBrokerNotReady
+          expr: |
+            kube_pod_status_ready{namespace="kafka", pod=~"goti-kafka-combined-.*", condition="true"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Kafka broker {{ $labels.pod }} not ready"
+            description: "Kafka broker {{ $labels.pod }}가 5분 이상 Ready 상태가 아닙니다."
+
+        - alert: KafkaUnderReplicatedPartitions
+          expr: |
+            kafka_server_replicamanager_underreplicatedpartitions > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Under-replicated partitions detected"
+            description: "{{ $labels.pod }}에서 {{ $value }}개 파티션이 복제 부족 상태입니다."
+
+        - alert: KafkaOfflinePartitions
+          expr: |
+            kafka_controller_kafkacontroller_offlinepartitionscount > 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Offline partitions detected"
+            description: "{{ $value }}개 파티션이 오프라인입니다. 즉시 확인이 필요합니다."
+
+    - name: kafka_consumer
+      rules:
+        # MSA 전환 후 Consumer Group 메트릭 활성화 시 사용
+        - alert: KafkaConsumerLagHigh
+          expr: |
+            kafka_consumergroup_group_lag > 10000
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Consumer group {{ $labels.consumergroup }} lag is high"
+            description: "Consumer group {{ $labels.consumergroup }}의 lag이 {{ $value }}입니다. 처리 지연을 확인하세요."
