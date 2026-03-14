@@ -1,0 +1,29 @@
+# Strimzi Kafka Operator — CRD 기반 Kafka 클러스터 관리
+# 의존성: 없음 (독립 배포 가능)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: strimzi-operator
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://strimzi.io/charts/
+      chart: strimzi-kafka-operator
+      targetRevision: 0.51.*
+      helm:
+        valueFiles:
+          - $values/infrastructure/strimzi-operator/values.yaml
+    - repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kafka
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

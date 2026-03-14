@@ -1,0 +1,136 @@
+# Kafka 클러스터 — Kind dev 환경 (combined mode: controller + broker 겸용)
+# Strimzi 0.51+ KafkaNodePool 패턴 사용
+# KRaft only (Kafka 4.x, ZooKeeper 제거)
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: combined
+  labels:
+    strimzi.io/cluster: goti-kafka
+spec:
+  replicas: 3
+  roles:
+    - controller
+    - broker
+  storage:
+    type: persistent-claim
+    size: 10Gi
+    deleteClaim: true
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 200m
+    limits:
+      memory: 2Gi
+      cpu: 500m
+  jvmOptions:
+    -Xms: 512m
+    -Xmx: 1024m
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: goti-kafka
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+spec:
+  kafka:
+    version: "4.2.0"
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+    config:
+      # 복제 설정 (3 broker 기준)
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      default.replication.factor: 3
+      min.insync.replicas: 2
+      # 리텐션
+      log.retention.hours: 168
+      # 기본 파티션 수
+      num.partitions: 3
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: kafka-metrics
+          key: kafka-metrics-config.yml
+  entityOperator:
+    topicOperator:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+    userOperator:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+---
+# Kafka JMX 메트릭 → Prometheus Exporter 설정
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kafka-metrics
+  labels:
+    app: strimzi
+data:
+  kafka-metrics-config.yml: |
+    lowercaseOutputName: true
+    lowercaseOutputLabelNames: true
+    rules:
+      # Broker 메트릭
+      - pattern: kafka.server<type=(.+), name=(.+), clientId=(.+), topic=(.+), partition=(.*)>Value
+        name: kafka_server_$1_$2
+        type: GAUGE
+        labels:
+          clientId: "$3"
+          topic: "$4"
+          partition: "$5"
+      - pattern: kafka.server<type=(.+), name=(.+), clientId=(.+), brokerHost=(.+), brokerPort=(.+)>Value
+        name: kafka_server_$1_$2
+        type: GAUGE
+        labels:
+          clientId: "$3"
+          broker: "$4:$5"
+      - pattern: kafka.server<type=(.+), name=(.+)>Value
+        name: kafka_server_$1_$2
+        type: GAUGE
+      # Controller 메트릭
+      - pattern: kafka.controller<type=(.+), name=(.+)>Value
+        name: kafka_controller_$1_$2
+        type: GAUGE
+      # Network 메트릭
+      - pattern: kafka.network<type=(.+), name=(.+), request=(.+)>Value
+        name: kafka_network_$1_$2
+        type: GAUGE
+        labels:
+          request: "$3"
+      # Log 메트릭
+      - pattern: kafka.log<type=(.+), name=(.+), topic=(.+), partition=(.+)>Value
+        name: kafka_log_$1_$2
+        type: GAUGE
+        labels:
+          topic: "$3"
+          partition: "$4"
+      # JVM 메트릭 (기본)
+      - pattern: "java.lang<type=(.+), name=(.+)><(.+)>: (\\d+)"
+        name: java_lang_$1_$3
+        type: GAUGE
+        labels:
+          name: "$2"
