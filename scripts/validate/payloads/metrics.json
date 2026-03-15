@@ -1,0 +1,393 @@
+{
+  "resourceMetrics": [
+    {
+      "resource": {
+        "attributes": [
+          { "key": "service.name", "value": { "stringValue": "goti-server" } },
+          { "key": "service.namespace", "value": { "stringValue": "goti" } },
+          { "key": "deployment.environment.name", "value": { "stringValue": "dev" } },
+          { "key": "service.version", "value": { "stringValue": "test-0.0.1" } },
+          { "key": "service.instance.id", "value": { "stringValue": "test-instance-001" } }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "scope": { "name": "io.opentelemetry.http-server", "version": "2.25.0" },
+          "metrics": [
+            {
+              "name": "http.server.request.duration",
+              "unit": "s",
+              "histogram": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                      { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                      { "key": "http.route", "value": { "stringValue": "/api/tickets" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "count": "100",
+                    "sum": 5.0,
+                    "bucketCounts": ["0", "0", "5", "40", "30", "15", "5", "3", "2", "0", "0", "0", "0"],
+                    "explicitBounds": [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
+                    "exemplars": [
+                      {
+                        "timeUnixNano": "PLACEHOLDER_TIME",
+                        "asDouble": 0.045,
+                        "traceId": "d4cda95b652f4a1592b449d5929fda1b",
+                        "spanId": "6e0c63257de34c92"
+                      }
+                    ],
+                    "min": 0.012,
+                    "max": 0.95
+                  },
+                  {
+                    "attributes": [
+                      { "key": "http.request.method", "value": { "stringValue": "POST" } },
+                      { "key": "http.response.status_code", "value": { "intValue": "201" } },
+                      { "key": "http.route", "value": { "stringValue": "/api/orders" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "count": "50",
+                    "sum": 15.0,
+                    "bucketCounts": ["0", "0", "0", "0", "0", "0", "5", "30", "10", "5", "0", "0", "0"],
+                    "explicitBounds": [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
+                    "min": 0.15,
+                    "max": 1.8
+                  },
+                  {
+                    "attributes": [
+                      { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                      { "key": "http.response.status_code", "value": { "intValue": "500" } },
+                      { "key": "http.route", "value": { "stringValue": "/api/tickets" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "count": "10",
+                    "sum": 12.0,
+                    "bucketCounts": ["0", "0", "0", "0", "0", "0", "0", "0", "5", "3", "2", "0", "0"],
+                    "explicitBounds": [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
+                    "min": 0.8,
+                    "max": 8.5
+                  }
+                ],
+                "aggregationTemporality": 2
+              }
+            },
+            {
+              "name": "goti.http.server.active_requests",
+              "unit": "{requests}",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "http.request.method", "value": { "stringValue": "GET" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "5"
+                  },
+                  {
+                    "attributes": [
+                      { "key": "http.request.method", "value": { "stringValue": "POST" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "2"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            }
+          ]
+        },
+        {
+          "scope": { "name": "io.opentelemetry.runtime-telemetry-java17", "version": "2.25.0" },
+          "metrics": [
+            {
+              "name": "jvm.memory.used",
+              "unit": "By",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "jvm.memory.type", "value": { "stringValue": "heap" } },
+                      { "key": "jvm.memory.pool.name", "value": { "stringValue": "G1 Eden Space" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "104857600"
+                  },
+                  {
+                    "attributes": [
+                      { "key": "jvm.memory.type", "value": { "stringValue": "non_heap" } },
+                      { "key": "jvm.memory.pool.name", "value": { "stringValue": "Metaspace" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "67108864"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "jvm.memory.limit",
+              "unit": "By",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "jvm.memory.type", "value": { "stringValue": "heap" } },
+                      { "key": "jvm.memory.pool.name", "value": { "stringValue": "G1 Eden Space" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "536870912"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "jvm.memory.committed",
+              "unit": "By",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "jvm.memory.type", "value": { "stringValue": "heap" } },
+                      { "key": "jvm.memory.pool.name", "value": { "stringValue": "G1 Eden Space" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "268435456"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "jvm.gc.duration",
+              "unit": "s",
+              "histogram": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "jvm.gc.name", "value": { "stringValue": "G1 Young Generation" } },
+                      { "key": "jvm.gc.action", "value": { "stringValue": "end of minor GC" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "count": "15",
+                    "sum": 0.45,
+                    "bucketCounts": ["5", "5", "3", "2", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+                    "explicitBounds": [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
+                    "min": 0.002,
+                    "max": 0.035
+                  }
+                ],
+                "aggregationTemporality": 2
+              }
+            },
+            {
+              "name": "jvm.thread.count",
+              "unit": "{threads}",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "jvm.thread.daemon", "value": { "boolValue": true } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "25"
+                  },
+                  {
+                    "attributes": [
+                      { "key": "jvm.thread.daemon", "value": { "boolValue": false } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "10"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "jvm.cpu.recent_utilization",
+              "unit": "1",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asDouble": 0.35
+                  }
+                ]
+              }
+            },
+            {
+              "name": "jvm.cpu.count",
+              "unit": "{cpus}",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "4"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            }
+          ]
+        },
+        {
+          "scope": { "name": "io.opentelemetry.hikaricp-3.0", "version": "2.25.0" },
+          "metrics": [
+            {
+              "name": "db.client.connections.usage",
+              "unit": "{connections}",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "state", "value": { "stringValue": "used" } },
+                      { "key": "db.pool.name", "value": { "stringValue": "HikariPool-1" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "3"
+                  },
+                  {
+                    "attributes": [
+                      { "key": "state", "value": { "stringValue": "idle" } },
+                      { "key": "db.pool.name", "value": { "stringValue": "HikariPool-1" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "7"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "db.client.connections.max",
+              "unit": "{connections}",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "db.pool.name", "value": { "stringValue": "HikariPool-1" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "10"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "db.client.connections.pending_requests",
+              "unit": "{requests}",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "db.pool.name", "value": { "stringValue": "HikariPool-1" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "0"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "db.client.connections.create_time",
+              "unit": "ms",
+              "histogram": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "db.pool.name", "value": { "stringValue": "HikariPool-1" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "count": "10",
+                    "sum": 250.0,
+                    "bucketCounts": ["0", "2", "5", "2", "1", "0", "0", "0", "0", "0", "0", "0", "0"],
+                    "explicitBounds": [5, 10, 25, 50, 75, 100, 250, 500, 1000, 2500, 5000, 10000],
+                    "min": 8.0,
+                    "max": 65.0
+                  }
+                ],
+                "aggregationTemporality": 2
+              }
+            },
+            {
+              "name": "db.client.connections.wait_time",
+              "unit": "ms",
+              "histogram": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "db.pool.name", "value": { "stringValue": "HikariPool-1" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "count": "50",
+                    "sum": 150.0,
+                    "bucketCounts": ["30", "10", "5", "3", "2", "0", "0", "0", "0", "0", "0", "0", "0"],
+                    "explicitBounds": [5, 10, 25, 50, 75, 100, 250, 500, 1000, 2500, 5000, 10000],
+                    "min": 0.5,
+                    "max": 55.0
+                  }
+                ],
+                "aggregationTemporality": 2
+              }
+            },
+            {
+              "name": "db.client.connections.use_time",
+              "unit": "ms",
+              "histogram": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "db.pool.name", "value": { "stringValue": "HikariPool-1" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "count": "50",
+                    "sum": 5000.0,
+                    "bucketCounts": ["0", "0", "5", "15", "10", "10", "5", "3", "2", "0", "0", "0", "0"],
+                    "explicitBounds": [5, 10, 25, 50, 75, 100, 250, 500, 1000, 2500, 5000, 10000],
+                    "min": 15.0,
+                    "max": 800.0
+                  }
+                ],
+                "aggregationTemporality": 2
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
