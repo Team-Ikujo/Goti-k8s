@@ -25,7 +25,7 @@ spec:
             fieldPath: metadata.labels['app.kubernetes.io/name']
       # 공통 resource attributes
       - name: OTEL_RESOURCE_ATTRIBUTES
-        value: service.namespace=goti,deployment.environment=dev
+        value: service.namespace=goti,deployment.environment.name=dev
       # gRPC 프로토콜 명시 (Java agent 2.25.0 기본값이 http/protobuf로 변경됨)
       - name: OTEL_EXPORTER_OTLP_PROTOCOL
         value: grpc
@@ -49,4 +49,4 @@ spec:
       - name: PYROSCOPE_SERVER_ADDRESS
         value: http://pyroscope-dev.monitoring.svc:4040
       - name: PYROSCOPE_LABELS
-        value: service_namespace=goti,deployment_environment=dev
+        value: service_namespace=goti,deployment_environment_name=dev
