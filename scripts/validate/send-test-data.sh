@@ -22,27 +22,29 @@ error() { echo -e "${RED}[ERROR]${NC} $*"; }
 # 타임스탬프 치환: PLACEHOLDER → 현재 시간 기준 나노초
 replace_timestamps() {
   local content="$1"
-  local now_ns
-  now_ns=$(date +%s)000000000
+  local now_s
+  now_s=$(date +%s)
+  local now_ns="${now_s}000000000"
 
   # start: 10초 전
-  local start_ns=$(( ($(date +%s) - 10) ))000000000
+  local start_s=$(( now_s - 10 ))
+  local start_ns="${start_s}000000000"
 
   content="${content//PLACEHOLDER_TIME/$now_ns}"
   content="${content//PLACEHOLDER_START/$start_ns}"
 
-  # traces용 오프셋 타임스탬프
-  local end_50ms=$(( $(date +%s) * 1000000000 + 50000000 ))
-  local end_100ms=$(( $(date +%s) * 1000000000 + 100000000 ))
-  local end_800ms=$(( $(date +%s) * 1000000000 + 800000000 ))
-  local start_2ms=$(( start_ns + 2000000 ))
-  local start_5ms=$(( start_ns + 5000000 ))
-  local start_10ms=$(( start_ns + 10000000 ))
-  local start_50ms=$(( start_ns + 50000000 ))
-  local end_7ms=$(( start_ns + 7000000 ))
-  local end_25ms=$(( start_ns + 25000000 ))
-  local end_90ms=$(( start_ns + 90000000 ))
-  local end_750ms=$(( start_ns + 750000000 ))
+  # traces용 오프셋 타임스탬프 (초 단위로 계산 후 나노초 자릿수 패딩)
+  local end_50ms="${now_s}050000000"
+  local end_100ms="${now_s}100000000"
+  local end_800ms="${now_s}800000000"
+  local start_2ms="${start_s}002000000"
+  local start_5ms="${start_s}005000000"
+  local start_10ms="${start_s}010000000"
+  local start_50ms="${start_s}050000000"
+  local end_7ms="${start_s}007000000"
+  local end_25ms="${start_s}025000000"
+  local end_90ms="${start_s}090000000"
+  local end_750ms="${start_s}750000000"
 
   content="${content//PLACEHOLDER_END_50MS/$end_50ms}"
   content="${content//PLACEHOLDER_END_100MS/$end_100ms}"

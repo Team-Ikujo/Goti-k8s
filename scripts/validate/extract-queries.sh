@@ -59,6 +59,9 @@ substitute_vars() {
   expr="${expr//\$\{search\}/}"
   expr="${expr//\$datasource/}"
   expr="${expr//\$\{datasource\}/}"
+  # Tempo 변수
+  expr="${expr//\$min_duration/100ms}"
+  expr="${expr//\$\{min_duration\}/100ms}"
   # Grafana time range
   expr="${expr//\$__range/1h}"
   expr="${expr//\[\$__auto\]/[5m]}"
@@ -78,10 +81,12 @@ find "${MONITORING_REPO}/grafana/dashboards" -name "*.json" -type f | sort | whi
   dashboard_name=$(basename "$json_file" .json)
 
   # Prometheus datasource를 사용하는 패널에서 expr 추출
+  # datasource는 panel 레벨에 있고, expr은 targets 레벨에 있으므로
+  # panel.datasource.type으로 필터 후 targets[].expr 추출
   queries=$(jq -r '
     .. | objects |
-    select(.expr? and .expr != "" and (.datasource?.type? == "prometheus" or (.datasource?.uid? | tostring | test("mimir|prometheus"; "i")) or (.datasource? == null and .type? != "logs"))) |
-    .expr
+    select(.datasource?.type? == "prometheus" or .datasource?.uid? == "prometheus") |
+    .targets[]? | select(.expr? and .expr != "") | .expr
   ' "$json_file" 2>/dev/null | sort -u || true)
 
   if [[ -n "$queries" ]]; then
@@ -109,10 +114,11 @@ logql_count=0
 find "${MONITORING_REPO}/grafana/dashboards" -name "*.json" -type f | sort | while read -r json_file; do
   dashboard_name=$(basename "$json_file" .json)
 
+  # panel.datasource.type == "loki" → targets[].expr 추출
   queries=$(jq -r '
     .. | objects |
-    select(.expr? and .expr != "" and (.datasource?.type? == "loki" or (.datasource?.uid? | tostring | test("loki"; "i")))) |
-    .expr
+    select(.datasource?.type? == "loki" or .datasource?.uid? == "loki") |
+    .targets[]? | select(.expr? and .expr != "") | .expr
   ' "$json_file" 2>/dev/null | sort -u || true)
 
   if [[ -n "$queries" ]]; then
@@ -137,10 +143,12 @@ traceql_file="${OUTPUT_DIR}/traceql-queries.txt"
 find "${MONITORING_REPO}/grafana/dashboards" -name "*.json" -type f | sort | while read -r json_file; do
   dashboard_name=$(basename "$json_file" .json)
 
+  # Tempo는 expr이 아닌 query 필드를 사용
+  # panel.datasource.type == "tempo" → targets[].query 추출
   queries=$(jq -r '
     .. | objects |
-    select(.expr? and .expr != "" and (.datasource?.type? == "tempo" or (.datasource?.uid? | tostring | test("tempo"; "i")))) |
-    .expr
+    select(.datasource?.type? == "tempo" or .datasource?.uid? == "tempo") |
+    .targets[]? | select(.query? and .query != "") | .query
   ' "$json_file" 2>/dev/null | sort -u || true)
 
   if [[ -n "$queries" ]]; then
@@ -169,7 +177,7 @@ if [[ -d "$rules_dir" ]]; then
 
     # yq가 있으면 사용, 없으면 grep fallback
     if command -v yq &>/dev/null; then
-      yq -r '.. | objects | select(.expr?) | .expr' "$rule_file" 2>/dev/null | while IFS= read -r expr; do
+      yq eval '.. | select(has("expr")) | .expr' "$rule_file" 2>/dev/null | grep -v '^---$' | grep -v '^null$' | while IFS= read -r expr; do
         substituted=$(substitute_vars "$expr")
         echo "$substituted" >> "$rules_file"
       done
@@ -199,7 +207,7 @@ if [[ -d "$loki_rules_dir" ]]; then
     echo "# Loki rules: ${rule_name}" >> "$loki_rules_file"
 
     if command -v yq &>/dev/null; then
-      yq -r '.. | objects | select(.expr?) | .expr' "$rule_file" 2>/dev/null | while IFS= read -r expr; do
+      yq eval '.. | select(has("expr")) | .expr' "$rule_file" 2>/dev/null | grep -v '^---$' | grep -v '^null$' | while IFS= read -r expr; do
         substituted=$(substitute_vars "$expr")
         echo "$substituted" >> "$loki_rules_file"
       done
