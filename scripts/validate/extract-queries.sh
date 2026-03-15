@@ -59,9 +59,26 @@ substitute_vars() {
   expr="${expr//\$\{search\}/}"
   expr="${expr//\$datasource/}"
   expr="${expr//\$\{datasource\}/}"
-  # Tempo 변수
+  # HTTP 필터 변수 (multi-select, includeAll → .* 치환)
+  expr="${expr//\$http_route/.*}"
+  expr="${expr//\$\{http_route\}/.*}"
+  expr="${expr//\$http_request_method/.*}"
+  expr="${expr//\$\{http_request_method\}/.*}"
+  expr="${expr//\$http_response_status_code/.*}"
+  expr="${expr//\$\{http_response_status_code\}/.*}"
+  # Tracing 변수
   expr="${expr//\$min_duration/100ms}"
   expr="${expr//\$\{min_duration\}/100ms}"
+  expr="${expr//\$span_name/.*}"
+  expr="${expr//\$\{span_name\}/.*}"
+  expr="${expr//\$db_system/.*}"
+  expr="${expr//\$\{db_system\}/.*}"
+  # Log 필터 변수
+  expr="${expr//\$log_level/ERROR}"
+  expr="${expr//\$\{log_level\}/ERROR}"
+  # JVM instance 변수
+  expr="${expr//\$instance/.*}"
+  expr="${expr//\$\{instance\}/.*}"
   # Grafana time range
   expr="${expr//\$__range/1h}"
   expr="${expr//\[\$__auto\]/[5m]}"

@@ -22,7 +22,8 @@
               "attributes": [
                 { "key": "log_type", "value": { "stringValue": "app" } },
                 { "key": "thread.name", "value": { "stringValue": "main" } },
-                { "key": "code.namespace", "value": { "stringValue": "com.goti.GotiApplication" } }
+                { "key": "code.namespace", "value": { "stringValue": "com.goti.GotiApplication" } },
+                { "key": "logger", "value": { "stringValue": "com.goti.GotiApplication" } }
               ]
             },
             {
@@ -33,7 +34,8 @@
               "body": { "stringValue": "GET /api/tickets - 200 OK (45ms)" },
               "attributes": [
                 { "key": "log_type", "value": { "stringValue": "app" } },
-                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-1" } }
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-1" } },
+                { "key": "logger", "value": { "stringValue": "com.goti.ticket.TicketController" } }
               ],
               "traceId": "d4cda95b652f4a1592b449d5929fda1b",
               "spanId": "6e0c63257de34c92"
@@ -48,6 +50,7 @@
                 { "key": "log_type", "value": { "stringValue": "app" } },
                 { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-3" } },
                 { "key": "code.namespace", "value": { "stringValue": "com.goti.order.OrderService" } },
+                { "key": "logger", "value": { "stringValue": "com.goti.order.OrderService" } },
                 { "key": "exception.type", "value": { "stringValue": "java.lang.NullPointerException" } }
               ],
               "traceId": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
@@ -61,7 +64,8 @@
               "body": { "stringValue": "{\"payment_status\":\"SUCCESS\",\"payment_duration_ms\":150,\"order_id\":\"ORD-001\",\"amount\":55000,\"pg_provider\":\"toss\"}" },
               "attributes": [
                 { "key": "log_type", "value": { "stringValue": "payment" } },
-                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-5" } }
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-5" } },
+                { "key": "logger", "value": { "stringValue": "com.goti.payment.PaymentService" } }
               ],
               "traceId": "d4cda95b652f4a1592b449d5929fda1b",
               "spanId": "abcdef1234567890"
@@ -74,7 +78,8 @@
               "body": { "stringValue": "{\"payment_status\":\"FAILED\",\"error_code\":\"PG_TIMEOUT\",\"order_id\":\"ORD-002\",\"amount\":33000,\"pg_provider\":\"toss\",\"retry_count\":3}" },
               "attributes": [
                 { "key": "log_type", "value": { "stringValue": "payment" } },
-                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-7" } }
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-7" } },
+                { "key": "logger", "value": { "stringValue": "com.goti.payment.PaymentService" } }
               ]
             },
             {
@@ -85,7 +90,8 @@
               "body": { "stringValue": "{\"action\":\"login\",\"actor\":\"user123\",\"resource\":\"session\",\"result\":\"success\",\"ip\":\"192.168.1.100\"}" },
               "attributes": [
                 { "key": "log_type", "value": { "stringValue": "audit" } },
-                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-2" } }
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-2" } },
+                { "key": "logger", "value": { "stringValue": "com.goti.auth.AuditLogger" } }
               ]
             },
             {
@@ -96,7 +102,8 @@
               "body": { "stringValue": "{\"action\":\"login_failed\",\"actor\":\"attacker\",\"resource\":\"session\",\"result\":\"denied\",\"ip\":\"10.0.0.99\",\"reason\":\"invalid_credentials\",\"attempt_count\":5}" },
               "attributes": [
                 { "key": "log_type", "value": { "stringValue": "audit" } },
-                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-4" } }
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-4" } },
+                { "key": "logger", "value": { "stringValue": "com.goti.auth.AuditLogger" } }
               ]
             }
           ]
