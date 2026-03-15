@@ -167,6 +167,34 @@
                     "startTimeUnixNano": "PLACEHOLDER_START",
                     "timeUnixNano": "PLACEHOLDER_TIME",
                     "asInt": "268435456"
+                  },
+                  {
+                    "attributes": [
+                      { "key": "jvm.memory.type", "value": { "stringValue": "non_heap" } },
+                      { "key": "jvm.memory.pool.name", "value": { "stringValue": "Metaspace" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "50331648"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "jvm.memory.used_after_last_gc",
+              "unit": "By",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "jvm.memory.type", "value": { "stringValue": "heap" } },
+                      { "key": "jvm.memory.pool.name", "value": { "stringValue": "G1 Eden Space" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "52428800"
                   }
                 ],
                 "aggregationTemporality": 2,
@@ -248,6 +276,157 @@
                 ],
                 "aggregationTemporality": 2,
                 "isMonotonic": false
+              }
+            },
+            {
+              "name": "jvm.cpu.time",
+              "unit": "s",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asDouble": 45.5
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": true
+              }
+            },
+            {
+              "name": "jvm.system_cpu.utilization",
+              "unit": "1",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asDouble": 0.25
+                  }
+                ]
+              }
+            },
+            {
+              "name": "jvm.buffer.memory.used",
+              "unit": "By",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "jvm.buffer.pool.name", "value": { "stringValue": "direct" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "1048576"
+                  },
+                  {
+                    "attributes": [
+                      { "key": "jvm.buffer.pool.name", "value": { "stringValue": "mapped" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "0"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "jvm.buffer.memory.limit",
+              "unit": "By",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "jvm.buffer.pool.name", "value": { "stringValue": "direct" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "8388608"
+                  },
+                  {
+                    "attributes": [
+                      { "key": "jvm.buffer.pool.name", "value": { "stringValue": "mapped" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "0"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "jvm.buffer.count",
+              "unit": "{buffers}",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "attributes": [
+                      { "key": "jvm.buffer.pool.name", "value": { "stringValue": "direct" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "5"
+                  },
+                  {
+                    "attributes": [
+                      { "key": "jvm.buffer.pool.name", "value": { "stringValue": "mapped" } }
+                    ],
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "0"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "jvm.class.count",
+              "unit": "{classes}",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "12500"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": false
+              }
+            },
+            {
+              "name": "jvm.class.loaded",
+              "unit": "{classes}",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "12500"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": true
+              }
+            },
+            {
+              "name": "jvm.class.unloaded",
+              "unit": "{classes}",
+              "sum": {
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asInt": "3"
+                  }
+                ],
+                "aggregationTemporality": 2,
+                "isMonotonic": true
               }
             }
           ]
@@ -383,6 +562,24 @@
                   }
                 ],
                 "aggregationTemporality": 2
+              }
+            }
+          ]
+        },
+        {
+          "scope": { "name": "io.opentelemetry.process", "version": "2.25.0" },
+          "metrics": [
+            {
+              "name": "process.cpu.start_time",
+              "unit": "s",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "PLACEHOLDER_START",
+                    "timeUnixNano": "PLACEHOLDER_TIME",
+                    "asDouble": 1741996800.0
+                  }
+                ]
               }
             }
           ]

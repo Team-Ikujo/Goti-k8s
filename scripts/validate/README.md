@@ -18,7 +18,18 @@ cd scripts/validate
 ./validate.sh
 ```
 
-port-forward → 테스트 데이터 전송 → 쿼리 추출 → 검증 → 리포트 순서로 자동 실행.
+lint → port-forward → 테스트 데이터 전송 → 쿼리 추출 → 검증 → 리포트 순서로 자동 실행.
+
+### 오프라인 Lint만 (클러스터 불필요, push 전 권장)
+
+```bash
+./validate.sh --lint-only
+# 또는 직접 실행
+./lint-dashboards.sh
+./check-coverage.sh
+```
+
+대시보드 JSON의 pitfalls 위반을 검증 (TraceQL 변수, LogQL level, PromQL histogram 등 8개 체크).
 
 ### 테스트 데이터 전송 건너뛰기
 
@@ -54,14 +65,16 @@ TEMPO_URL=http://localhost:13200 \
 
 ```
 scripts/validate/
-├── validate.sh              # 메인 실행 (port-forward + 전체 파이프라인)
+├── validate.sh              # 메인 실행 (port-forward + lint + 전체 파이프라인)
+├── lint-dashboards.sh       # 오프라인 pitfalls 검증 (클러스터 불필요)
+├── check-coverage.sh        # 대시보드 ↔ 테스트 데이터 커버리지 확인
 ├── send-test-data.sh        # OTLP HTTP로 테스트 데이터 전송
 ├── extract-queries.sh       # 대시보드 JSON에서 PromQL/LogQL/TraceQL 추출
 ├── validate-queries.sh      # 추출된 쿼리를 API로 실행 검증
 ├── payloads/
-│   ├── metrics.json         # OTel OTLP 메트릭 (HTTP histogram, JVM, HikariCP)
-│   ├── logs.json            # OTel OTLP 로그 (app/payment/audit 3종)
-│   └── traces.json          # OTel OTLP 트레이스 (정상/에러/느린 요청)
+│   ├── metrics.json         # OTel OTLP 메트릭 (HTTP, JVM, HikariCP, Buffer, Class)
+│   ├── logs.json            # OTel OTLP 로그 (app/payment/audit, logger 포함)
+│   └── traces.json          # OTel OTLP 트레이스 (정상/에러/느린, DB/Redis span)
 ├── extracted/               # (자동 생성) 추출된 쿼리 + 검증 리포트
 └── README.md
 ```
