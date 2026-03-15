@@ -64,14 +64,17 @@ trap cleanup EXIT
 # ─── 옵션 파싱 ───
 SKIP_SEND=false
 EXTRACT_ONLY=false
+LINT_ONLY=false
 for arg in "$@"; do
   case "$arg" in
     --skip-send) SKIP_SEND=true ;;
     --extract-only) EXTRACT_ONLY=true ;;
+    --lint-only) LINT_ONLY=true ;;
     --help|-h)
-      echo "Usage: $0 [--skip-send] [--extract-only]"
+      echo "Usage: $0 [--skip-send] [--extract-only] [--lint-only]"
       echo "  --skip-send     테스트 데이터 전송 건너뛰기"
       echo "  --extract-only  쿼리 추출만 수행 (port-forward 불필요)"
+      echo "  --lint-only     오프라인 lint만 수행 (클러스터 불필요)"
       exit 0
       ;;
   esac
@@ -109,12 +112,26 @@ if [[ -z "$MONITORING_REPO" ]] || [[ ! -d "$MONITORING_REPO" ]]; then
 fi
 info "Monitoring repo: ${MONITORING_REPO}"
 
+# lint-only 모드 (클러스터 불필요)
+if [[ "$LINT_ONLY" == true ]]; then
+  header "오프라인 Lint (lint-only)"
+  bash "${SCRIPT_DIR}/lint-dashboards.sh" "${MONITORING_REPO}"
+  LINT_EXIT=$?
+  header "커버리지 검증"
+  bash "${SCRIPT_DIR}/check-coverage.sh" "${MONITORING_REPO}"
+  exit $LINT_EXIT
+fi
+
 # extract-only 모드
 if [[ "$EXTRACT_ONLY" == true ]]; then
   header "쿼리 추출 (extract-only)"
   bash "${SCRIPT_DIR}/extract-queries.sh" "${MONITORING_REPO}"
   exit 0
 fi
+
+# ─── 오프라인 Lint (항상 실행) ───
+header "오프라인 Lint"
+bash "${SCRIPT_DIR}/lint-dashboards.sh" "${MONITORING_REPO}" || warn "Lint에서 위반 사항 발견 — 위 결과를 확인하세요"
 
 # ─── Pod 상태 확인 ───
 header "Pod 상태 확인"
