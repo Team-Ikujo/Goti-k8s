@@ -1,0 +1,107 @@
+{
+  "resourceLogs": [
+    {
+      "resource": {
+        "attributes": [
+          { "key": "service.name", "value": { "stringValue": "goti-server" } },
+          { "key": "service.namespace", "value": { "stringValue": "goti" } },
+          { "key": "deployment.environment.name", "value": { "stringValue": "dev" } },
+          { "key": "service.version", "value": { "stringValue": "test-0.0.1" } }
+        ]
+      },
+      "scopeLogs": [
+        {
+          "scope": { "name": "io.opentelemetry.logback-appender-1.0", "version": "2.25.0" },
+          "logRecords": [
+            {
+              "timeUnixNano": "PLACEHOLDER_TIME",
+              "observedTimeUnixNano": "PLACEHOLDER_TIME",
+              "severityNumber": 9,
+              "severityText": "INFO",
+              "body": { "stringValue": "Started GotiApplication in 3.2s (process running for 4.1s)" },
+              "attributes": [
+                { "key": "log_type", "value": { "stringValue": "app" } },
+                { "key": "thread.name", "value": { "stringValue": "main" } },
+                { "key": "code.namespace", "value": { "stringValue": "com.goti.GotiApplication" } }
+              ]
+            },
+            {
+              "timeUnixNano": "PLACEHOLDER_TIME",
+              "observedTimeUnixNano": "PLACEHOLDER_TIME",
+              "severityNumber": 9,
+              "severityText": "INFO",
+              "body": { "stringValue": "GET /api/tickets - 200 OK (45ms)" },
+              "attributes": [
+                { "key": "log_type", "value": { "stringValue": "app" } },
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-1" } }
+              ],
+              "traceId": "d4cda95b652f4a1592b449d5929fda1b",
+              "spanId": "6e0c63257de34c92"
+            },
+            {
+              "timeUnixNano": "PLACEHOLDER_TIME",
+              "observedTimeUnixNano": "PLACEHOLDER_TIME",
+              "severityNumber": 17,
+              "severityText": "ERROR",
+              "body": { "stringValue": "NullPointerException at OrderService.java:42 - order.getUser() returned null for orderId=ORD-999" },
+              "attributes": [
+                { "key": "log_type", "value": { "stringValue": "app" } },
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-3" } },
+                { "key": "code.namespace", "value": { "stringValue": "com.goti.order.OrderService" } },
+                { "key": "exception.type", "value": { "stringValue": "java.lang.NullPointerException" } }
+              ],
+              "traceId": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+              "spanId": "1234567890abcdef"
+            },
+            {
+              "timeUnixNano": "PLACEHOLDER_TIME",
+              "observedTimeUnixNano": "PLACEHOLDER_TIME",
+              "severityNumber": 9,
+              "severityText": "INFO",
+              "body": { "stringValue": "{\"payment_status\":\"SUCCESS\",\"payment_duration_ms\":150,\"order_id\":\"ORD-001\",\"amount\":55000,\"pg_provider\":\"toss\"}" },
+              "attributes": [
+                { "key": "log_type", "value": { "stringValue": "payment" } },
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-5" } }
+              ],
+              "traceId": "d4cda95b652f4a1592b449d5929fda1b",
+              "spanId": "abcdef1234567890"
+            },
+            {
+              "timeUnixNano": "PLACEHOLDER_TIME",
+              "observedTimeUnixNano": "PLACEHOLDER_TIME",
+              "severityNumber": 17,
+              "severityText": "ERROR",
+              "body": { "stringValue": "{\"payment_status\":\"FAILED\",\"error_code\":\"PG_TIMEOUT\",\"order_id\":\"ORD-002\",\"amount\":33000,\"pg_provider\":\"toss\",\"retry_count\":3}" },
+              "attributes": [
+                { "key": "log_type", "value": { "stringValue": "payment" } },
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-7" } }
+              ]
+            },
+            {
+              "timeUnixNano": "PLACEHOLDER_TIME",
+              "observedTimeUnixNano": "PLACEHOLDER_TIME",
+              "severityNumber": 9,
+              "severityText": "INFO",
+              "body": { "stringValue": "{\"action\":\"login\",\"actor\":\"user123\",\"resource\":\"session\",\"result\":\"success\",\"ip\":\"192.168.1.100\"}" },
+              "attributes": [
+                { "key": "log_type", "value": { "stringValue": "audit" } },
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-2" } }
+              ]
+            },
+            {
+              "timeUnixNano": "PLACEHOLDER_TIME",
+              "observedTimeUnixNano": "PLACEHOLDER_TIME",
+              "severityNumber": 13,
+              "severityText": "WARN",
+              "body": { "stringValue": "{\"action\":\"login_failed\",\"actor\":\"attacker\",\"resource\":\"session\",\"result\":\"denied\",\"ip\":\"10.0.0.99\",\"reason\":\"invalid_credentials\",\"attempt_count\":5}" },
+              "attributes": [
+                { "key": "log_type", "value": { "stringValue": "audit" } },
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-4" } }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

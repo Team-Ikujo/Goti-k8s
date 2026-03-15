@@ -1,0 +1,125 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          { "key": "service.name", "value": { "stringValue": "goti-server" } },
+          { "key": "service.namespace", "value": { "stringValue": "goti" } },
+          { "key": "deployment.environment.name", "value": { "stringValue": "dev" } },
+          { "key": "service.version", "value": { "stringValue": "test-0.0.1" } }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": { "name": "io.opentelemetry.spring-webmvc-6.0", "version": "2.25.0" },
+          "spans": [
+            {
+              "traceId": "d4cda95b652f4a1592b449d5929fda1b",
+              "spanId": "6e0c63257de34c92",
+              "name": "GET /api/tickets",
+              "kind": 2,
+              "startTimeUnixNano": "PLACEHOLDER_START",
+              "endTimeUnixNano": "PLACEHOLDER_END_50MS",
+              "attributes": [
+                { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                { "key": "http.route", "value": { "stringValue": "/api/tickets" } },
+                { "key": "url.path", "value": { "stringValue": "/api/tickets" } }
+              ],
+              "status": { "code": 1 }
+            },
+            {
+              "traceId": "d4cda95b652f4a1592b449d5929fda1b",
+              "spanId": "abcdef1234567890",
+              "parentSpanId": "6e0c63257de34c92",
+              "name": "SELECT goti.tickets",
+              "kind": 3,
+              "startTimeUnixNano": "PLACEHOLDER_START_5MS",
+              "endTimeUnixNano": "PLACEHOLDER_END_25MS",
+              "attributes": [
+                { "key": "db.system", "value": { "stringValue": "postgresql" } },
+                { "key": "db.statement", "value": { "stringValue": "SELECT * FROM tickets WHERE status = ?" } },
+                { "key": "db.name", "value": { "stringValue": "goti" } }
+              ],
+              "status": { "code": 1 }
+            },
+            {
+              "traceId": "d4cda95b652f4a1592b449d5929fda1b",
+              "spanId": "1111111111111111",
+              "parentSpanId": "6e0c63257de34c92",
+              "name": "GET redis:tickets:cache",
+              "kind": 3,
+              "startTimeUnixNano": "PLACEHOLDER_START_2MS",
+              "endTimeUnixNano": "PLACEHOLDER_END_7MS",
+              "attributes": [
+                { "key": "db.system", "value": { "stringValue": "redis" } },
+                { "key": "db.statement", "value": { "stringValue": "GET tickets:list:page:1" } }
+              ],
+              "status": { "code": 1 }
+            },
+            {
+              "traceId": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+              "spanId": "1234567890abcdef",
+              "name": "POST /api/orders",
+              "kind": 2,
+              "startTimeUnixNano": "PLACEHOLDER_START",
+              "endTimeUnixNano": "PLACEHOLDER_END_100MS",
+              "attributes": [
+                { "key": "http.request.method", "value": { "stringValue": "POST" } },
+                { "key": "http.response.status_code", "value": { "intValue": "500" } },
+                { "key": "http.route", "value": { "stringValue": "/api/orders" } },
+                { "key": "url.path", "value": { "stringValue": "/api/orders" } }
+              ],
+              "status": { "code": 2, "message": "Internal Server Error" }
+            },
+            {
+              "traceId": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+              "spanId": "fedcba0987654321",
+              "parentSpanId": "1234567890abcdef",
+              "name": "INSERT goti.orders",
+              "kind": 3,
+              "startTimeUnixNano": "PLACEHOLDER_START_10MS",
+              "endTimeUnixNano": "PLACEHOLDER_END_90MS",
+              "attributes": [
+                { "key": "db.system", "value": { "stringValue": "postgresql" } },
+                { "key": "db.statement", "value": { "stringValue": "INSERT INTO orders (user_id, ticket_id, amount) VALUES (?, ?, ?)" } },
+                { "key": "db.name", "value": { "stringValue": "goti" } }
+              ],
+              "status": { "code": 2, "message": "duplicate key violation" }
+            },
+            {
+              "traceId": "bbbbbbbbbbbbbbbbcccccccccccccccc",
+              "spanId": "2222222222222222",
+              "name": "GET /api/tickets/search",
+              "kind": 2,
+              "startTimeUnixNano": "PLACEHOLDER_START",
+              "endTimeUnixNano": "PLACEHOLDER_END_800MS",
+              "attributes": [
+                { "key": "http.request.method", "value": { "stringValue": "GET" } },
+                { "key": "http.response.status_code", "value": { "intValue": "200" } },
+                { "key": "http.route", "value": { "stringValue": "/api/tickets/search" } },
+                { "key": "url.path", "value": { "stringValue": "/api/tickets/search" } }
+              ],
+              "status": { "code": 1 }
+            },
+            {
+              "traceId": "bbbbbbbbbbbbbbbbcccccccccccccccc",
+              "spanId": "3333333333333333",
+              "parentSpanId": "2222222222222222",
+              "name": "SELECT goti.tickets WHERE ...",
+              "kind": 3,
+              "startTimeUnixNano": "PLACEHOLDER_START_50MS",
+              "endTimeUnixNano": "PLACEHOLDER_END_750MS",
+              "attributes": [
+                { "key": "db.system", "value": { "stringValue": "postgresql" } },
+                { "key": "db.statement", "value": { "stringValue": "SELECT * FROM tickets WHERE title LIKE ? AND venue_id = ? ORDER BY event_date" } },
+                { "key": "db.name", "value": { "stringValue": "goti" } }
+              ],
+              "status": { "code": 1 }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
