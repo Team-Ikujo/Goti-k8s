@@ -59,6 +59,15 @@ substitute_vars() {
   expr="${expr//\$\{search\}/}"
   expr="${expr//\$datasource/}"
   expr="${expr//\$\{datasource\}/}"
+  # K8s 운영 변수 (cluster-nodes, pod-lifecycle, capacity-planning 등)
+  expr="${expr//\$namespace/.*}"
+  expr="${expr//\$\{namespace\}/.*}"
+  expr="${expr//\$node/.*}"
+  expr="${expr//\$\{node\}/.*}"
+  expr="${expr//\$workload/.*}"
+  expr="${expr//\$\{workload\}/.*}"
+  expr="${expr//\$deployment/.*}"
+  expr="${expr//\$\{deployment\}/.*}"
   # HTTP 필터 변수 (multi-select, includeAll → .* 치환)
   expr="${expr//\$http_route/.*}"
   expr="${expr//\$\{http_route\}/.*}"
