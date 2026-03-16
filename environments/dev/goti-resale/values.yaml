@@ -2,7 +2,7 @@ nameOverride: goti-resale
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-resale"
-  tag: "latest"
+  tag: "dev-f1c1d61"
   pullPolicy: Always
 
 imagePullSecrets:

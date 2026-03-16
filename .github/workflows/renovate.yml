@@ -1,0 +1,48 @@
+name: Renovate
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Dry run (no PRs created)"
+        required: false
+        default: "false"
+        type: boolean
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Get ECR login password
+        id: ecr
+        run: |
+          PASSWORD=$(aws ecr get-login-password --region ap-northeast-2)
+          echo "::add-mask::$PASSWORD"
+          echo "password=$PASSWORD" >> "$GITHUB_OUTPUT"
+
+      - name: Run Renovate
+        uses: renovatebot/github-action@v41.14.4
+        with:
+          configurationFile: renovate.json
+          token: ${{ secrets.RENOVATE_TOKEN }}
+        env:
+          LOG_LEVEL: debug
+          RENOVATE_HOST_RULES: >-
+            [{"hostType":"docker","matchHost":"707925622666.dkr.ecr.ap-northeast-2.amazonaws.com","username":"AWS","password":"${{ steps.ecr.outputs.password }}"}]
+          RENOVATE_DRY_RUN: ${{ inputs.dry-run == 'true' && 'full' || 'null' }}
