@@ -40,7 +40,7 @@ env:
   - name: SPRING_PROFILES_ACTIVE
     value: "dev"
   - name: JAVA_TOOL_OPTIONS
-    value: "-Xms256m -Xmx512m"
+    value: "-XX:MaxRAMPercentage=60.0"
 
 envFrom:
   - secretRef:
@@ -53,5 +53,5 @@ externalSecret:
     name: aws-parameter-store
     kind: ClusterSecretStore
   remoteRef:
-    path: /dev/server
+    path: /dev/server  # TODO: 서비스별 경로 분리 예정 (/dev/resale 등)
     overridePath: /dev/kind/server
