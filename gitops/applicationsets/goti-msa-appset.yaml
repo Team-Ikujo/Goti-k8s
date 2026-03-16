@@ -1,0 +1,67 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: goti-msa
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - service: user
+            namespace: goti
+            valuesFile: environments/dev/goti-user/values.yaml
+          - service: stadium
+            namespace: goti
+            valuesFile: environments/dev/goti-stadium/values.yaml
+          - service: ticketing
+            namespace: goti
+            valuesFile: environments/dev/goti-ticketing/values.yaml
+          - service: payment
+            namespace: goti
+            valuesFile: environments/dev/goti-payment/values.yaml
+          - service: resale
+            namespace: goti
+            valuesFile: environments/dev/goti-resale/values.yaml
+  template:
+    metadata:
+      name: "goti-{{service}}-dev"
+      annotations:
+        argocd-image-updater.argoproj.io/image-list: "{{service}}=707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-{{service}}"
+        argocd-image-updater.argoproj.io/{{service}}.update-strategy: latest
+        argocd-image-updater.argoproj.io/{{service}}.allow-tags: "regexp:^dev-"
+        argocd-image-updater.argoproj.io/write-back-method: git
+        argocd-image-updater.argoproj.io/git-branch: main
+        argocd-image-updater.argoproj.io/git-repository: "https://github.com/Team-Ikujo/Goti-k8s.git"
+        argocd-image-updater.argoproj.io/write-back-target: "helmvalues:/{{valuesFile}}"
+        argocd-image-updater.argoproj.io/{{service}}.helm.image-name: image.repository
+        argocd-image-updater.argoproj.io/{{service}}.helm.image-tag: image.tag
+    spec:
+      project: goti
+      source:
+        repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+        targetRevision: main  # dev only: HEAD tracking — prod는 반드시 semver tag 고정
+        path: "charts/goti-server"
+        helm:
+          valueFiles:
+            - "../../{{valuesFile}}"
+      destination:
+        server: "https://kubernetes.default.svc"
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas
