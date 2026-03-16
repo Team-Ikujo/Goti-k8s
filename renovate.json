@@ -1,0 +1,39 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["custom.regex"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update container image tags in Helm values",
+      "fileMatch": ["^environments/dev/goti-.+/values\\.yaml$"],
+      "matchStrings": [
+        "repository:\\s*\"(?<registryUrl>[^/]+)/(?<depName>[^\"]+)\"\\s*\\n\\s*tag:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "regex:^(?<version>dev-.+)$"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Goti MSA + monolith image auto-update (dev only)",
+      "matchDatasources": ["docker"],
+      "matchPackagePatterns": ["^goti-"],
+      "allowedVersions": "/^dev-/",
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "groupName": "goti-dev-images",
+      "commitMessagePrefix": "[CHORE]",
+      "commitMessageTopic": "container image tags",
+      "prTitle": "[CHORE] container image 태그 업데이트"
+    }
+  ],
+  "hostRules": [
+    {
+      "hostType": "docker",
+      "matchHost": "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com",
+      "username": "AWS"
+    }
+  ]
+}
