@@ -3,7 +3,7 @@
     {
       "resource": {
         "attributes": [
-          { "key": "service.name", "value": { "stringValue": "goti-server" } },
+          { "key": "service.name", "value": { "stringValue": "goti-user" } },
           { "key": "service.namespace", "value": { "stringValue": "goti" } },
           { "key": "deployment.environment.name", "value": { "stringValue": "dev" } },
           { "key": "service.version", "value": { "stringValue": "test-0.0.1" } }

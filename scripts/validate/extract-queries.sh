@@ -37,10 +37,11 @@ mkdir -p "${OUTPUT_DIR}"
 # 템플릿 변수 치환 함수
 substitute_vars() {
   local expr="$1"
-  expr="${expr//\$service_name/goti/goti-server}"
-  expr="${expr//\$\{service_name\}/goti/goti-server}"
-  expr="${expr//\$svc/goti-server}"
-  expr="${expr//\$\{svc\}/goti-server}"
+  # MSA: 대표 서비스로 치환 (실제 job 레이블: goti/goti-user, goti/goti-ticketing, ...)
+  expr="${expr//\$service_name/goti/goti-user}"
+  expr="${expr//\$\{service_name\}/goti/goti-user}"
+  expr="${expr//\$svc/goti-user}"
+  expr="${expr//\$\{svc\}/goti-user}"
   expr="${expr//\$interval/5m}"
   expr="${expr//\$\{interval\}/5m}"
   expr="${expr//\$__rate_interval/5m}"
