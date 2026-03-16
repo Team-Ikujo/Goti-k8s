@@ -3,6 +3,8 @@ name: Renovate
 on:
   schedule:
     - cron: "0 * * * *"
+  repository_dispatch:
+    types: [image-pushed]
   workflow_dispatch:
     inputs:
       dry-run:
