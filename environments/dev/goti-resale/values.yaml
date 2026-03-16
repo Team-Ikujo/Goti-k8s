@@ -1,0 +1,57 @@
+nameOverride: goti-resale
+
+image:
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-resale"
+  tag: "latest"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: ecr-creds
+
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+gateway:
+  enabled: false
+
+probes:
+  liveness:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+  readiness:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 5
+
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "dev"
+  - name: JAVA_TOOL_OPTIONS
+    value: "-Xms256m -Xmx512m"
+
+envFrom:
+  - secretRef:
+      name: goti-resale-dev-secrets
+
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-parameter-store
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /dev/server
+    overridePath: /dev/kind/server
