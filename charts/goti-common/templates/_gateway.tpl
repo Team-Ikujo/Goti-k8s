@@ -1,25 +1,6 @@
 {{- define "goti-common.gateway" -}}
 {{- if .Values.gateway.enabled }}
 apiVersion: networking.istio.io/v1
-kind: Gateway
-metadata:
-  name: {{ include "goti-common.fullname" . }}
-  labels:
-    {{- include "goti-common.labels" . | nindent 4 }}
-spec:
-  selector:
-    istio: ingressgateway
-  servers:
-    - port:
-        number: 80
-        name: http
-        protocol: HTTP
-      hosts:
-        {{- range .Values.gateway.hosts }}
-        - {{ . | quote }}
-        {{- end }}
----
-apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
   name: {{ include "goti-common.fullname" . }}
@@ -31,12 +12,25 @@ spec:
     - {{ . | quote }}
     {{- end }}
   gateways:
-    - {{ include "goti-common.fullname" . }}
+    - {{ .Values.gateway.gatewayRef | default (include "goti-common.fullname" .) }}
   http:
+    {{- if .Values.gateway.matchPrefixes }}
+    - match:
+        {{- range .Values.gateway.matchPrefixes }}
+        - uri:
+            prefix: {{ . | quote }}
+        {{- end }}
+      route:
+        - destination:
+            host: {{ include "goti-common.fullname" . }}
+            port:
+              number: {{ .Values.service.port }}
+    {{- else }}
     - route:
         - destination:
             host: {{ include "goti-common.fullname" . }}
             port:
               number: {{ .Values.service.port }}
+    {{- end }}
 {{- end }}
 {{- end }}

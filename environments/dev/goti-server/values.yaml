@@ -20,7 +20,12 @@ resources:
 gateway:
   enabled: true
   hosts:
-    - "goti.local"
+    - "dev.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  matchPrefixes:
+    - "/api/"
+    - "/swagger-ui/"
+    - "/v3/"
 
 probes:
   liveness:

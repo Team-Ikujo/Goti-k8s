@@ -21,3 +21,7 @@ gateway:
     limits:
       cpu: 500m
       memory: 256Mi
+
+sharedGateway:
+  hosts:
+    - "dev.go-ti.shop"

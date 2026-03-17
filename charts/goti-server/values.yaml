@@ -21,6 +21,8 @@ gateway:
   enabled: false
   hosts:
     - "goti.local"
+  gatewayRef: ""
+  matchPrefixes: []
 
 probes:
   liveness:

@@ -12,3 +12,7 @@ gateway:
         port: 443
         targetPort: 443
         protocol: TCP
+
+sharedGateway:
+  hosts:
+    - "goti.local"
