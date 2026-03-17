@@ -1,0 +1,34 @@
+image:
+  repository: nginx
+  tag: "1.27-alpine"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 16Mi
+  limits:
+    cpu: 50m
+    memory: 32Mi
+
+service:
+  port: 8080
+
+hosts:
+  - "dev.go-ti.shop"
+
+gatewayRef: "istio-system/goti-shared-gateway"
+
+services:
+  - name: "User Service"
+    path: "user"
+  - name: "Stadium Service"
+    path: "stadium"
+  - name: "Ticketing Service"
+    path: "ticketing"
+  - name: "Payment Service"
+    path: "payment"
+  - name: "Resale Service"
+    path: "resale"

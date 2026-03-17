@@ -1,0 +1,6 @@
+apiVersion: v2
+name: swagger-ui
+description: Goti 통합 Swagger UI (MSA 서비스 드롭다운)
+type: application
+version: 0.1.0
+appVersion: "5.0.0"
