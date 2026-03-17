@@ -20,7 +20,39 @@ resources:
     memory: 768Mi
 
 gateway:
-  enabled: false
+  enabled: true
+  hosts:
+    - "dev.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/auth/"
+      route:
+        - destination:
+            host: goti-user-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/user/swagger-ui/"
+      rewrite:
+        uri: "/swagger-ui/"
+      route:
+        - destination:
+            host: goti-user-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/user/v3/"
+      rewrite:
+        uri: "/v3/"
+      route:
+        - destination:
+            host: goti-user-dev
+            port:
+              number: 8080
 
 probes:
   liveness:

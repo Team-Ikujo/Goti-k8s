@@ -14,7 +14,9 @@ spec:
   gateways:
     - {{ .Values.gateway.gatewayRef | default (include "goti-common.fullname" .) }}
   http:
-    {{- if .Values.gateway.matchPrefixes }}
+    {{- if .Values.gateway.httpRoutes }}
+    {{- toYaml .Values.gateway.httpRoutes | nindent 4 }}
+    {{- else if .Values.gateway.matchPrefixes }}
     - match:
         {{- range .Values.gateway.matchPrefixes }}
         - uri:
