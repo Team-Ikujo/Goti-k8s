@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-html
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Goti API Documentation</title>
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+    </head>
+    <body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script>
+    SwaggerUIBundle({
+        urls: [
+          {{- range $i, $svc := .Values.services }}
+          {{- if $i }},{{ end }}
+            { url: "/api/docs/{{ $svc.path }}/v3/api-docs", name: "{{ $svc.name }}" }
+          {{- end }}
+        ],
+        "urls.primaryName": "{{ (index .Values.services 0).name }}",
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+        layout: "StandaloneLayout"
+    });
+    </script>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-nginx
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  default.conf: |
+    server {
+        listen {{ .Values.service.port }};
+
+        location /api/docs/ {
+            alias /usr/share/nginx/html/;
+            index index.html;
+        }
+
+        location = /api/docs {
+            return 301 /api/docs/;
+        }
+    }
