@@ -35,7 +35,7 @@ gateway:
               number: 8080
     - match:
         - uri:
-            prefix: "/payment/swagger-ui/"
+            prefix: "/api/docs/payment/swagger-ui/"
       rewrite:
         uri: "/swagger-ui/"
       route:
@@ -45,7 +45,7 @@ gateway:
               number: 8080
     - match:
         - uri:
-            prefix: "/payment/v3/"
+            prefix: "/api/docs/payment/v3/"
       rewrite:
         uri: "/v3/"
       route:
@@ -73,6 +73,10 @@ env:
     value: "dev"
   - name: JAVA_TOOL_OPTIONS
     value: "-XX:MaxRAMPercentage=60.0"
+  - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
+    value: "/api/docs/payment/v3/api-docs/swagger-config"
+  - name: SPRINGDOC_SWAGGER_UI_URL
+    value: "/api/docs/payment/v3/api-docs"
 
 envFrom:
   - secretRef:
