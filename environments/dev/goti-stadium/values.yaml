@@ -20,7 +20,41 @@ resources:
     memory: 512Mi
 
 gateway:
-  enabled: false
+  enabled: true
+  hosts:
+    - "dev.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/stadiums/"
+        - uri:
+            prefix: "/api/v1/baseball-teams/"
+      route:
+        - destination:
+            host: goti-stadium-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/stadium/swagger-ui/"
+      rewrite:
+        uri: "/swagger-ui/"
+      route:
+        - destination:
+            host: goti-stadium-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/stadium/v3/"
+      rewrite:
+        uri: "/v3/"
+      route:
+        - destination:
+            host: goti-stadium-dev
+            port:
+              number: 8080
 
 probes:
   liveness:

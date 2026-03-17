@@ -23,6 +23,7 @@ gateway:
     - "goti.local"
   gatewayRef: ""
   matchPrefixes: []
+  httpRoutes: []
 
 probes:
   liveness:

@@ -20,7 +20,49 @@ resources:
     memory: 768Mi
 
 gateway:
-  enabled: false
+  enabled: true
+  hosts:
+    - "dev.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/orders/"
+        - uri:
+            prefix: "/api/v1/games/"
+        - uri:
+            prefix: "/api/v1/tickets/"
+        - uri:
+            prefix: "/api/v1/seats/"
+        - uri:
+            prefix: "/api/v1/seat-reservations/"
+        - uri:
+            prefix: "/api/v1/teams/"
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/ticketing/swagger-ui/"
+      rewrite:
+        uri: "/swagger-ui/"
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/ticketing/v3/"
+      rewrite:
+        uri: "/v3/"
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
 
 probes:
   liveness:
