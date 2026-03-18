@@ -10,7 +10,7 @@
       "matchStrings": [
         "repository:\\s*\"[^/]+/(?<depName>[^\"]+)\"\\s*\\n\\s*tag:\\s*\"(?<currentValue>[^\"]+)\""
       ],
-      "registryUrlTemplate": "https://707925622666.dkr.ecr.ap-northeast-2.amazonaws.com",
+      "registryUrlTemplate": "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com",
       "datasourceTemplate": "docker",
       "versioningTemplate": "regex:^dev-(?:(?<major>\\d+)-)?(?<compatibility>[a-f0-9]{7})$"
     }
