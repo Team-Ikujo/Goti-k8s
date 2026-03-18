@@ -2,7 +2,7 @@ nameOverride: goti-ticketing
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-ticketing"
-  tag: "dev-33-2f828dd"
+  tag: "dev-41af00e"
   pullPolicy: Always
 
 imagePullSecrets:
