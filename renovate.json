@@ -11,7 +11,7 @@
         "repository:\\s*\"(?<registryUrl>[^/]+)/(?<depName>[^\"]+)\"\\s*\\n\\s*tag:\\s*\"(?<currentValue>[^\"]+)\""
       ],
       "datasourceTemplate": "docker",
-      "versioningTemplate": "regex:^dev-(?<major>\\d+)-[a-f0-9]+$"
+      "versioningTemplate": "regex:^dev-(?:(?<major>\\d+)-)?(?<compatibility>[a-f0-9]{7})$"
     }
   ],
   "packageRules": [
