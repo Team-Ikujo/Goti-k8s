@@ -2,7 +2,7 @@ nameOverride: goti-stadium
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-stadium"
-  tag: "dev-41af00e"
+  tag: "dev-32-e0b1257"
   pullPolicy: Always
 
 imagePullSecrets:
