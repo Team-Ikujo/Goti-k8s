@@ -27,7 +27,7 @@ gateway:
   httpRoutes:
     - match:
         - uri:
-            prefix: "/api/v1/resale/"
+            prefix: "/api/v1/resales"
       route:
         - destination:
             host: goti-resale-dev

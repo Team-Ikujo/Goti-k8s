@@ -27,17 +27,17 @@ gateway:
   httpRoutes:
     - match:
         - uri:
-            prefix: "/api/v1/orders/"
+            prefix: "/api/v1/orders"
         - uri:
-            prefix: "/api/v1/games/"
+            prefix: "/api/v1/games"
         - uri:
-            prefix: "/api/v1/tickets/"
+            prefix: "/api/v1/tickets"
         - uri:
-            prefix: "/api/v1/seats/"
+            prefix: "/api/v1/seats"
         - uri:
-            prefix: "/api/v1/seat-reservations/"
+            prefix: "/api/v1/seat-reservations"
         - uri:
-            prefix: "/api/v1/teams/"
+            prefix: "/api/v1/teams"
       route:
         - destination:
             host: goti-ticketing-dev
