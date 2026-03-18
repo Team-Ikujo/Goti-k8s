@@ -31,26 +31,21 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ap-northeast-2
 
-      - name: Get ECR authorization token
+      - name: Get ECR login password
         id: ecr
         run: |
-          TOKEN=$(aws ecr get-authorization-token --region ap-northeast-2 --query 'authorizationData[0].authorizationToken' --output text)
-          echo "::add-mask::$TOKEN"
-          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+          PASSWORD=$(aws ecr get-login-password --region ap-northeast-2)
+          echo "::add-mask::$PASSWORD"
+          echo "password=$PASSWORD" >> "$GITHUB_OUTPUT"
 
       - name: Run Renovate
         uses: renovatebot/github-action@v46.1.5
         with:
           configurationFile: renovate.json
           token: ${{ secrets.RENOVATE_TOKEN }}
-          env-regex: "^(?:RENOVATE_\\w+|LOG_LEVEL|GITHUB_COM_TOKEN|NODE_OPTIONS|(?:HTTPS?|NO)_PROXY|(?:https?|no)_proxy|AWS_\\w+)$"
         env:
           LOG_LEVEL: debug
           RENOVATE_REPOSITORIES: '["Team-Ikujo/Goti-k8s"]'
           RENOVATE_HOST_RULES: >-
-            [{"hostType":"docker","matchHost":"https://707925622666.dkr.ecr.ap-northeast-2.amazonaws.com","token":"${{ steps.ecr.outputs.token }}"}]
+            [{"hostType":"docker","matchHost":"707925622666.dkr.ecr.ap-northeast-2.amazonaws.com","username":"AWS","password":"${{ steps.ecr.outputs.password }}"}]
           RENOVATE_DRY_RUN: ${{ inputs.dry-run == 'true' && 'full' || 'null' }}
-          AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ${{ env.AWS_SESSION_TOKEN }}
-          AWS_REGION: ap-northeast-2
