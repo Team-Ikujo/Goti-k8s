@@ -48,7 +48,7 @@ jobs:
           LOG_LEVEL: debug
           RENOVATE_REPOSITORIES: '["Team-Ikujo/Goti-k8s"]'
           RENOVATE_HOST_RULES: >-
-            [{"hostType":"docker","matchHost":"707925622666.dkr.ecr.ap-northeast-2.amazonaws.com","username":"AWS","password":"${{ steps.ecr.outputs.password }}"}]
+            [{"hostType":"docker","matchHost":"https://707925622666.dkr.ecr.ap-northeast-2.amazonaws.com","username":"AWS","password":"${{ steps.ecr.outputs.password }}"}]
           RENOVATE_DRY_RUN: ${{ inputs.dry-run == 'true' && 'full' || 'null' }}
           AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
