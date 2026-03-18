@@ -38,6 +38,8 @@ gateway:
             prefix: "/api/v1/seat-reservations"
         - uri:
             prefix: "/api/v1/teams"
+        - uri:
+            prefix: "/api/v1/stadiums/"
       route:
         - destination:
             host: goti-ticketing-dev

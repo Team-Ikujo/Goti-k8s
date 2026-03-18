@@ -27,7 +27,7 @@ gateway:
   httpRoutes:
     - match:
         - uri:
-            prefix: "/api/v1/stadiums"
+            exact: "/api/v1/stadiums"
         - uri:
             prefix: "/api/v1/baseball-teams"
       route:
