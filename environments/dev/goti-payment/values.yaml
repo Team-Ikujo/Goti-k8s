@@ -27,7 +27,7 @@ gateway:
   httpRoutes:
     - match:
         - uri:
-            prefix: "/api/v1/payments/"
+            prefix: "/api/v1/payments"
       route:
         - destination:
             host: goti-payment-dev
