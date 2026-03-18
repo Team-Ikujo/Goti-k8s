@@ -29,6 +29,5 @@
       "commitMessageTopic": "container image tags",
       "prTitle": "[CHORE] container image 태그 업데이트"
     }
-  ],
-  "hostRules": []
+  ]
 }
