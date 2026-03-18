@@ -15,7 +15,7 @@ spec:
   http:
     - match:
         - uri:
-            prefix: "/api/docs/"
+            exact: "/api/docs/"
         - uri:
             exact: "/api/docs"
       route:
