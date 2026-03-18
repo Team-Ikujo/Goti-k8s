@@ -30,11 +30,5 @@
       "prTitle": "[CHORE] container image 태그 업데이트"
     }
   ],
-  "hostRules": [
-    {
-      "hostType": "docker",
-      "matchHost": "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com",
-      "username": "AWS"
-    }
-  ]
+  "hostRules": []
 }
