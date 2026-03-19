@@ -1,0 +1,24 @@
+# NetworkPolicy — namespace별 default-deny + 허용 규칙
+# 대상: goti, monitoring, kafka, argocd (각 파일에 namespace 명시)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: network-policies
+  namespace: argocd
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
+    targetRevision: main
+    path: infrastructure/dev/network-policies
+    directory:
+      exclude: '*application.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: goti
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=false
