@@ -30,6 +30,11 @@ gateway:
             prefix: "/api/v1/auth"
         - uri:
             prefix: "/api/v1/test"
+      timeout: 5s
+      retries:
+        attempts: 2
+        perTryTimeout: 2s
+        retryOn: 5xx,reset,connect-failure
       route:
         - destination:
             host: goti-user-dev
@@ -93,3 +98,15 @@ externalSecret:
   remoteRef:
     path: /dev/server  # TODO: 서비스별 경로 분리 예정 (/dev/user 등)
     overridePath: /dev/kind/server
+
+# --- Istio 보안/네트워크 정책 ---
+
+istioPolicy:
+  # Phase 1: user 서비스는 다른 서비스로부터 호출받지 않음 (Gateway 통해서만 접근)
+  authorizationPolicy:
+    enabled: true
+    allowFrom: []
+
+  # Phase 2: Resilience (공통 설정은 goti-server/values.yaml 기본값 사용)
+  destinationRule:
+    enabled: true
