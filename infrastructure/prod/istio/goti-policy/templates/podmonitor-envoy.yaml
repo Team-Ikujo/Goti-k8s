@@ -1,0 +1,20 @@
+{{- if .Values.allowPrometheus.enabled }}
+# Istio Envoy sidecar 메트릭 수집 (istio_requests_total 등)
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: envoy-sidecar-metrics
+  labels:
+    release: kube-prometheus-stack-prod
+spec:
+  selector:
+    matchLabels:
+      security.istio.io/tlsMode: istio
+  namespaceSelector:
+    matchNames:
+      - goti
+  podMetricsEndpoints:
+    - port: http-envoy-prom
+      path: /stats/prometheus
+      interval: 30s
+{{- end }}

@@ -1,0 +1,44 @@
+# 필수 레이블 검증 — 서비스 식별 및 Istio 트래픽 관리에 필요
+# app, version 레이블은 Istio VirtualService/DestinationRule 라우팅의 기반
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-labels
+  annotations:
+    policies.kyverno.io/title: Require Labels
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: low
+    policies.kyverno.io/description: >-
+      app과 version 레이블은 Istio 트래픽 관리와 모니터링 대시보드에서 필수입니다.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-app-label
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - goti
+      validate:
+        message: "Pod에 'app' 레이블이 필요합니다. Istio 라우팅과 모니터링에 사용됩니다."
+        pattern:
+          metadata:
+            labels:
+              app: "?*"
+    - name: require-version-label
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - goti
+      validate:
+        message: "Pod에 'version' 레이블이 필요합니다. Istio DestinationRule subset 라우팅에 사용됩니다."
+        pattern:
+          metadata:
+            labels:
+              version: "?*"

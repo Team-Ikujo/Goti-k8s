@@ -1,0 +1,42 @@
+# goti namespace의 모든 컨테이너에 CPU/메모리 limits 강제
+# OOM Kill이나 노드 리소스 고갈 방지
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-limits
+  annotations:
+    policies.kyverno.io/title: Require Resource Limits
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      goti namespace의 모든 컨테이너는 CPU 및 메모리 limits를 설정해야 합니다.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: validate-resource-limits
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - goti
+      exclude:
+        any:
+          - resources:
+              annotations:
+                kyverno.io/exclude-resource-limits: "true"
+      validate:
+        message: "컨테이너 '{{ request.object.spec.containers[*].name }}'에 CPU와 메모리 limits를 설정해야 합니다."
+        foreach:
+          - list: "request.object.spec.containers"
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.resources.limits.memory || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.resources.limits.cpu || '' }}"
+                    operator: Equals
+                    value: ""

@@ -1,0 +1,11 @@
+{{- if .Values.peerAuth.permissiveForScrape.enabled }}
+# goti namespace PERMISSIVE mTLS (dev only)
+# prod에서는 monitoring sidecar 주입으로 불필요 — enabled: false
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: goti-permissive-for-scrape
+spec:
+  mtls:
+    mode: PERMISSIVE
+{{- end }}

@@ -1,0 +1,29 @@
+# Kyverno ClusterPolicies — goti namespace 정책 적용
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kyverno-policies
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
+      targetRevision: main
+      path: infrastructure/prod/kyverno/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kyverno
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
+    retry:
+      limit: 10
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

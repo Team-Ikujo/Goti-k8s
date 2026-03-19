@@ -1,0 +1,10 @@
+# Mesh-wide STRICT mTLS
+# istio-system namespace에 배포 → 모든 namespace에 적용
+# monitoring namespace는 자체 PERMISSIVE PeerAuthentication으로 오버라이드됨
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+spec:
+  mtls:
+    mode: {{ .Values.mtls.mode }}
