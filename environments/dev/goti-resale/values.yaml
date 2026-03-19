@@ -114,23 +114,6 @@ istioPolicy:
                   paths: ["/api/v1/resales/orders/*"]
                   methods: ["GET", "PATCH"]
 
-  # Phase 2: Resilience
+  # Phase 2: Resilience (공통 설정은 goti-server/values.yaml 기본값 사용)
   destinationRule:
     enabled: true
-    connectionPool:
-      tcp:
-        maxConnections: 100
-        connectTimeout: 5s
-      http:
-        maxRequestsPerConnection: 100
-        maxRetries: 2
-    outlierDetection:
-      consecutive5xxErrors: 5
-      interval: 30s
-      baseEjectionTime: 30s
-      maxEjectionPercent: 50
-    loadBalancer:
-      simple: LEAST_REQUEST
-
-  sidecar:
-    enabled: false

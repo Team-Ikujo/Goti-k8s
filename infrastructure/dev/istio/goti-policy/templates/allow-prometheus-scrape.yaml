@@ -17,11 +17,6 @@ spec:
       to:
         - operation:
             ports: ["15020", "15090"]
-    - from:
-        - source:
-            namespaces:
-              - {{ .Values.allowPrometheus.sourceNamespace | quote }}
-      to:
         - operation:
             ports: ["8080"]
             paths: ["/actuator/prometheus"]

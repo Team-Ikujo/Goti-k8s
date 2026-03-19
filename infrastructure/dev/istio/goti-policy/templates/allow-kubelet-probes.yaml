@@ -11,6 +11,6 @@ spec:
   rules:
     - to:
         - operation:
-            paths: ["/actuator/health/*"]
+            paths: ["/actuator/health/liveness", "/actuator/health/readiness"]
             methods: ["GET"]
 {{- end }}

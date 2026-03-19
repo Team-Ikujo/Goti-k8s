@@ -1,3 +1,2 @@
-# dev 환경: 바로 STRICT (PERMISSIVE 중간 단계 불필요)
-mtls:
-  mode: STRICT
+# dev 환경: values.yaml 기본값(STRICT) 그대로 사용
+# prod 환경 분리 시 여기에 환경별 오버라이드 추가

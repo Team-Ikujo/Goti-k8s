@@ -40,7 +40,7 @@ gateway:
             prefix: "/api/v1/teams"
         - uri:
             prefix: "/api/v1/stadiums/"
-      timeout: 10s
+      timeout: 12s
       retries:
         attempts: 3
         perTryTimeout: 3s
@@ -123,27 +123,9 @@ istioPolicy:
                   principals: ["cluster.local/ns/goti/sa/goti-payment-dev"]
             to:
               - operation:
-                  # /api/v1/orders/{id}/payment-confirmations — prefix로 매칭
-                  paths: ["/api/v1/orders/*/payment-confirmations"]
+                  paths: ["/api/v1/orders/*"]
                   methods: ["POST"]
 
-  # Phase 2: Resilience (예매/좌석 — 상대적 무거움)
+  # Phase 2: Resilience (공통 설정은 goti-server/values.yaml 기본값 사용)
   destinationRule:
     enabled: true
-    connectionPool:
-      tcp:
-        maxConnections: 100
-        connectTimeout: 5s
-      http:
-        maxRequestsPerConnection: 100
-        maxRetries: 3
-    outlierDetection:
-      consecutive5xxErrors: 5
-      interval: 30s
-      baseEjectionTime: 30s
-      maxEjectionPercent: 50
-    loadBalancer:
-      simple: LEAST_REQUEST
-
-  sidecar:
-    enabled: false
