@@ -27,6 +27,9 @@ spec:
       kind: MutatingWebhookConfiguration
     - group: "admissionregistration.k8s.io"
       kind: ValidatingWebhookConfiguration
+    # External Secrets (cluster-scoped)
+    - group: "external-secrets.io"
+      kind: ClusterSecretStore
   namespaceResourceWhitelist:
     # Core
     - group: ""
@@ -100,8 +103,6 @@ spec:
     - group: "kafka.strimzi.io"
       kind: KafkaUser
     # External Secrets
-    - group: "external-secrets.io"
-      kind: ClusterSecretStore
     - group: "external-secrets.io"
       kind: ExternalSecret
     # Batch

@@ -119,8 +119,12 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/alloy-dev.monitoring.svc.cluster.local"
+          - "kafka/*"
+          # OAuth 소셜 로그인 (Google, Naver, Kakao)
           - "~/*.googleapis.com"
           - "~/*.naver.com"
           - "~/*.kakao.com"
+          # SMS 발송 (Nurigo/CoolSMS)
           - "~/*.nurigo.com"
+          # AWS (SSM Parameter Store, STS)
           - "~/*.amazonaws.com"

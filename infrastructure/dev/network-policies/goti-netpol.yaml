@@ -1,24 +1,23 @@
+# goti namespace: defense-in-depth (Istio AuthorizationPolicy L7 + NetworkPolicy L3/L4)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-all
-  namespace: monitoring
+  namespace: goti
 spec:
   podSelector: {}
   policyTypes:
     - Ingress
     - Egress
 ---
-# Grafana: Istio Gateway에서 접근 허용
+# Istio Gateway에서의 ingress 허용
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-grafana-ingress
-  namespace: monitoring
+  name: allow-from-istio-gateway
+  namespace: goti
 spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: grafana
+  podSelector: {}
   policyTypes:
     - Ingress
   ingress:
@@ -26,16 +25,13 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: istio-system
-      ports:
-        - port: 3000
-          protocol: TCP
 ---
-# monitoring 내부 통신 허용 (Alloy→Mimir, Alloy→Loki, Alloy→Tempo 등)
+# goti namespace 내부 서비스 간 통신
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-monitoring-internal
-  namespace: monitoring
+  name: allow-goti-internal
+  namespace: goti
 spec:
   podSelector: {}
   policyTypes:
@@ -47,59 +43,22 @@ spec:
   egress:
     - to:
         - podSelector: {}
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-        podSelector:
-          matchLabels:
-            k8s-app: kube-dns
-      ports:
-        - port: 53
-          protocol: UDP
-        - port: 53
-          protocol: TCP
 ---
-# Alloy: goti namespace에서 OTLP 수신
+# monitoring에서의 scrape 허용 (Alloy metrics + Istio sidecar)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-alloy-ingress
-  namespace: monitoring
+  name: allow-monitoring-scrape
+  namespace: goti
 spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: alloy
+  podSelector: {}
   policyTypes:
     - Ingress
   ingress:
     - from:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: goti
-      ports:
-        - port: 4317
-          protocol: TCP
-        - port: 4318
-          protocol: TCP
----
-# Alloy: goti namespace scrape egress + kube-system metrics
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-alloy-scrape-egress
-  namespace: monitoring
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: alloy
-  policyTypes:
-    - Egress
-  egress:
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: goti
+              kubernetes.io/metadata.name: monitoring
       ports:
         - port: 8080
           protocol: TCP
@@ -107,13 +66,49 @@ spec:
           protocol: TCP
         - port: 15090
           protocol: TCP
+---
+# egress: monitoring (OTLP), kafka, DNS, Istio control plane
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-goti-egress
+  namespace: goti
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # monitoring: Alloy OTLP
     - to:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: kube-system
+              kubernetes.io/metadata.name: monitoring
       ports:
-        - port: 8080
+        - port: 4317
           protocol: TCP
+        - port: 4318
+          protocol: TCP
+    # kafka: 브로커 접근
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kafka
+      ports:
+        - port: 9092
+          protocol: TCP
+        - port: 9093
+          protocol: TCP
+    # istio-system: Istiod xDS, CA
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - port: 15012
+          protocol: TCP
+        - port: 15014
+          protocol: TCP
+    # DNS
     - to:
         - namespaceSelector:
             matchLabels:
@@ -125,4 +120,8 @@ spec:
         - port: 53
           protocol: UDP
         - port: 53
+          protocol: TCP
+    # 외부 HTTPS (AWS SSM, OAuth 등 — Sidecar에서 L7 세분화)
+    - ports:
+        - port: 443
           protocol: TCP

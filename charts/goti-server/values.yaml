@@ -76,6 +76,22 @@ externalSecret:
   remoteRef:
     path: ""
 
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+extraVolumeMounts: []
+extraVolumes: []
+
 podAnnotations: {}
 nodeSelector: {}
 tolerations: []

@@ -128,4 +128,5 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/alloy-dev.monitoring.svc.cluster.local"
+          - "kafka/*"
           - "~/*.amazonaws.com"
