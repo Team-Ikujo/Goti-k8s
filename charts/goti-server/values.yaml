@@ -11,6 +11,7 @@ serviceAccount:
   create: true
   name: ""
   annotations: {}
+  automountServiceAccountToken: false
 
 service:
   type: ClusterIP
@@ -74,6 +75,22 @@ externalSecret:
     kind: ClusterSecretStore
   remoteRef:
     path: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+extraVolumeMounts: []
+extraVolumes: []
 
 podAnnotations: {}
 nodeSelector: {}
