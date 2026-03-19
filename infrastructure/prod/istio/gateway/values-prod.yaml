@@ -1,12 +1,9 @@
 # Istio Ingress Gateway EKS 프로덕션 설정
+# Terraform ALB + TargetGroupBinding으로 연결 — k8s가 LB 생성 안 함
 gateway:
   replicaCount: 2
   service:
-    type: LoadBalancer  # AWS NLB (EKS)
-    annotations:
-      service.beta.kubernetes.io/aws-load-balancer-type: "external"
-      service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
-      service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    type: ClusterIP
     ports:
       - name: http2
         port: 80
