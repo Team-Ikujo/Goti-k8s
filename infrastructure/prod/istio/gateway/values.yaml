@@ -2,7 +2,7 @@
 gateway:
   replicaCount: 2
   service:
-    type: LoadBalancer
+    type: ClusterIP
     ports:
       - name: http2
         port: 80
