@@ -1,0 +1,13 @@
+{{- if .Values.allowPrometheus.enabled }}
+# goti namespace PERMISSIVE mTLS
+# monitoring namespace에 sidecar 미주입 → plaintext scrape 수신 허용
+# AuthorizationPolicy deny-all이 L7 접근 제어를 담당하므로 보안 유지
+# mesh 내부(sidecar → sidecar) 통신은 자동으로 mTLS 사용
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+spec:
+  mtls:
+    mode: PERMISSIVE
+{{- end }}
