@@ -1,0 +1,22 @@
+# Kafka JMX 메트릭 → Alloy 스크래핑
+# metrics-service.yaml의 headless Service를 통해 Pod의 JMX Exporter(9404) 수집
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kafka-metrics
+  namespace: kafka
+  labels:
+    release: kube-prometheus-stack-dev    # Alloy serviceMonitorSelector 매칭
+    strimzi.io/cluster: goti-kafka
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/cluster: goti-kafka
+      app.kubernetes.io/component: metrics
+  namespaceSelector:
+    matchNames:
+      - kafka
+  endpoints:
+    - port: tcp-prometheus
+      path: /metrics
+      interval: 30s

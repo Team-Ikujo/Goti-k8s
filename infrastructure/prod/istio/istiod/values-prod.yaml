@@ -1,0 +1,23 @@
+# Istiod EKS 프로덕션 설정
+istiod:
+  replicaCount: 2
+  autoscaleEnabled: true
+  autoscaleMin: 2
+  autoscaleMax: 5
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+
+  meshConfig:
+    # 프로덕션: 접근 로그는 샘플링으로 비용 절감 (필요시 활성화)
+    accessLogFile: ""
+    enableTracing: true
+    extensionProviders:
+      - name: otel-tracing
+        opentelemetry:
+          service: alloy.monitoring.svc.cluster.local
+          port: 4317

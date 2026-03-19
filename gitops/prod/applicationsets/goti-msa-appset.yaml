@@ -1,0 +1,57 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: goti-msa
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - service: user
+            namespace: goti
+            valuesFile: environments/prod/goti-user/values.yaml
+          - service: stadium
+            namespace: goti
+            valuesFile: environments/prod/goti-stadium/values.yaml
+          - service: ticketing
+            namespace: goti
+            valuesFile: environments/prod/goti-ticketing/values.yaml
+          - service: payment
+            namespace: goti
+            valuesFile: environments/prod/goti-payment/values.yaml
+          - service: resale
+            namespace: goti
+            valuesFile: environments/prod/goti-resale/values.yaml
+  template:
+    metadata:
+      name: "goti-{{service}}-prod"
+    spec:
+      project: goti
+      source:
+        repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+        targetRevision: main  # TODO: prod 배포 시 반드시 semver tag로 고정 (예: v1.2.3)
+        path: "charts/goti-server"
+        helm:
+          valueFiles:
+            - "../../{{valuesFile}}"
+      destination:
+        server: "https://kubernetes.default.svc"
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas

@@ -1,0 +1,43 @@
+# Instrumentation CR — Java auto-instrumentation 설정 (프로덕션)
+# goti namespace의 모든 Java 서비스에 적용
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: goti-java
+  namespace: goti
+spec:
+  exporter:
+    endpoint: http://alloy.monitoring.svc:4317
+  propagators:
+    - tracecontext
+    - baggage
+  sampler:
+    type: parentbased_traceidratio
+    argument: "0.1"  # 프로덕션: 10% 샘플링 (비용 절감)
+  java:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.25.0
+    env:
+      - name: OTEL_SERVICE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['app.kubernetes.io/name']
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: service.namespace=goti,deployment.environment.name=prod
+      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: grpc
+      - name: OTEL_INSTRUMENTATION_LOG4J_APPENDER_ENABLED
+        value: "true"
+      - name: OTEL_METRICS_EXPORTER
+        value: otlp
+      - name: OTEL_TRACES_EXPORTER
+        value: otlp
+      - name: OTEL_LOGS_EXPORTER
+        value: otlp
+      - name: PYROSCOPE_APPLICATION_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['app.kubernetes.io/name']
+      - name: PYROSCOPE_SERVER_ADDRESS
+        value: http://pyroscope.monitoring.svc:4040
+      - name: PYROSCOPE_LABELS
+        value: service_namespace=goti,deployment_environment_name=prod
