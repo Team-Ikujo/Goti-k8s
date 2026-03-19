@@ -11,6 +11,7 @@ serviceAccount:
   create: true
   name: ""
   annotations: {}
+  automountServiceAccountToken: false
 
 service:
   type: ClusterIP

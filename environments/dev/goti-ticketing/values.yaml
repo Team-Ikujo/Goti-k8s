@@ -129,3 +129,13 @@ istioPolicy:
   # Phase 2: Resilience (공통 설정은 goti-server/values.yaml 기본값 사용)
   destinationRule:
     enabled: true
+
+  # Phase 2: Sidecar egress 제한
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/alloy-dev.monitoring.svc.cluster.local"
+          - "~/*.amazonaws.com"
