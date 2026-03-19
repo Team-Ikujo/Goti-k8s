@@ -11,7 +11,12 @@ allowGateway:
 
 allowPrometheus:
   enabled: true
-  sourceNamespace: "monitoring"
+
+# mTLS PERMISSIVE — scrape 포트만 plaintext 허용 (dev only)
+# prod: monitoring에 sidecar 주입 후 enabled: false
+peerAuth:
+  permissiveForScrape:
+    enabled: true
 
 allowKubeletProbes:
   enabled: true
