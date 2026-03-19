@@ -12,7 +12,7 @@ spec:
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main
-      path: "infrastructure/argocd"
+      path: "infrastructure/dev/argocd"
       helm:
         valueFiles:
           - values.yaml
