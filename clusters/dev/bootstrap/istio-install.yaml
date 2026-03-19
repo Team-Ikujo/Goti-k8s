@@ -13,7 +13,7 @@ spec:
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main
-      path: "infrastructure/istio/base"
+      path: "infrastructure/dev/istio/base"
       helm:
         valueFiles:
           - values.yaml
@@ -49,7 +49,7 @@ spec:
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main
-      path: "infrastructure/istio/istiod"
+      path: "infrastructure/dev/istio/istiod"
       helm:
         valueFiles:
           - values.yaml
@@ -86,7 +86,7 @@ spec:
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main
-      path: "infrastructure/istio/gateway"
+      path: "infrastructure/dev/istio/gateway"
       helm:
         valueFiles:
           - values.yaml

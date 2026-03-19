@@ -1,23 +1,24 @@
+# cert-manager — OTel Operator webhook 인증서 관리에 필요
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: external-secrets
+  name: cert-manager
   namespace: argocd
 spec:
   project: default
   sources:
-    - repoURL: https://charts.external-secrets.io
-      chart: external-secrets
-      targetRevision: 2.1.*
+    - repoURL: https://charts.jetstack.io
+      chart: cert-manager
+      targetRevision: v1.17.*
       helm:
         valueFiles:
-          - $values/infrastructure/external-secrets/values.yaml
+          - $values/infrastructure/dev/cert-manager/values.yaml
     - repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
       targetRevision: main
       ref: values
   destination:
     server: https://kubernetes.default.svc
-    namespace: external-secrets
+    namespace: cert-manager
   syncPolicy:
     automated:
       selfHeal: true

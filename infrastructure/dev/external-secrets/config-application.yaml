@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
     targetRevision: main
-    path: infrastructure/external-secrets/config
+    path: infrastructure/dev/external-secrets/config
   destination:
     server: https://kubernetes.default.svc
   syncPolicy:

@@ -13,7 +13,7 @@ spec:
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main
-      path: "gitops/projects"
+      path: "gitops/dev/projects"
   destination:
     server: "https://kubernetes.default.svc"
     namespace: argocd
@@ -46,7 +46,7 @@ spec:
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main
-      path: "infrastructure"
+      path: "infrastructure/dev"
       directory:
         recurse: true
         include: "*application.yaml"
@@ -81,7 +81,7 @@ spec:
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
       targetRevision: main
-      path: "gitops/applicationsets"
+      path: "gitops/dev/applicationsets"
   destination:
     server: "https://kubernetes.default.svc"
     namespace: argocd
