@@ -1,19 +1,7 @@
 # dev 환경 Istio 정책
-denyAll:
-  enabled: true
+# 기본값(values.yaml)과 동일한 필드는 생략 — 차이값만 오버라이드
 
-allowGateway:
-  enabled: true
-  gatewaySA: "cluster.local/ns/istio-system/sa/istio-gateway"
-
-allowPrometheus:
-  enabled: true
-  sourceNamespace: "monitoring"
-
-allowKubeletProbes:
-  enabled: true
-
-# Phase 2: 외부 서비스 허용 (OAuth, SMS 등)
+# Phase 2: 외부 서비스 허용 (OAuth, SMS, AWS)
 serviceEntries:
   - name: oauth-google
     hosts:
@@ -49,7 +37,9 @@ serviceEntries:
         protocol: TLS
   - name: aws-services
     hosts:
-      - "*.amazonaws.com"
+      - "ssm.ap-northeast-2.amazonaws.com"
+      - "secretsmanager.ap-northeast-2.amazonaws.com"
+      - "sts.ap-northeast-2.amazonaws.com"
     ports:
       - number: 443
         name: https

@@ -7,14 +7,14 @@ metadata:
   namespace: argocd
 spec:
   project: goti
-  source:
-    repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-    targetRevision: main
-    path: "infrastructure/dev/istio/goti-policy"
-    helm:
-      valueFiles:
-        - values.yaml
-        - values-dev.yaml
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main  # dev only: HEAD tracking — prod는 반드시 semver tag 고정
+      path: "infrastructure/dev/istio/goti-policy"
+      helm:
+        valueFiles:
+          - values.yaml
+          - values-dev.yaml
   destination:
     server: "https://kubernetes.default.svc"
     namespace: goti
