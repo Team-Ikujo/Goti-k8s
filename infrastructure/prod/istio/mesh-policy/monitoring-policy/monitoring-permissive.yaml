@@ -1,0 +1,11 @@
+# monitoring namespace: PERMISSIVE mTLS
+# mesh-wide STRICT와 공존 — namespace 레벨이 mesh-wide보다 우선 적용
+# monitoring 컴포넌트(Prometheus, Alloy 등)가 sidecar 없이도 트래픽 수신 가능
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: monitoring-permissive
+  namespace: monitoring
+spec:
+  mtls:
+    mode: PERMISSIVE
