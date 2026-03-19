@@ -79,3 +79,20 @@ podAnnotations: {}
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# Istio 보안/네트워크 정책
+istioPolicy:
+  # Phase 1: 서비스별 AuthorizationPolicy (서비스 간 통신 허용)
+  authorizationPolicy:
+    enabled: false
+    allowFrom: []
+  # Phase 2: DestinationRule (circuit breaker, connection pool)
+  destinationRule:
+    enabled: false
+    connectionPool: {}
+    outlierDetection: {}
+    loadBalancer: {}
+  # Phase 2: Sidecar (egress 제한, 기본 비활성화)
+  sidecar:
+    enabled: false
+    egress: []

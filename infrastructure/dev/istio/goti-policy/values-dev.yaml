@@ -1,0 +1,56 @@
+# dev 환경 Istio 정책
+denyAll:
+  enabled: true
+
+allowGateway:
+  enabled: true
+  gatewaySA: "cluster.local/ns/istio-system/sa/istio-gateway"
+
+allowPrometheus:
+  enabled: true
+  sourceNamespace: "monitoring"
+
+allowKubeletProbes:
+  enabled: true
+
+# Phase 2: 외부 서비스 허용 (OAuth, SMS 등)
+serviceEntries:
+  - name: oauth-google
+    hosts:
+      - "accounts.google.com"
+      - "oauth2.googleapis.com"
+      - "www.googleapis.com"
+    ports:
+      - number: 443
+        name: https
+        protocol: TLS
+  - name: oauth-naver
+    hosts:
+      - "nid.naver.com"
+      - "openapi.naver.com"
+    ports:
+      - number: 443
+        name: https
+        protocol: TLS
+  - name: oauth-kakao
+    hosts:
+      - "kauth.kakao.com"
+      - "kapi.kakao.com"
+    ports:
+      - number: 443
+        name: https
+        protocol: TLS
+  - name: sms-nurigo
+    hosts:
+      - "api.coolsms.co.kr"
+    ports:
+      - number: 443
+        name: https
+        protocol: TLS
+  - name: aws-services
+    hosts:
+      - "*.amazonaws.com"
+    ports:
+      - number: 443
+        name: https
+        protocol: TLS
