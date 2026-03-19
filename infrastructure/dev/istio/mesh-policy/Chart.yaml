@@ -1,6 +1,0 @@
-apiVersion: v2
-name: istio-mesh-policy
-description: Mesh-wide Istio 보안 정책 (PeerAuthentication STRICT mTLS)
-type: application
-version: 0.1.0
-appVersion: "1.29"

@@ -1,9 +1,0 @@
-{{- if .Values.denyAll.enabled }}
-# deny-all: 빈 spec = goti namespace 모든 워크로드에 대한 트래픽 거부
-# 개별 ALLOW 정책으로 필요한 트래픽만 허용 (allowlist 패턴)
-apiVersion: security.istio.io/v1
-kind: AuthorizationPolicy
-metadata:
-  name: deny-all
-spec: {}
-{{- end }}

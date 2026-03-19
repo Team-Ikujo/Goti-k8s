@@ -1,6 +1,0 @@
-apiVersion: v2
-name: goti-istio-policy
-description: Goti namespace Istio 보안/네트워크 정책 (deny-all, allow rules, ServiceEntry)
-type: application
-version: 0.1.0
-appVersion: "1.29"
