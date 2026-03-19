@@ -6,11 +6,11 @@ istiod:
   autoscaleMax: 5
   resources:
     requests:
-      cpu: 500m
-      memory: 2Gi
+      cpu: 100m
+      memory: 512Mi
     limits:
-      cpu: 2000m
-      memory: 4Gi
+      cpu: 1000m
+      memory: 1Gi
 
   # prod: 트레이싱 샘플링 1% (비용 절감)
   traceSampling: 1.0
