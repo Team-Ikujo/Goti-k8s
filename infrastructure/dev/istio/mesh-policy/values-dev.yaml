@@ -1,0 +1,3 @@
+# dev 환경: 바로 STRICT (PERMISSIVE 중간 단계 불필요)
+mtls:
+  mode: STRICT

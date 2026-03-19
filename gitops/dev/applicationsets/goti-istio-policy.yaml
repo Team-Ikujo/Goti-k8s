@@ -1,0 +1,33 @@
+# Goti namespace Istio 정책 (deny-all + allow rules + ServiceEntry)
+# deny-all과 allow 정책을 하나의 Helm chart로 묶어서 원자적 배포
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: goti-istio-policy
+  namespace: argocd
+spec:
+  project: goti
+  source:
+    repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+    targetRevision: main
+    path: "infrastructure/dev/istio/goti-policy"
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-dev.yaml
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: goti
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

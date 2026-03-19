@@ -1,0 +1,16 @@
+{{- if .Values.allowKubeletProbes.enabled }}
+# Kubelet health probe 허용
+# Istio 1.7+에서 자동 probe 리디렉션이 작동하지만, 안전장치로 추가
+# from 없음 = 모든 소스 허용 (kubelet은 mesh identity 없음)
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-kubelet-probes
+spec:
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths: ["/actuator/health/*"]
+            methods: ["GET"]
+{{- end }}

@@ -30,6 +30,11 @@ gateway:
             exact: "/api/v1/stadiums"
         - uri:
             prefix: "/api/v1/baseball-teams"
+      timeout: 5s
+      retries:
+        attempts: 2
+        perTryTimeout: 2s
+        retryOn: 5xx,reset,connect-failure
       route:
         - destination:
             host: goti-stadium-dev
@@ -93,3 +98,41 @@ externalSecret:
   remoteRef:
     path: /dev/server  # TODO: 서비스별 경로 분리 예정 (/dev/stadium 등)
     overridePath: /dev/kind/server
+
+# --- Istio 보안/네트워크 정책 ---
+
+istioPolicy:
+  # Phase 1: ticketing → stadium (경기장/팀 조회)
+  authorizationPolicy:
+    enabled: true
+    allowFrom:
+      - name: from-ticketing
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-ticketing-dev"]
+            to:
+              - operation:
+                  paths: ["/api/v1/stadiums*", "/api/v1/baseball-teams*"]
+                  methods: ["GET"]
+
+  # Phase 2: Resilience
+  destinationRule:
+    enabled: true
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 5s
+      http:
+        maxRequestsPerConnection: 100
+        maxRetries: 2
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    loadBalancer:
+      simple: LEAST_REQUEST
+
+  sidecar:
+    enabled: false

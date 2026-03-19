@@ -28,6 +28,11 @@ gateway:
     - match:
         - uri:
             prefix: "/api/v1/payments"
+      timeout: 15s
+      retries:
+        attempts: 2
+        perTryTimeout: 5s
+        retryOn: 5xx,reset,connect-failure
       route:
         - destination:
             host: goti-payment-dev
@@ -91,3 +96,41 @@ externalSecret:
   remoteRef:
     path: /dev/server  # TODO: 서비스별 경로 분리 예정 (/dev/payment 등)
     overridePath: /dev/kind/server
+
+# --- Istio 보안/네트워크 정책 ---
+
+istioPolicy:
+  # Phase 1: resale → payment (양도 결제/환불)
+  authorizationPolicy:
+    enabled: true
+    allowFrom:
+      - name: from-resale
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-resale-dev"]
+            to:
+              - operation:
+                  paths: ["/api/v1/resales/payments", "/api/v1/resales/payments/*"]
+                  methods: ["POST", "PATCH"]
+
+  # Phase 2: Resilience (PG 연동 가능 — 넉넉한 timeout)
+  destinationRule:
+    enabled: true
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 5s
+      http:
+        maxRequestsPerConnection: 100
+        maxRetries: 2
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    loadBalancer:
+      simple: LEAST_REQUEST
+
+  sidecar:
+    enabled: false
