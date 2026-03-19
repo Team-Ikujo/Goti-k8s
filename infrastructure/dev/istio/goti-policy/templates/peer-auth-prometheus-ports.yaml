@@ -1,8 +1,9 @@
 {{- if .Values.peerAuth.permissiveForScrape.enabled }}
-# goti namespace — scrape 포트만 PERMISSIVE mTLS (dev only)
+# goti namespace PERMISSIVE mTLS (dev only)
 # monitoring namespace에 sidecar 미주입 → plaintext scrape 수신 허용
-# 기본 STRICT 유지, scrape 대상 포트만 PERMISSIVE로 범위 최소화
-# AuthorizationPolicy deny-all이 L7 접근 제어를 담당하므로 보안 유지
+# AuthorizationPolicy deny-all + port/path/method 제한이 L7 접근 제어를 담당
+# mesh 내부(sidecar → sidecar) 통신은 자동으로 mTLS 사용
+# NOTE: portLevelMtls는 selector 필수 → namespace-wide는 PERMISSIVE로 설정
 # TODO(prod): monitoring에 sidecar 주입 후 enabled: false 또는 이 파일 제거
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication
@@ -10,12 +11,5 @@ metadata:
   name: goti-permissive-for-scrape
 spec:
   mtls:
-    mode: STRICT
-  portLevelMtls:
-    15020:
-      mode: PERMISSIVE  # Istio merged prometheus metrics
-    15090:
-      mode: PERMISSIVE  # Envoy admin stats
-    8080:
-      mode: PERMISSIVE  # Spring Boot actuator (/actuator/prometheus)
+    mode: PERMISSIVE
 {{- end }}
