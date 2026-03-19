@@ -1,0 +1,50 @@
+# root 사용자로 컨테이너 실행 금지 — 컨테이너 탈출 시 피해 최소화
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-run-as-non-root
+  annotations:
+    policies.kyverno.io/title: Require Run As Non-Root
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      컨테이너를 root(UID 0)로 실행하면 컨테이너 탈출 시 호스트 전체가 위험해집니다.
+      runAsNonRoot: true 또는 runAsUser > 0을 설정해야 합니다.
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: validate-run-as-non-root
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - goti
+      validate:
+        message: >-
+          Pod 또는 컨테이너 '{{ element.name }}'의 securityContext에
+          runAsNonRoot: true 또는 runAsUser > 0을 설정해야 합니다.
+        foreach:
+          - list: "request.object.spec.containers"
+            preconditions:
+              all:
+                - key: "{{ element.name }}"
+                  operator: NotEquals
+                  value: "istio-proxy"
+            deny:
+              conditions:
+                all:
+                  # pod-level도 non-root가 아니고
+                  - key: "{{ request.object.spec.securityContext.runAsNonRoot || false }}"
+                    operator: Equals
+                    value: false
+                  # container-level도 non-root 설정이 없고
+                  - key: "{{ element.securityContext.runAsNonRoot || false }}"
+                    operator: Equals
+                    value: false
+                  # runAsUser도 0이거나 미설정인 경우
+                  - key: "{{ element.securityContext.runAsUser || 0 }}"
+                    operator: Equals
+                    value: 0

@@ -1,0 +1,39 @@
+# 권한 상승(privilege escalation) 금지 — 컨테이너 탈출 공격 방지
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privilege-escalation
+  annotations:
+    policies.kyverno.io/title: Disallow Privilege Escalation
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      allowPrivilegeEscalation을 false로 설정하면 컨테이너 프로세스가
+      부모보다 높은 권한을 얻는 것을 방지합니다.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: deny-privilege-escalation
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - goti
+      validate:
+        message: "컨테이너 '{{ element.name }}'의 securityContext.allowPrivilegeEscalation을 false로 설정해야 합니다."
+        foreach:
+          - list: "request.object.spec.containers"
+            preconditions:
+              all:
+                - key: "{{ element.name }}"
+                  operator: NotEquals
+                  value: "istio-proxy"
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.securityContext.allowPrivilegeEscalation || true }}"
+                    operator: Equals
+                    value: true

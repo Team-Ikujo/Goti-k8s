@@ -1,0 +1,24 @@
+# Goti namespace Istio 정책 기본값
+# deny-all + allow 정책은 반드시 동시 배포
+
+denyAll:
+  enabled: true
+
+allowGateway:
+  enabled: true
+  # Istio Gateway Helm release의 ServiceAccount 이름
+  gatewaySA: "cluster.local/ns/istio-system/sa/istio-gateway"
+
+allowPrometheus:
+  enabled: true
+
+# prod: monitoring namespace에 sidecar 주입 완료 → PERMISSIVE 불필요
+peerAuth:
+  permissiveForScrape:
+    enabled: false
+
+allowKubeletProbes:
+  enabled: true
+
+# Phase 2: 외부 서비스 ServiceEntry
+serviceEntries: []

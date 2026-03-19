@@ -1,0 +1,47 @@
+# liveness/readiness probe 필수 설정 — 비정상 Pod 자동 감지 및 트래픽 차단
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-pod-probes
+  annotations:
+    policies.kyverno.io/title: Require Pod Probes
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      liveness probe는 비정상 Pod를 재시작하고, readiness probe는 준비되지 않은
+      Pod로의 트래픽을 차단합니다. goti namespace의 모든 앱 컨테이너에 필수입니다.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: validate-probes
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - goti
+      # istio-proxy, otel-collector 등 사이드카 컨테이너 제외
+      validate:
+        message: "컨테이너 '{{ element.name }}'에 livenessProbe와 readinessProbe를 설정해야 합니다."
+        foreach:
+          - list: "request.object.spec.containers"
+            preconditions:
+              all:
+                # istio-proxy, otel, kube 관련 사이드카는 제외
+                - key: "{{ element.name }}"
+                  operator: NotEquals
+                  value: "istio-proxy"
+                - key: "{{ element.name }}"
+                  operator: NotEquals
+                  value: "otc-container"
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.livenessProbe || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.readinessProbe || '' }}"
+                    operator: Equals
+                    value: ""

@@ -12,6 +12,9 @@ istiod:
       cpu: 2000m
       memory: 4Gi
 
+  # prod: 트레이싱 샘플링 1% (비용 절감)
+  traceSampling: 1.0
+
   meshConfig:
     # 프로덕션: 접근 로그는 샘플링으로 비용 절감 (필요시 활성화)
     accessLogFile: ""
@@ -21,3 +24,7 @@ istiod:
         opentelemetry:
           service: alloy.monitoring.svc.cluster.local
           port: 4317
+    # EKS: sidecar가 앱보다 먼저 완전히 기동되도록 보장
+    # init container 완료 후 앱 컨테이너 시작 전에 envoy proxy가 ready 상태여야 함
+    defaultConfig:
+      holdApplicationUntilProxyStarts: true

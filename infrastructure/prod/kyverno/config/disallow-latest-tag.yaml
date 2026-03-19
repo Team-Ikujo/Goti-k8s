@@ -1,0 +1,37 @@
+# prod에서 :latest 태그 사용 금지 — 재현 불가능한 배포 방지
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Disallow Latest Tag
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      :latest 태그나 태그 없는 이미지는 재현 불가능한 배포를 만듭니다.
+      prod에서는 반드시 명시적인 이미지 태그를 사용해야 합니다.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-image-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - goti
+      validate:
+        message: "이미지 '{{ element.image }}'는 명시적인 태그를 사용해야 합니다. :latest는 허용되지 않습니다."
+        foreach:
+          - list: "request.object.spec.containers"
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.image }}"
+                    operator: Equals
+                    value: "*:latest"
+                  - key: "{{ element.image }}"
+                    operator: NotContains
+                    value: ":"

@@ -1,0 +1,26 @@
+{{- if .Values.allowPrometheus.enabled }}
+# Prometheus/Alloy → goti 서비스 메트릭 스크랩 허용
+# prod: monitoring namespace에 sidecar 주입 완료 → source.namespaces로 소스 제한
+# - 15020: Istio merged prometheus metrics
+# - 15090: Envoy admin stats
+# - 8080: /actuator/prometheus (Spring Boot)
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-prometheus-scrape
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["monitoring"]
+      to:
+        - operation:
+            ports: ["15020", "15090"]
+            paths: ["/stats/prometheus"]
+            methods: ["GET"]
+        - operation:
+            ports: ["8080"]
+            paths: ["/actuator/prometheus"]
+            methods: ["GET"]
+{{- end }}

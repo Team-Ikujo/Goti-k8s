@@ -1,0 +1,60 @@
+# Kyverno prod values — HA configuration (3 replicas for admission controller)
+
+admissionController:
+  replicas: 3
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+backgroundController:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+cleanupController:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+reportsController:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Kyverno webhook은 ArgoCD가 관리하는 Namespace에서 동작해야 하므로
+# argocd, kyverno, istio-system namespace는 정책 적용에서 제외
+config:
+  excludeGroups:
+    - system:nodes
+  webhooks:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - kyverno
+            - argocd
+            - istio-system
+            - kube-system
