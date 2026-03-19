@@ -1,5 +1,7 @@
 {{- if .Values.allowPrometheus.enabled }}
-# Prometheus (monitoring namespace) → goti 서비스 메트릭 스크랩 허용
+# Prometheus/Alloy → goti 서비스 메트릭 스크랩 허용
+# monitoring namespace에 sidecar 미주입 → source.namespaces 식별 불가
+# port + path + method 제한으로 보호 (non-mesh 소스도 허용)
 # - 15020: Istio merged prometheus metrics
 # - 15090: Envoy admin stats
 # - 8080: /actuator/prometheus (Spring Boot)
@@ -10,11 +12,7 @@ metadata:
 spec:
   action: ALLOW
   rules:
-    - from:
-        - source:
-            namespaces:
-              - {{ .Values.allowPrometheus.sourceNamespace | quote }}
-      to:
+    - to:
         - operation:
             ports: ["15020", "15090"]
         - operation:
