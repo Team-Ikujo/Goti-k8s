@@ -12,9 +12,13 @@ metadata:
 spec:
   action: ALLOW
   rules:
+    # TODO(prod): monitoring에 sidecar 주입 후 source.namespaces 복원
+    # dev only: sidecar 미주입으로 source 식별 불가하여 from 절 생략
     - to:
         - operation:
             ports: ["15020", "15090"]
+            paths: ["/stats/prometheus"]
+            methods: ["GET"]
         - operation:
             ports: ["8080"]
             paths: ["/actuator/prometheus"]
