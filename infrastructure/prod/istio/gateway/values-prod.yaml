@@ -1,0 +1,30 @@
+# Istio Ingress Gateway EKS 프로덕션 설정
+gateway:
+  replicaCount: 2
+  service:
+    type: LoadBalancer  # AWS NLB (EKS)
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "external"
+      service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    ports:
+      - name: http2
+        port: 80
+        targetPort: 80
+        protocol: TCP
+      - name: https
+        port: 443
+        targetPort: 443
+        protocol: TCP
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+sharedGateway:
+  hosts:
+    - "go-ti.shop"
+    - "*.go-ti.shop"

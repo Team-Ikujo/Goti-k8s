@@ -1,0 +1,66 @@
+# ArgoCD EKS 프로덕션 설정
+argo-cd:
+  global:
+    revisionHistoryLimit: 3
+
+  # 컨트롤러: HA를 위한 샤딩 활성화
+  controller:
+    replicas: 1  # StatefulSet — sharding은 단일 레플리카로 시작
+    env:
+      - name: ARGOCD_CONTROLLER_REPLICAS
+        value: "1"
+
+  # 서버: 2 레플리카 HA
+  server:
+    replicas: 2
+    service:
+      type: ClusterIP  # Istio IngressGateway를 통해 노출
+
+  # Repo 서버: 2 레플리카 HA
+  repoServer:
+    replicas: 2
+
+  # ApplicationSet 컨트롤러
+  applicationSet:
+    replicas: 2
+
+  # Redis HA (sentinel 모드)
+  redis:
+    enabled: false  # redis-ha 사용
+  redis-ha:
+    enabled: true
+
+  # Dex: SSO 연동 (GitHub OAuth 등)
+  dex:
+    enabled: true
+
+  # 알림: prod 이벤트 Slack/PagerDuty 연동
+  notifications:
+    enabled: true
+
+  configs:
+    params:
+      server.insecure: false
+      applicationsetcontroller.policy: sync
+
+    # RBAC 정책
+    rbac:
+      policy.default: role:readonly
+      policy.csv: |
+        # 팀 전체: 읽기 권한
+        p, role:readonly, applications, get, */*, allow
+        p, role:readonly, repositories, get, *, allow
+        p, role:readonly, clusters, get, *, allow
+
+        # 배포 권한: 프로젝트별 담당자
+        p, role:deployer, applications, sync, */*, allow
+        p, role:deployer, applications, get, */*, allow
+        p, role:deployer, applications, override, */*, allow
+
+        # 관리자: 전체 권한
+        p, role:admin, *, *, */*, allow
+
+        # GitHub Teams 매핑 (Dex 연동 후 활성화)
+        # g, Team-Ikujo:backend, role:deployer
+        # g, Team-Ikujo:infra, role:admin
+      scopes: "[groups]"

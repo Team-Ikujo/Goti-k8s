@@ -1,0 +1,104 @@
+nameOverride: goti-ticketing
+
+image:
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-ticketing"
+  tag: "latest"  # TODO: CI/CD 파이프라인에서 semver tag로 교체
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: ecr-creds
+
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 1Gi
+
+gateway:
+  enabled: true
+  hosts:
+    - "go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/orders"
+        - uri:
+            prefix: "/api/v1/games"
+        - uri:
+            prefix: "/api/v1/tickets"
+        - uri:
+            prefix: "/api/v1/seats"
+        - uri:
+            prefix: "/api/v1/seat-reservations"
+        - uri:
+            prefix: "/api/v1/teams"
+        - uri:
+            prefix: "/api/v1/stadiums/"
+      route:
+        - destination:
+            host: goti-ticketing-prod
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/docs/ticketing/swagger-ui/"
+      rewrite:
+        uri: "/swagger-ui/"
+      route:
+        - destination:
+            host: goti-ticketing-prod
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/docs/ticketing/v3/"
+      rewrite:
+        uri: "/v3/"
+      route:
+        - destination:
+            host: goti-ticketing-prod
+            port:
+              number: 8080
+
+probes:
+  liveness:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+  readiness:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 5
+
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "prod"
+  - name: JAVA_TOOL_OPTIONS
+    value: "-XX:MaxRAMPercentage=60.0"
+  - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
+    value: "/api/docs/ticketing/v3/api-docs/swagger-config"
+  - name: SPRINGDOC_SWAGGER_UI_URL
+    value: "/api/docs/ticketing/v3/api-docs"
+
+envFrom:
+  - secretRef:
+      name: goti-ticketing-prod-secrets
+
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-parameter-store
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /prod/ticketing
