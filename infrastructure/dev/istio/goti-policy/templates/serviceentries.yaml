@@ -9,8 +9,16 @@ spec:
     {{- range .hosts }}
     - {{ . | quote }}
     {{- end }}
+  {{- with .addresses }}
+  addresses:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   location: {{ .location | default "MESH_EXTERNAL" }}
   ports:
     {{- toYaml .ports | nindent 4 }}
   resolution: {{ .resolution | default "DNS" }}
+  {{- with .endpoints }}
+  endpoints:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 {{- end }}
