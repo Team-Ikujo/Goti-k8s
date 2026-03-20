@@ -16,3 +16,7 @@ gateway:
 sharedGateway:
   hosts:
     - "goti.local"
+
+# JWT 헤더 위조 방지: Gateway에서 X-User-Id/X-User-Role strip
+stripInternalHeaders:
+  enabled: true

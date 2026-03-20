@@ -75,6 +75,7 @@ externalSecret:
     kind: ClusterSecretStore
   remoteRef:
     path: ""
+  additionalPaths: []  # 추가 Parameter Store 경로 (서비스별 시크릿 분리용)
 
 podSecurityContext:
   runAsNonRoot: true
@@ -119,6 +120,21 @@ istioPolicy:
       maxEjectionPercent: 50
     loadBalancer:
       simple: LEAST_REQUEST
+  # JWT 검증: Istio RequestAuthentication (기본 비활성화)
+  requestAuthentication:
+    enabled: false
+    issuer: "goti-user-service"
+    jwksUri: ""
+    forwardOriginalToken: true
+    outputClaimToHeaders:
+      - header: "X-User-Id"
+        claim: "sub"
+      - header: "X-User-Role"
+        claim: "role"
+  # JWT 필수 강제: 공개 API 외 경로에 JWT 없으면 403 (기본 비활성화)
+  jwtAuthorizationPolicy:
+    enabled: false
+    excludePaths: []
   # Phase 2: Sidecar (egress 제한, 기본 비활성화)
   sidecar:
     enabled: false
