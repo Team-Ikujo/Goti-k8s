@@ -83,3 +83,5 @@ spec:
       kind: PeerAuthentication
     - group: "policy"
       kind: PodDisruptionBudget
+    - group: "external-secrets.io"
+      kind: ExternalSecret
