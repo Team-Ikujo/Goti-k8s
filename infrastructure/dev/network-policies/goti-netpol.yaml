@@ -1,14 +1,15 @@
 # goti namespace: defense-in-depth (Istio AuthorizationPolicy L7 + NetworkPolicy L3/L4)
+# Egress 제어는 Istio Sidecar + AuthorizationPolicy(L7)로 충분
+# kindnet NetworkPolicy egress 구현 이슈로 Ingress만 제한 (dev 환경)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny-all
+  name: default-deny-ingress
   namespace: goti
 spec:
   podSelector: {}
   policyTypes:
     - Ingress
-    - Egress
 ---
 # Istio Gateway에서의 ingress 허용
 apiVersion: networking.k8s.io/v1
