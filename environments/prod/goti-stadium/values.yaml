@@ -88,7 +88,7 @@ externalSecret:
   enabled: true
   refreshInterval: "1h"
   secretStoreRef:
-    name: aws-parameter-store
+    name: aws-ssm
     kind: ClusterSecretStore
   remoteRef:
     path: /prod/stadium
