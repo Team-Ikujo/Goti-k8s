@@ -128,3 +128,5 @@ istioPolicy:
           - "~/*.nurigo.com"
           # AWS (SSM Parameter Store, STS)
           - "~/*.amazonaws.com"
+          # dev only: Kind 호스트 PC DB/Redis
+          - "*/host-db.local"

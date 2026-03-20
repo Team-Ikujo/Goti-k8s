@@ -128,3 +128,5 @@ istioPolicy:
           - "monitoring/alloy-dev.monitoring.svc.cluster.local"
           - "kafka/*"
           - "~/*.amazonaws.com"
+          # dev only: Kind 호스트 PC DB/Redis
+          - "*/host-db.local"
