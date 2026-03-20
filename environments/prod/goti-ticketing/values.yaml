@@ -37,6 +37,8 @@ gateway:
         - uri:
             prefix: "/api/v1/seat-reservations"
         - uri:
+            prefix: "/api/v1/stadium-seats"
+        - uri:
             prefix: "/api/v1/teams"
         - uri:
             prefix: "/api/v1/stadiums/"
