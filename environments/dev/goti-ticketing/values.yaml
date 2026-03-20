@@ -4,7 +4,7 @@ replicaCount: 2
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-ticketing"
-  tag: "dev-35-de629ba"
+  tag: "dev-36-033f89e"
   pullPolicy: Always
 
 imagePullSecrets:
