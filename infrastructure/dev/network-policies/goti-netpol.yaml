@@ -121,6 +121,15 @@ spec:
           protocol: UDP
         - port: 53
           protocol: TCP
+    # 호스트 DB/Redis (Kind dev: docker bridge gateway)
+    - to:
+        - ipBlock:
+            cidr: 172.20.0.1/32
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 6379
+          protocol: TCP
     # 외부 HTTPS (AWS SSM, OAuth 등 — Sidecar에서 L7 세분화)
     - ports:
         - port: 443
