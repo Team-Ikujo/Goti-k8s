@@ -44,8 +44,12 @@ reportsController:
       memory: 256Mi
 
 cleanupJobs:
-  image:
-    tag: "1.30"
+  admissionReports:
+    image:
+      tag: "1.30"
+  clusterAdmissionReports:
+    image:
+      tag: "1.30"
 
 # Kyverno webhook은 ArgoCD가 관리하는 Namespace에서 동작해야 하므로
 # argocd, kyverno, istio-system namespace는 정책 적용에서 제외
