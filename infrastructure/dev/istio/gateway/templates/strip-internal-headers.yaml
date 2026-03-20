@@ -2,11 +2,11 @@
 # 외부에서 유입되는 X-User-Id / X-User-Role 헤더를 Gateway에서 제거
 # Istio outputClaimToHeaders가 JWT claim에서 새로 설정하므로
 # 클라이언트가 이 헤더를 위조해도 무시된다
+# EnvoyFilter는 Istio 1.29 기준 v1alpha3만 지원 (v1 GA 미승격)
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
   name: strip-internal-headers
-  namespace: istio-system
 spec:
   workloadSelector:
     labels:

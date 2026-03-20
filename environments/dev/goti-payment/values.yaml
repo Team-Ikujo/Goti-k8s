@@ -117,24 +117,20 @@ istioPolicy:
                   paths: ["/api/v1/resales/payments", "/api/v1/resales/payments/*"]
                   methods: ["POST", "PATCH"]
 
-  # JWT 검증: Istio sidecar가 RS256 JWT를 검증하고 claim을 헤더로 변환
+  # JWT 검증: issuer/outputClaimToHeaders는 base values 상속
   requestAuthentication:
     enabled: true
-    issuer: "goti-user-service"
     jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
-    forwardOriginalToken: true
-    outputClaimToHeaders:
-      - header: "X-User-Id"
-        claim: "sub"
-      - header: "X-User-Role"
-        claim: "role"
 
   # JWT 필수 강제: 모든 payment API는 인증 필수
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
+      - "/actuator"
       - "/actuator/*"
+      - "/swagger-ui"
       - "/swagger-ui/*"
+      - "/v3/api-docs"
       - "/v3/api-docs/*"
 
   # Phase 2: Resilience (공통 설정은 goti-server/values.yaml 기본값 사용)

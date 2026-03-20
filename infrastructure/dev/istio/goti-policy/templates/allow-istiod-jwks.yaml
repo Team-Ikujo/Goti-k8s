@@ -9,7 +9,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: goti-user
+      {{- toYaml .Values.allowIstiodJwks.targetSelector | nindent 6 }}
   action: ALLOW
   rules:
     - from:
