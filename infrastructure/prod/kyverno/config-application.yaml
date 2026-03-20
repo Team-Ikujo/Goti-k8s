@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: kyverno-policies
   namespace: argocd
+  annotations: 
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   sources:
@@ -20,10 +22,3 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-      - SkipDryRunOnMissingResource=true
-    retry:
-      limit: 10
-      backoff:
-        duration: 30s
-        factor: 2
-        maxDuration: 5m

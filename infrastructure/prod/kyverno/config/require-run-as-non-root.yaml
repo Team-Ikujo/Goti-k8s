@@ -24,8 +24,7 @@ spec:
                 - goti
       validate:
         message: >-
-          Pod 또는 컨테이너 '{{ element.name }}'의 securityContext에
-          runAsNonRoot: true 또는 runAsUser > 0을 설정해야 합니다.
+          컨테이너의 securityContext에 runAsNonRoot: true 또는 runAsUser > 0을 설정해야 합니다.
         foreach:
           - list: "request.object.spec.containers"
             preconditions:
@@ -37,14 +36,14 @@ spec:
               conditions:
                 all:
                   # pod-level도 non-root가 아니고
-                  - key: "{{ request.object.spec.securityContext.runAsNonRoot || false }}"
+                  - key: "{{ request.object.spec.securityContext.runAsNonRoot || `false` }}"
                     operator: Equals
                     value: false
                   # container-level도 non-root 설정이 없고
-                  - key: "{{ element.securityContext.runAsNonRoot || false }}"
+                  - key: "{{ element.securityContext.runAsNonRoot || `false` }}"
                     operator: Equals
                     value: false
                   # runAsUser도 0이거나 미설정인 경우
-                  - key: "{{ element.securityContext.runAsUser || 0 }}"
+                  - key: "{{ element.securityContext.runAsUser || `0` }}"
                     operator: Equals
                     value: 0

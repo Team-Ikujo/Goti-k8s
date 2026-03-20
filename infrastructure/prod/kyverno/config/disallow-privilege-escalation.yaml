@@ -23,7 +23,7 @@ spec:
               namespaces:
                 - goti
       validate:
-        message: "컨테이너 '{{ element.name }}'의 securityContext.allowPrivilegeEscalation을 false로 설정해야 합니다."
+        message: "컨테이너의 securityContext.allowPrivilegeEscalation을 false로 설정해야 합니다."
         foreach:
           - list: "request.object.spec.containers"
             preconditions:
@@ -34,6 +34,6 @@ spec:
             deny:
               conditions:
                 any:
-                  - key: "{{ element.securityContext.allowPrivilegeEscalation || true }}"
+                  - key: "{{ element.securityContext.allowPrivilegeEscalation || `true` }}"
                     operator: Equals
                     value: true

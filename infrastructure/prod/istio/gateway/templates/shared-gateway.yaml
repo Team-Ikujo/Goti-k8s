@@ -15,3 +15,11 @@ spec:
         {{- range .Values.sharedGateway.hosts }}
         - {{ . | quote }}
         {{- end }}
+    - port:
+        number: 443
+        name: https
+        protocol: HTTP
+      hosts:
+        {{- range .Values.sharedGateway.hosts }}
+        - {{ . | quote }}
+        {{- end }}
