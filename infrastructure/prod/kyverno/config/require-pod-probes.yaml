@@ -24,7 +24,7 @@ spec:
                 - goti
       # istio-proxy, otel-collector 등 사이드카 컨테이너 제외
       validate:
-        message: "컨테이너 '{{ element.name }}'에 livenessProbe와 readinessProbe를 설정해야 합니다."
+        message: "컨테이너에 livenessProbe와 readinessProbe를 설정해야 합니다."
         foreach:
           - list: "request.object.spec.containers"
             preconditions:
