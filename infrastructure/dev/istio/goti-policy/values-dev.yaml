@@ -44,19 +44,3 @@ serviceEntries:
       - number: 443
         name: https
         protocol: TLS
-  # dev only: Kind 호스트 PC의 PostgreSQL + Redis
-  - name: host-db-redis
-    hosts:
-      - "host-db.local"
-    addresses:
-      - 172.20.0.1/32
-    ports:
-      - number: 5432
-        name: tcp-postgres
-        protocol: TCP
-      - number: 6379
-        name: tcp-redis
-        protocol: TCP
-    resolution: STATIC
-    endpoints:
-      - address: 172.20.0.1
