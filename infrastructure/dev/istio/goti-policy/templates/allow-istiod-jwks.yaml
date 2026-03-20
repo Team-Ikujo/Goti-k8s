@@ -1,0 +1,23 @@
+{{- if .Values.allowIstiodJwks.enabled }}
+# istiod → user 서비스 JWKS 엔드포인트 접근 허용
+# RequestAuthentication의 jwksUri를 istiod가 주기적으로 fetch한다
+# deny-all 하에서 이 접근을 명시적으로 허용해야 한다
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-istiod-jwks
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: goti-user
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - {{ .Values.allowIstiodJwks.istiodSA | quote }}
+      to:
+        - operation:
+            paths: ["/.well-known/jwks.json"]
+            methods: ["GET"]
+{{- end }}
