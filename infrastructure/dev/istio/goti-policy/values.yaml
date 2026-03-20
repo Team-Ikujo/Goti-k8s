@@ -21,5 +21,14 @@ peerAuth:
 allowKubeletProbes:
   enabled: true
 
+# JWT 헤더 위조 방지: Gateway에서 X-User-Id/X-User-Role strip
+stripInternalHeaders:
+  enabled: true
+
+# istiod → user JWKS 엔드포인트 접근 허용 (RequestAuthentication용)
+allowIstiodJwks:
+  enabled: true
+  istiodSA: "cluster.local/ns/istio-system/sa/istiod"
+
 # Phase 2: 외부 서비스 ServiceEntry
 serviceEntries: []
