@@ -1,5 +1,7 @@
 nameOverride: goti-user
 
+replicaCount: 2
+
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-user"
   tag: "dev-32-e0b1257"
