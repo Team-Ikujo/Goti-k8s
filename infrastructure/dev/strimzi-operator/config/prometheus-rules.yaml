@@ -44,10 +44,10 @@ spec:
 
     - name: kafka_consumer
       rules:
-        # MSA 전환 후 Consumer Group 메트릭 활성화 시 사용
+        # kafka-exporter가 노출하는 consumer group lag 메트릭
         - alert: KafkaConsumerLagHigh
           expr: |
-            kafka_consumergroup_group_lag > 10000
+            kafka_consumergroup_lag > 10000
           for: 10m
           labels:
             severity: warning
