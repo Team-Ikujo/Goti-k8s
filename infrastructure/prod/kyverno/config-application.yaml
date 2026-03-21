@@ -21,8 +21,10 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - RespectIgnoreDifferences=true
   ignoreDifferences:
     - group: kyverno.io
       kind: ClusterPolicy
       jsonPointers:
         - /metadata/namespace
+        - /status
