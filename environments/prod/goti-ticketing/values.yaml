@@ -103,4 +103,4 @@ externalSecret:
     name: aws-ssm
     kind: ClusterSecretStore
   remoteRef:
-    path: /prod/ticketing
+    path: /prod/server
