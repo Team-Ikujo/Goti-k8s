@@ -89,4 +89,4 @@ externalSecret:
     name: aws-ssm
     kind: ClusterSecretStore
   remoteRef:
-    path: /prod/resale
+    path: /prod/server
