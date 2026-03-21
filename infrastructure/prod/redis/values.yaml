@@ -1,0 +1,19 @@
+architecture: standalone
+
+auth:
+  enabled: false
+
+master:
+  podAnnotations:
+    sidecar.istio.io/inject: "false"
+  persistence:
+    enabled: true
+    storageClass: gp3
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
