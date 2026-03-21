@@ -62,8 +62,9 @@ spec:
           name: kafka-metrics
           key: kafka-metrics-config.yml
   kafkaExporter:
-    topicRegex: "^(?!__).*"
-    groupRegex: "^(?!strimzi-).*"
+    # Go RE2 엔진은 negative lookahead (?!) 미지원 — 전체 수집 후 Grafana/alert에서 필터링
+    topicRegex: ".*"
+    groupRegex: ".*"
     resources:
       requests:
         cpu: 50m
