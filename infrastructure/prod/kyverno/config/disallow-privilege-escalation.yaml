@@ -34,6 +34,6 @@ spec:
             deny:
               conditions:
                 any:
-                  - key: "{{ element.securityContext.allowPrivilegeEscalation || `true` }}"
-                    operator: Equals
-                    value: true
+                  - key: "{{ element.securityContext.allowPrivilegeEscalation }}"
+                    operator: NotEquals
+                    value: false
