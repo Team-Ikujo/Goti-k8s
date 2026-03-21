@@ -1,0 +1,23 @@
+# Kafka Exporter 메트릭 → Alloy 스크래핑
+# Consumer group lag 등 kafka-exporter 전용 메트릭 수집
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kafka-exporter-metrics
+  namespace: kafka
+  labels:
+    release: kube-prometheus-stack-prod
+    strimzi.io/cluster: goti-kafka
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/cluster: goti-kafka
+      strimzi.io/component-type: kafka-exporter
+  namespaceSelector:
+    matchNames:
+      - kafka
+  endpoints:
+    - port: tcp-prometheus
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 15s
