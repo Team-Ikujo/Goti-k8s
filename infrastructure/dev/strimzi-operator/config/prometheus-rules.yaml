@@ -45,12 +45,13 @@ spec:
     - name: kafka_consumer
       rules:
         # kafka-exporter가 노출하는 consumer group lag 메트릭
+        # sum by로 집계하여 파티션 단위 alert storm 방지
         - alert: KafkaConsumerLagHigh
           expr: |
-            kafka_consumergroup_lag > 10000
+            sum by (consumergroup, topic) (kafka_consumergroup_lag) > 10000
           for: 10m
           labels:
             severity: warning
           annotations:
             summary: "Consumer group {{ $labels.consumergroup }} lag is high"
-            description: "Consumer group {{ $labels.consumergroup }}의 lag이 {{ $value }}입니다. 처리 지연을 확인하세요."
+            description: "Consumer group {{ $labels.consumergroup }}의 토픽 {{ $labels.topic }} lag 합계가 {{ $value }}입니다. 처리 지연을 확인하세요."

@@ -62,8 +62,8 @@ spec:
           name: kafka-metrics
           key: kafka-metrics-config.yml
   kafkaExporter:
-    topicRegex: ".*"
-    groupRegex: ".*"
+    topicRegex: "^(?!__).*"
+    groupRegex: "^(?!strimzi-).*"
     resources:
       requests:
         cpu: 50m
@@ -71,6 +71,16 @@ spec:
       limits:
         cpu: 200m
         memory: 128Mi
+    template:
+      pod:
+        securityContext:
+          runAsNonRoot: true
+      container:
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
   entityOperator:
     topicOperator:
       resources:
