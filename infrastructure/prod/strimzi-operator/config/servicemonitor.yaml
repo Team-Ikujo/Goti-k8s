@@ -6,7 +6,7 @@ metadata:
   name: kafka-metrics
   namespace: kafka
   labels:
-    release: kube-prometheus-stack-dev    # Alloy serviceMonitorSelector 매칭
+    release: kube-prometheus-stack-prod   # Alloy serviceMonitorSelector 매칭
     strimzi.io/cluster: goti-kafka
 spec:
   selector:
