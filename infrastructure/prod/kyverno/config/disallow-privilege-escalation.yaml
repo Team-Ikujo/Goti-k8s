@@ -22,6 +22,11 @@ spec:
                 - Pod
               namespaces:
                 - goti
+      exclude:
+        any:
+          - resources:
+              annotations:
+                kyverno.io/exclude-label-policy: "true"
       validate:
         message: "컨테이너의 securityContext.allowPrivilegeEscalation을 false로 설정해야 합니다."
         foreach:
