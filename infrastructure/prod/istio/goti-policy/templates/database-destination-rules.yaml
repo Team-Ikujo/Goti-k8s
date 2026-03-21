@@ -1,0 +1,23 @@
+# PostgreSQL, Redis는 Istio 사이드카 없이 배포
+# STRICT mTLS 환경에서 MSA → DB/Redis 트래픽이 mTLS 없이 통신하도록 설정
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: goti-postgresql
+  namespace: goti
+spec:
+  host: goti-postgresql.goti.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: goti-redis-master
+  namespace: goti
+spec:
+  host: goti-redis-master.goti.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: DISABLE
