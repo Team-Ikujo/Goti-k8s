@@ -1,0 +1,55 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-topology-spread-constraints
+  annotations:
+    policies.kyverno.io/title: Add Topology Spread Constraints
+    policies.kyverno.io/description: >
+      Pod가 AZ와 노드에 고르게 분산되도록 topologySpreadConstraints를 자동 주입합니다.
+      DaemonSet Pod와 이미 topologySpreadConstraints가 있는 Pod는 제외합니다.
+spec:
+  rules:
+    - name: add-zone-spread
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          # DaemonSet Pod 제외
+          - resources:
+              kinds:
+                - Pod
+              selector:
+                matchExpressions:
+                  - key: app
+                    operator: DoesNotExist
+          - subjects:
+              - kind: ServiceAccount
+                name: "*"
+                namespace: kube-system
+      preconditions:
+        all:
+          # 이미 topologySpreadConstraints가 있는 경우 제외
+          - key: "{{ request.object.spec.topologySpreadConstraints[] | length(@) }}"
+            operator: Equals
+            value: 0
+          # DaemonSet 소유 Pod 제외
+          - key: "{{ request.object.metadata.ownerReferences[?kind=='DaemonSet'] | length(@) }}"
+            operator: Equals
+            value: 0
+      mutate:
+        patchStrategicMerge:
+          spec:
+            topologySpreadConstraints:
+              - maxSkew: 1
+                topologyKey: topology.kubernetes.io/zone
+                whenUnsatisfiable: ScheduleAnyway
+                matchLabelKeys:
+                  - pod-template-hash
+              - maxSkew: 1
+                topologyKey: kubernetes.io/hostname
+                whenUnsatisfiable: ScheduleAnyway
+                matchLabelKeys:
+                  - pod-template-hash
