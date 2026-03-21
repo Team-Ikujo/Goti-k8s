@@ -85,6 +85,26 @@ spec:
         configMapKeyRef:
           name: kafka-metrics
           key: kafka-metrics-config.yml
+  kafkaExporter:
+    topicRegex: "^(?!__).*"
+    groupRegex: "^(?!strimzi-).*"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+    template:
+      pod:
+        securityContext:
+          runAsNonRoot: true
+      container:
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
   entityOperator:
     topicOperator:
       resources:
