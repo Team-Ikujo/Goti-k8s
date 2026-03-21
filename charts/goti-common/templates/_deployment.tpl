@@ -21,6 +21,8 @@ spec:
         {{- end }}
       labels:
         {{- include "goti-common.selectorLabels" . | nindent 8 }}
+        app: {{ include "goti-common.name" . }}
+        version: {{ .Values.image.tag | quote }}
     spec:
       {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ default (include "goti-common.fullname" .) .Values.serviceAccount.name }}
@@ -35,7 +37,10 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            allowPrivilegeEscalation: false
+            {{- with .Values.securityContext }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
