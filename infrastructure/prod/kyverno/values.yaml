@@ -44,11 +44,18 @@ reportsController:
       memory: 256Mi
 
 cleanupJobs:
-  kubectl:
-    image:
-      registry: docker.io
-      repository: bitnami/kubectl
-      tag: "1.31.0"  # 존재하는 버전으로
+  admissionReports:
+    kubectl:
+      image:
+        registry: docker.io
+        repository: bitnami/kubectl
+        tag: "1.31"
+  clusterAdmissionReports:
+    kubectl:
+      image:
+        registry: docker.io
+        repository: bitnami/kubectl
+        tag: "1.31"
 
 # Kyverno webhook은 ArgoCD가 관리하는 Namespace에서 동작해야 하므로
 # argocd, kyverno, istio-system namespace는 정책 적용에서 제외
