@@ -2,7 +2,7 @@ nameOverride: goti-resale
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-resale"
-  tag: "latest"  # TODO: CI/CD 파이프라인에서 semver tag로 교체
+  tag: "dev-35-de629ba"
   pullPolicy: IfNotPresent
 
 imagePullSecrets:
