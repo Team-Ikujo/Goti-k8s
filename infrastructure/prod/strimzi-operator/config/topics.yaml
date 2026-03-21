@@ -1,8 +1,8 @@
-# KafkaTopic CRs — 도메인별 이벤트 토픽
+# KafkaTopic CRs — 도메인별 이벤트 토픽 (EKS prod)
 # 네이밍: {domain}.{event-type}.{version}
-# MSA 전환 시 서비스 간 비동기 이벤트 처리용
+# prod: 고트래픽 토픽 partition 확대, 감사 토픽 retention 연장
 ---
-# === 티켓 도메인 ===
+# === 티켓 도메인 (고트래픽: partition 12) ===
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
@@ -11,10 +11,10 @@ metadata:
     strimzi.io/cluster: goti-kafka
     domain: ticket
 spec:
-  partitions: 6
+  partitions: 12
   replicas: 3
   config:
-    retention.ms: 604800000      # 7일
+    retention.ms: 1209600000      # 14일
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
@@ -26,10 +26,10 @@ metadata:
     strimzi.io/cluster: goti-kafka
     domain: ticket
 spec:
-  partitions: 6
+  partitions: 12
   replicas: 3
   config:
-    retention.ms: 604800000
+    retention.ms: 1209600000      # 14일
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
@@ -41,13 +41,14 @@ metadata:
     strimzi.io/cluster: goti-kafka
     domain: ticket
 spec:
-  partitions: 6
+  partitions: 12
   replicas: 3
   config:
-    retention.ms: 604800000
+    retention.ms: 1209600000      # 14일
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
+# === 티켓 도메인 (감사: partition 6, retention 90일) ===
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
@@ -59,7 +60,7 @@ spec:
   partitions: 6
   replicas: 3
   config:
-    retention.ms: 2592000000     # 30일
+    retention.ms: 7776000000      # 90일 (감사 목적)
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
@@ -74,11 +75,11 @@ spec:
   partitions: 6
   replicas: 3
   config:
-    retention.ms: 2592000000
+    retention.ms: 7776000000      # 90일 (감사 목적)
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
-# === 사용자 도메인 ===
+# === 사용자 도메인 (partition 6) ===
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
@@ -87,14 +88,14 @@ metadata:
     strimzi.io/cluster: goti-kafka
     domain: user
 spec:
-  partitions: 3
+  partitions: 6
   replicas: 3
   config:
-    retention.ms: 2592000000
+    retention.ms: 2592000000      # 30일
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
-# === 알림 도메인 ===
+# === 알림 도메인 (partition 6) ===
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
@@ -103,14 +104,14 @@ metadata:
     strimzi.io/cluster: goti-kafka
     domain: notification
 spec:
-  partitions: 3
+  partitions: 6
   replicas: 3
   config:
-    retention.ms: 259200000      # 3일
+    retention.ms: 604800000       # 7일
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
-# === 양도 도메인 ===
+# === 양도 도메인 (partition 6) ===
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
@@ -119,16 +120,16 @@ metadata:
     strimzi.io/cluster: goti-kafka
     domain: resale
 spec:
-  partitions: 3
+  partitions: 6
   replicas: 3
   config:
-    retention.ms: 604800000
+    retention.ms: 604800000       # 7일
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
 # =============================================================================
 # DLQ (Dead Letter Queue) 토픽
-# 처리 실패한 메시지를 보관. partitions: 1 (순서 보장), retention: 30일
+# 처리 실패한 메시지를 보관. partitions: 1 (순서 보장), retention: 90일 (prod)
 # =============================================================================
 ---
 # === 티켓 도메인 DLQ ===
@@ -144,7 +145,7 @@ spec:
   partitions: 1
   replicas: 3
   config:
-    retention.ms: 2592000000      # 30일
+    retention.ms: 7776000000      # 90일 (prod: 재처리/감사 여유)
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
@@ -160,7 +161,7 @@ spec:
   partitions: 1
   replicas: 3
   config:
-    retention.ms: 2592000000
+    retention.ms: 7776000000
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
@@ -176,7 +177,7 @@ spec:
   partitions: 1
   replicas: 3
   config:
-    retention.ms: 2592000000
+    retention.ms: 7776000000
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
@@ -192,7 +193,7 @@ spec:
   partitions: 1
   replicas: 3
   config:
-    retention.ms: 2592000000
+    retention.ms: 7776000000
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
@@ -208,7 +209,7 @@ spec:
   partitions: 1
   replicas: 3
   config:
-    retention.ms: 2592000000
+    retention.ms: 7776000000
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
@@ -225,7 +226,7 @@ spec:
   partitions: 1
   replicas: 3
   config:
-    retention.ms: 2592000000
+    retention.ms: 7776000000
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
@@ -242,7 +243,7 @@ spec:
   partitions: 1
   replicas: 3
   config:
-    retention.ms: 2592000000
+    retention.ms: 7776000000
     cleanup.policy: delete
     min.insync.replicas: 2
 ---
@@ -259,6 +260,6 @@ spec:
   partitions: 1
   replicas: 3
   config:
-    retention.ms: 2592000000
+    retention.ms: 7776000000
     cleanup.policy: delete
     min.insync.replicas: 2
