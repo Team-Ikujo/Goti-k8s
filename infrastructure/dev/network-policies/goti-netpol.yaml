@@ -131,6 +131,14 @@ spec:
         - port: 6379
           protocol: TCP
     # 외부 HTTPS (AWS SSM, OAuth 등 — Sidecar에서 L7 세분화)
-    - ports:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.169.254/32
+      ports:
         - port: 443
           protocol: TCP
