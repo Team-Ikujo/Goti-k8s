@@ -6,6 +6,9 @@ auth:
 master:
   podAnnotations:
     sidecar.istio.io/inject: "false"
+    kyverno.io/exclude-image-tag-policy: "true"
+    kyverno.io/exclude-label-policy: "true"
+    kyverno.io/exclude-resource-limits: "true"
   persistence:
     enabled: true
     storageClass: gp3

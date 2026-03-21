@@ -22,6 +22,11 @@ spec:
                 - Pod
               namespaces:
                 - goti
+      exclude:
+        any:
+          - resources:
+              annotations:
+                kyverno.io/exclude-label-policy: "true"
       # istio-proxy, otel-collector 등 사이드카 컨테이너 제외
       validate:
         message: "컨테이너에 livenessProbe와 readinessProbe를 설정해야 합니다."
