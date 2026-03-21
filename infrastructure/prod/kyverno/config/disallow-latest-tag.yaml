@@ -23,7 +23,7 @@ spec:
               namespaces:
                 - goti
       validate:
-        message: "이미지 '{{ element.image }}'는 명시적인 태그를 사용해야 합니다. :latest는 허용되지 않습니다."
+        message: "이미지는 명시적인 태그를 사용해야 합니다. :latest는 허용되지 않습니다."
         foreach:
           - list: "request.object.spec.containers"
             deny:
