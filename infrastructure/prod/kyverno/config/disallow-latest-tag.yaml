@@ -22,6 +22,11 @@ spec:
                 - Pod
               namespaces:
                 - goti
+      exclude:
+        any:
+          - resources:
+              annotations:
+                kyverno.io/exclude-image-tag-policy: "true"
       validate:
         message: "이미지는 명시적인 태그를 사용해야 합니다. :latest는 허용되지 않습니다."
         foreach:
