@@ -70,6 +70,7 @@ spec:
   policyTypes:
     - Egress
   egress:
+    # Kind 환경에서 GitHub IP가 동적이므로 0.0.0.0/0 허용, IMDS만 차단
     - to:
         - ipBlock:
             cidr: 0.0.0.0/0
@@ -92,6 +93,8 @@ spec:
   policyTypes:
     - Egress
   egress:
+    # Kind 환경에서 K8s API 서버 IP가 동적이므로 0.0.0.0/0 허용, IMDS만 차단
+    # prod에서는 API 서버 ClusterIP/대역으로 제한 필요
     - to:
         - ipBlock:
             cidr: 0.0.0.0/0
