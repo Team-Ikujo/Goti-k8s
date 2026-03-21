@@ -32,9 +32,6 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
   name: goti-kafka
-  annotations:
-    strimzi.io/node-pools: enabled
-    strimzi.io/kraft: enabled
 spec:
   kafka:
     version: "4.2.0"
