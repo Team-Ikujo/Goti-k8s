@@ -1,0 +1,25 @@
+auth:
+  username: goti
+  database: goti
+  existingSecret: goti-postgresql-auth
+  secretKeys:
+    adminPasswordKey: postgres-password
+    userPasswordKey: password
+
+primary:
+  podAnnotations:
+    sidecar.istio.io/inject: "false"
+  persistence:
+    enabled: true
+    storageClass: gp3
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+metrics:
+  enabled: false
