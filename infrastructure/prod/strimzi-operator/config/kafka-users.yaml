@@ -15,13 +15,7 @@ spec:
   authorization:
     type: simple
     acls:
-      # ticket 도메인 토픽 produce/consume
-      - resource:
-          type: topic
-          name: ticket.
-          patternType: prefix
-        operations: [Read, Write, Describe]
-      # ticket DLQ
+      # ticket 도메인 토픽 전체 (DLQ ticket.*.dlq 포함)
       - resource:
           type: topic
           name: ticket.
