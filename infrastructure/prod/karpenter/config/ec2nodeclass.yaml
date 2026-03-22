@@ -1,0 +1,16 @@
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: goti-app
+spec:
+  amiFamily: AL2
+  role: goti-prod-node-group-role  # foundation 모듈의 node_group IAM role 이름
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: goti-prod
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: goti-prod
+  tags:
+    Name: goti-prod-karpenter-node
+    Environment: prod
