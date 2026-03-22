@@ -29,4 +29,5 @@ spec:
     memory: 400Gi
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
-    consolidateAfter: 30s
+    # 티켓팅 특성상 트래픽 급증 대비 — 너무 빠른 consolidation 방지
+    consolidateAfter: 5m
