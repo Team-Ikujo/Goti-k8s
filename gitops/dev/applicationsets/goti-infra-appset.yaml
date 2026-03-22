@@ -18,7 +18,7 @@ spec:
       project: goti
       source:
         repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-        targetRevision: main  # dev only: HEAD tracking
+        targetRevision: main  # dev only: HEAD tracking — prod는 반드시 semver tag 고정
         path: "charts/goti-server"
         helm:
           valueFiles:
