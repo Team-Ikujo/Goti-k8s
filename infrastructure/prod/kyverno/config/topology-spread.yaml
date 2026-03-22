@@ -29,6 +29,16 @@ spec:
               - kind: ServiceAccount
                 name: "*"
                 namespace: kube-system
+          # 인프라 네임스페이스 제외 — Karpenter/Istio 등 자체 스케줄링 로직 보호
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - karpenter
+                - istio-system
+                - cert-manager
+                - external-secrets
+                - monitoring
       preconditions:
         all:
           # 이미 topologySpreadConstraints가 있는 경우 제외
