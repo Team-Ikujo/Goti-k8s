@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  project: default
+  source:
+    repoURL: https://charts.karpenter.sh
+    chart: karpenter
+    targetRevision: "1.*.*"
+    helm:
+      valuesObject:
+        serviceAccount:
+          annotations:
+            # SSM /prod/karpenter/ROLE_ARN 에서 관리
+            # 값: arn:aws:iam::<account_id>:role/goti-prod-karpenter-role
+            eks.amazonaws.com/role-arn: ""  # terraform output karpenter_role_arn
+        settings:
+          clusterName: goti-prod
+          # SSM /prod/karpenter/QUEUE_NAME 에서 관리
+          interruptionQueue: ""  # terraform output → karpenter queue name
+        podAnnotations:
+          sidecar.istio.io/inject: "false"
+          kyverno.io/exclude-image-tag-policy: "true"
+          kyverno.io/exclude-label-policy: "true"
+          kyverno.io/exclude-resource-limits: "true"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: karpenter
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
