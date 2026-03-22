@@ -88,8 +88,12 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
       tolerations:
+        # Spot NodeGroup (node-role=spot:NoSchedule) 허용 — 앱 Pod는 Spot에서 실행
+        - key: "node-role"
+          value: "spot"
+          effect: "NoSchedule"
+        {{- with .Values.tolerations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
 {{- end }}
