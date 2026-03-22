@@ -3,7 +3,8 @@ kind: EC2NodeClass
 metadata:
   name: goti-app
 spec:
-  amiFamily: AL2
+  # Bottlerocket — 불변 읽기전용 OS, 공격 표면 최소화
+  amiFamily: Bottlerocket
   role: goti-prod-node-group-role  # foundation 모듈의 node_group IAM role 이름
   subnetSelectorTerms:
     - tags:
