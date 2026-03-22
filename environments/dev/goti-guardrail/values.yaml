@@ -24,14 +24,14 @@ probes:
     httpGet:
       path: /health
       port: http
-    initialDelaySeconds: 5
+    initialDelaySeconds: 15
     periodSeconds: 10
     failureThreshold: 3
   readiness:
     httpGet:
       path: /health/ready
       port: http
-    initialDelaySeconds: 5
+    initialDelaySeconds: 10
     periodSeconds: 5
     failureThreshold: 3
 
@@ -45,20 +45,14 @@ resources:
 
 env:
   - name: GUARDRAIL_REDIS_URL
-    value: "redis://host.docker.internal:6379/1"  # dev: 호스트 PC Redis, DB 1번
+    value: "redis://host.docker.internal:6379/1"  # dev only: 호스트 PC Redis, DB 1번. prod에서는 ExternalSecret으로 교체
+  - name: PYTHONDONTWRITEBYTECODE
+    value: "1"
+  - name: PYTHONUNBUFFERED
+    value: "1"
 
 gateway:
   enabled: false  # Guardrail은 Istio ExtAuthz로 연동 (VirtualService 불필요)
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 5
-  targetCPUUtilizationPercentage: 70
-
-pdb:
-  enabled: false
-  minAvailable: 1
 
 podSecurityContext:
   runAsNonRoot: true
@@ -77,12 +71,12 @@ configMap:
   enabled: false
 
 externalSecret:
-  enabled: false
+  enabled: false  # dev only: Redis 인증 미사용. prod에서는 enabled: true + remoteRef 설정
 
 # --- Istio 보안/네트워크 정책 ---
 istioPolicy:
   authorizationPolicy:
-    enabled: false  # ExtAuthz로 사용되므로 별도 설정 불필요
+    enabled: false  # ExtAuthz 서버로 동작하여 자체 AuthorizationPolicy 불필요. 호출 제한은 Istio mesh 레벨에서 처리
   destinationRule:
     enabled: true
   sidecar:
