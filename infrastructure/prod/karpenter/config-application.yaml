@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"  # karpenter 설치 후 적용
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Team-Ikujo/Goti-k8s
+    targetRevision: main
+    path: infrastructure/prod/karpenter/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: karpenter
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
