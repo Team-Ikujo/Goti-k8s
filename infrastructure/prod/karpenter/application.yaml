@@ -8,20 +8,22 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://charts.karpenter.sh
+    # v1.x는 OCI 레지스트리 사용 (charts.karpenter.sh는 v0.x 전용)
+    repoURL: public.ecr.aws/karpenter
     chart: karpenter
     targetRevision: "1.*.*"
     helm:
       valuesObject:
         serviceAccount:
           annotations:
-            # SSM /prod/karpenter/ROLE_ARN 에서 관리
-            # 값: arn:aws:iam::<account_id>:role/goti-prod-karpenter-role
-            eks.amazonaws.com/role-arn: ""  # terraform output karpenter_role_arn
+            # terraform output karpenter_role_arn 값
+            # 패턴: arn:aws:iam::<account_id>:role/<cluster_name>-karpenter-role
+            eks.amazonaws.com/role-arn: "arn:aws:iam::707925622666:role/goti-prod-karpenter-role"
         settings:
           clusterName: goti-prod
-          # SSM /prod/karpenter/QUEUE_NAME 에서 관리
-          interruptionQueue: ""  # terraform output → karpenter queue name
+          # terraform output → SSM /prod/karpenter/QUEUE_NAME
+          # 패턴: <cluster_name>-karpenter
+          interruptionQueue: "goti-prod-karpenter"
         podAnnotations:
           sidecar.istio.io/inject: "false"
           kyverno.io/exclude-image-tag-policy: "true"
