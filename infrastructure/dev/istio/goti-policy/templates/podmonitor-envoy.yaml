@@ -19,4 +19,16 @@ spec:
     - port: http-envoy-prom
       path: /stats/prometheus
       interval: 30s
+      metricRelabelings:
+        # === 필수 메트릭만 유지 (allowlist) ===
+        # 대시보드/알림에서 사용하는 메트릭만 통과, 나머지 전부 drop
+        # 사용 중: istio_requests_total, istio_request_duration_seconds_*,
+        #          istio_tcp_connections_opened_total, istio_agent_cert_*
+        - sourceLabels: [__name__]
+          regex: "istio_requests_total|istio_request_duration_seconds_bucket|istio_request_duration_seconds_count|istio_request_duration_seconds_sum|istio_tcp_connections_opened_total|istio_tcp_connections_closed_total|istio_tcp_sent_bytes_total|istio_tcp_received_bytes_total|istio_agent_cert_expiry_seconds|istio_agent_cert_rotation_count"
+          action: keep
+        # === 고카디널리티 레이블 제거 ===
+        # source/destination_principal, canonical_service 등은 대시보드에서 미사용
+        - action: labeldrop
+          regex: "source_principal|destination_principal|source_canonical_service|source_canonical_revision|destination_canonical_revision|connection_security_policy|source_cluster|destination_cluster"
 {{- end }}
