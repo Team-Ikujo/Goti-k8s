@@ -15,7 +15,18 @@ spec:
           values: ["spot", "on-demand"]
         - key: node.kubernetes.io/instance-type
           operator: In
-          values: ["t3.xlarge", "t3a.xlarge", "m5.xlarge", "m5a.xlarge"]
+          values:
+            # 주력 (현재 Spot NodeGroup과 동일)
+            - t3a.xlarge   # 4c/16G
+            - t3.xlarge    # 4c/16G
+            # 대체 (Spot 재고 부족 시 fallback)
+            - t3a.large    # 2c/8G
+            - t3.large     # 2c/8G
+            # 버스트용 (티켓팅 급증 대비)
+            - m5a.xlarge   # 4c/16G, 네트워크 성능 우수
+            - m5.xlarge    # 4c/16G
+            - c5a.xlarge   # 4c/8G, CPU 집약 작업용
+            - c5.xlarge    # 4c/8G
         - key: topology.kubernetes.io/zone
           operator: In
           values: ["ap-northeast-2a", "ap-northeast-2b", "ap-northeast-2c"]
