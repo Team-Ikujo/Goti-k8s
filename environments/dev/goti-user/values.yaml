@@ -4,7 +4,7 @@ replicaCount: 2
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-user"
-  tag: "dev-36-033f89e"
+  tag: "dev-37-71dcf1b"
   pullPolicy: Always
 
 imagePullSecrets:
