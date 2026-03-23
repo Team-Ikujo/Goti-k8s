@@ -131,11 +131,13 @@ spec:
         - port: 6379
           protocol: TCP
     # Kubernetes API (ecr-credential-renewer의 kubectl apply용)
+    # ClusterIP(10.96.0.1)는 DNAT 후 NetworkPolicy 평가되므로 동작 안 함
+    # DNAT 후 실제 목적지(Kind docker network 대역 + API server 포트)로 허용
     - to:
         - ipBlock:
-            cidr: 10.96.0.1/32
+            cidr: 172.20.0.0/24
       ports:
-        - port: 443
+        - port: 6443
           protocol: TCP
     # 외부 HTTPS (AWS SSM, OAuth 등 — Sidecar에서 L7 세분화)
     - to:
