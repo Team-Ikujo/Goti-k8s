@@ -152,6 +152,20 @@ spec:
       ports:
         - port: 9404
           protocol: TCP
+    # ArgoCD metrics scrape (8080=appset, 8082=controller, 8083=server, 8084=repo-server)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: argocd
+      ports:
+        - port: 8080
+          protocol: TCP
+        - port: 8082
+          protocol: TCP
+        - port: 8083
+          protocol: TCP
+        - port: 8084
+          protocol: TCP
     - to:
         - namespaceSelector:
             matchLabels:
