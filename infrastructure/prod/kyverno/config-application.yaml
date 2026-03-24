@@ -28,3 +28,7 @@ spec:
       jsonPointers:
         - /metadata/namespace
         - /status
+        - /spec/admission
+        - /spec/background
+        - /spec/emitWarning
+        - /spec/validationFailureAction
