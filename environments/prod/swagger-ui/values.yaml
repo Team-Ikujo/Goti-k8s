@@ -4,5 +4,6 @@ image:
 
 hosts:
   - "go-ti.shop"
+  - "api.go-ti.shop"
 
 gatewayRef: "istio-system/goti-shared-gateway"
