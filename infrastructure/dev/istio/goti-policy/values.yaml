@@ -22,12 +22,9 @@ allowKubeletProbes:
   enabled: true
 
 # istiod + envoy sidecar → user JWKS 엔드포인트 접근 허용 (RequestAuthentication용)
+# istiod는 sidecar 없이 직접 HTTP 호출 → principals 매칭 불가 → namespaces 사용
 allowIstiodJwks:
   enabled: true
-  istiodSA: "cluster.local/ns/istio-system/sa/istiod"
-  additionalPrincipals:
-    - "cluster.local/ns/istio-system/sa/istio-gateway"
-    - "cluster.local/ns/goti/sa/*"
   targetSelector:
     app.kubernetes.io/name: goti-user
 
