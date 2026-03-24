@@ -1,0 +1,26 @@
+# 기본값 — 환경별 values에서 오버라이드
+enabled: false
+
+schedule: "*/5 * * * *"
+
+image:
+  repository: grafana/k6
+  tag: "0.56.0"
+
+k6:
+  vus: 3
+  duration: "4m"
+
+services:
+  ticketing: "http://goti-ticketing-dev.goti.svc:8080"
+  user: "http://goti-user-dev.goti.svc:8080"
+  stadium: "http://goti-stadium-dev.goti.svc:8080"
+  payment: "http://goti-payment-dev.goti.svc:8080"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
