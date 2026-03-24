@@ -136,7 +136,7 @@ istioPolicy:
             to:
               - operation:
                   paths: ["/api/v1/orders/*"]
-                  methods: ["POST"]
+                  methods: ["GET", "POST"]
 
   # JWT 검증: issuer/outputClaimToHeaders는 base values 상속
   requestAuthentication:
