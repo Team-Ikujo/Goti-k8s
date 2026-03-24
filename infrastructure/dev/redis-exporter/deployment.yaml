@@ -1,0 +1,54 @@
+# Redis Exporter: 호스트 PC Redis(172.20.0.1:6379)를 모니터링
+# oliver006/redis_exporter — Prometheus 메트릭 노출
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-exporter
+  namespace: monitoring
+  labels:
+    app: redis-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-exporter
+  template:
+    metadata:
+      labels:
+        app: redis-exporter
+    spec:
+      containers:
+        - name: redis-exporter
+          image: oliver006/redis_exporter:v1.67.0
+          ports:
+            - containerPort: 9121
+              name: metrics
+          env:
+            - name: REDIS_ADDR
+              value: "redis://172.20.0.1:6379"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9121
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9121
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 59000
+            capabilities:
+              drop: [ALL]
