@@ -1,0 +1,179 @@
+# KafkaUser CRs — 서비스별 SCRAM-SHA-512 인증 + ACL
+# prod 전용: dev는 인증 없이 운영 (개발 편의)
+# Strimzi User Operator가 자동으로 Secret 생성 (namespace: kafka)
+---
+# === goti-ticketing 서비스 ===
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: goti-ticketing
+  labels:
+    strimzi.io/cluster: goti-kafka
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      # ticket 도메인 토픽 전체 (DLQ ticket.*.dlq 포함)
+      - resource:
+          type: topic
+          name: ticket.
+          patternType: prefix
+        operations: [Read, Write, Describe]
+      # consumer group
+      - resource:
+          type: group
+          name: goti-ticketing
+          patternType: prefix
+        operations: [Read, Describe]
+---
+# === goti-user 서비스 ===
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: goti-user
+  labels:
+    strimzi.io/cluster: goti-kafka
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: user.
+          patternType: prefix
+        operations: [Read, Write, Describe]
+      - resource:
+          type: group
+          name: goti-user
+          patternType: prefix
+        operations: [Read, Describe]
+---
+# === goti-payment 서비스 ===
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: goti-payment
+  labels:
+    strimzi.io/cluster: goti-kafka
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      # payment-completed produce
+      - resource:
+          type: topic
+          name: ticket.payment-completed.v1
+          patternType: literal
+        operations: [Write, Describe]
+      # order-created consume (결제 요청 수신)
+      - resource:
+          type: topic
+          name: ticket.order-created.v1
+          patternType: literal
+        operations: [Read, Describe]
+      - resource:
+          type: group
+          name: goti-payment
+          patternType: prefix
+        operations: [Read, Describe]
+---
+# === goti-stadium 서비스 ===
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: goti-stadium
+  labels:
+    strimzi.io/cluster: goti-kafka
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      # seat-reserved consume (좌석 예약 이벤트 수신)
+      - resource:
+          type: topic
+          name: ticket.seat-reserved.v1
+          patternType: literal
+        operations: [Read, Describe]
+      - resource:
+          type: group
+          name: goti-stadium
+          patternType: prefix
+        operations: [Read, Describe]
+---
+# === goti-resale 서비스 ===
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: goti-resale
+  labels:
+    strimzi.io/cluster: goti-kafka
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: resale.
+          patternType: prefix
+        operations: [Read, Write, Describe]
+      # ticket 이벤트 구독 (양도 대상 확인)
+      - resource:
+          type: topic
+          name: ticket.issued.v1
+          patternType: literal
+        operations: [Read, Describe]
+      - resource:
+          type: topic
+          name: ticket.cancelled.v1
+          patternType: literal
+        operations: [Read, Describe]
+      - resource:
+          type: group
+          name: goti-resale
+          patternType: prefix
+        operations: [Read, Describe]
+---
+# === goti-notification 서비스 ===
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: goti-notification
+  labels:
+    strimzi.io/cluster: goti-kafka
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: notification.
+          patternType: prefix
+        operations: [Read, Write, Describe]
+      # 모든 도메인 이벤트 구독 (알림 트리거)
+      - resource:
+          type: topic
+          name: ticket.
+          patternType: prefix
+        operations: [Read, Describe]
+      - resource:
+          type: topic
+          name: user.
+          patternType: prefix
+        operations: [Read, Describe]
+      - resource:
+          type: group
+          name: goti-notification
+          patternType: prefix
+        operations: [Read, Describe]

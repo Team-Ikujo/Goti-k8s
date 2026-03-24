@@ -45,6 +45,7 @@ spec:
   policyTypes:
     - Ingress
     - Egress
+  # TODO: inter-broker 포트(9091, 9090 등) 명시하여 최소 권한 적용
   ingress:
     - from:
         - podSelector:
@@ -87,7 +88,14 @@ spec:
   egress:
     - to:
         - podSelector: {}
-    - ports:
+    # Kind 환경에서 K8s API 서버 IP가 동적이므로 0.0.0.0/0 허용, IMDS만 차단
+    # prod에서는 API 서버 ClusterIP/대역으로 제한 필요
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 169.254.169.254/32
+      ports:
         - port: 443
           protocol: TCP
         - port: 6443

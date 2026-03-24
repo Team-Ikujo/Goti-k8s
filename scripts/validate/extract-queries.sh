@@ -84,6 +84,9 @@ substitute_vars() {
   expr="${expr//\$\{span_name\}/.*}"
   expr="${expr//\$db_system/.*}"
   expr="${expr//\$\{db_system\}/.*}"
+  # Error tracking 변수
+  expr="${expr//\$error_class/.*}"
+  expr="${expr//\$\{error_class\}/.*}"
   # Log 필터 변수
   expr="${expr//\$log_level/ERROR}"
   expr="${expr//\$\{log_level\}/ERROR}"

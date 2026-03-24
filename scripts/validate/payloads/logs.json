@@ -59,6 +59,25 @@
             {
               "timeUnixNano": "PLACEHOLDER_TIME",
               "observedTimeUnixNano": "PLACEHOLDER_TIME",
+              "severityNumber": 17,
+              "severityText": "ERROR",
+              "body": { "stringValue": "{\"error_class\":\"DBTimeoutException\",\"message\":\"Query execution timeout after 2000ms\",\"http_route\":\"/api/v1/seat-reservations\",\"http_method\":\"POST\",\"http_status\":500,\"stack_trace\":\"com.goti.ticketing.SeatService.select(SeatService.java:142)\\ncom.goti.ticketing.SeatRepo.updateStatus(SeatRepo.java:87)\",\"userId\":\"usr_12345\",\"matchId\":\"KT-20260322\"}" },
+              "attributes": [
+                { "key": "log_type", "value": { "stringValue": "app" } },
+                { "key": "thread.name", "value": { "stringValue": "http-nio-8080-exec-9" } },
+                { "key": "code.namespace", "value": { "stringValue": "com.goti.ticketing.SeatService" } },
+                { "key": "logger", "value": { "stringValue": "com.goti.ticketing.SeatService" } },
+                { "key": "exception.type", "value": { "stringValue": "com.goti.common.exception.DBTimeoutException" } },
+                { "key": "error_class", "value": { "stringValue": "DBTimeoutException" } },
+                { "key": "http_route", "value": { "stringValue": "/api/v1/seat-reservations" } },
+                { "key": "http_status", "value": { "intValue": "500" } }
+              ],
+              "traceId": "f1e2d3c4b5a6978800112233aabbccdd",
+              "spanId": "aabb112233445566"
+            },
+            {
+              "timeUnixNano": "PLACEHOLDER_TIME",
+              "observedTimeUnixNano": "PLACEHOLDER_TIME",
               "severityNumber": 9,
               "severityText": "INFO",
               "body": { "stringValue": "{\"payment_status\":\"SUCCESS\",\"payment_duration_ms\":150,\"order_id\":\"ORD-001\",\"amount\":55000,\"pg_provider\":\"toss\"}" },

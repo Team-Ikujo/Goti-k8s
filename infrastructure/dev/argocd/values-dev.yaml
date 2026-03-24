@@ -4,20 +4,51 @@ argo-cd:
     # 리비전 히스토리 최소화 (리소스 절약)
     revisionHistoryLimit: 1
 
-  # 컨트롤러: 단일 레플리카
+  # 컨트롤러: 단일 레플리카 + 메트릭
   controller:
     replicas: 1
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        interval: 30s
+        additionalLabels:
+          release: kube-prometheus-stack-dev
 
-  # 서버: 단일 레플리카 + NodePort
+  # 서버: 단일 레플리카 + NodePort + 메트릭
   server:
     replicas: 1
     service:
       type: NodePort
       nodePortHttp: 30080
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        interval: 30s
+        additionalLabels:
+          release: kube-prometheus-stack-dev
 
-  # Repo 서버: 단일 레플리카
+  # Repo 서버: 단일 레플리카 + 메트릭
   repoServer:
     replicas: 1
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        interval: 30s
+        additionalLabels:
+          release: kube-prometheus-stack-dev
+
+  # ApplicationSet 메트릭
+  applicationSet:
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        interval: 30s
+        additionalLabels:
+          release: kube-prometheus-stack-dev
 
   # 내장 Redis 사용
   redis:
@@ -35,3 +66,6 @@ argo-cd:
       server.insecure: true
       # chart 9.x에서 기본값 제거됨 — ApplicationSet 자동 sync 필요 시 명시
       applicationsetcontroller.policy: sync
+      # ArgoCD 트레이싱 → Alloy → Tempo (sync, reconcile, repo-server 등)
+      otlp.address: "alloy-dev.monitoring.svc:4317"
+      otlp.insecure: "true"

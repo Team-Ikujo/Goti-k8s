@@ -4,7 +4,7 @@ replicaCount: 2
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-payment"
-  tag: "dev-35-de629ba"
+  tag: "dev-37-71dcf1b"
   pullPolicy: Always
 
 imagePullSecrets:
@@ -26,6 +26,7 @@ gateway:
   enabled: true
   hosts:
     - "dev.go-ti.shop"
+    - "api.go-ti.shop"
   gatewayRef: "istio-system/goti-shared-gateway"
   httpRoutes:
     - match:
@@ -81,6 +82,10 @@ env:
     value: "dev"
   - name: JAVA_TOOL_OPTIONS
     value: "-XX:MaxRAMPercentage=60.0"
+  - name: GOTI_MESH_ENABLED
+    value: "true"
+  - name: TICKETING_BASE_URL
+    value: "http://goti-ticketing-dev.goti.svc.cluster.local:8080"
   - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
     value: "/api/docs/payment/v3/api-docs/swagger-config"
   - name: SPRINGDOC_SWAGGER_UI_URL
@@ -117,6 +122,22 @@ istioPolicy:
                   paths: ["/api/v1/resales/payments", "/api/v1/resales/payments/*"]
                   methods: ["POST", "PATCH"]
 
+  # JWT 검증: issuer/outputClaimToHeaders는 base values 상속
+  requestAuthentication:
+    enabled: true
+    jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
+
+  # JWT 필수 강제: 모든 payment API는 인증 필수
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/actuator"
+      - "/actuator/*"
+      - "/swagger-ui"
+      - "/swagger-ui/*"
+      - "/v3/api-docs"
+      - "/v3/api-docs/*"
+
   # Phase 2: Resilience (공통 설정은 goti-server/values.yaml 기본값 사용)
   destinationRule:
     enabled: true
@@ -128,6 +149,6 @@ istioPolicy:
       - hosts:
           - "istio-system/*"
           - "./*"
-          - "monitoring/alloy-dev.monitoring.svc.cluster.local"
+          - "monitoring/*"
           - "kafka/*"
           - "~/*.amazonaws.com"

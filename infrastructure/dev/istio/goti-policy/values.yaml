@@ -21,5 +21,12 @@ peerAuth:
 allowKubeletProbes:
   enabled: true
 
+# istiod + envoy sidecar → user JWKS 엔드포인트 접근 허용 (RequestAuthentication용)
+# istiod는 sidecar 없이 직접 HTTP 호출 → principals 매칭 불가 → namespaces 사용
+allowIstiodJwks:
+  enabled: true
+  targetSelector:
+    app.kubernetes.io/name: goti-user
+
 # Phase 2: 외부 서비스 ServiceEntry
 serviceEntries: []
