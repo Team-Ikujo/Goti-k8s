@@ -85,7 +85,7 @@ run_logql() {
 
   local response
   local now_ns=$(($(date +%s) * 1000000000))
-  local start_ns=$(( ($(date +%s) - 3600) * 1000000000 ))
+  local start_ns=$(( ($(date +%s) - 21600) * 1000000000 ))  # 6h: dev 저트래픽 환경 false negative 방지
 
   if [[ "$endpoint" == *"query_range" ]]; then
     response=$(curl -s --connect-timeout 5 --max-time 10 \
