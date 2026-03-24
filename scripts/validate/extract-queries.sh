@@ -93,6 +93,19 @@ substitute_vars() {
   # JVM instance 변수
   expr="${expr//\$instance/.*}"
   expr="${expr//\$\{instance\}/.*}"
+  # ArgoCD 변수
+  expr="${expr//\$project/.*}"
+  expr="${expr//\$\{project\}/.*}"
+  expr="${expr//\$app/.*}"
+  expr="${expr//\$\{app\}/.*}"
+  # Kafka 변수
+  expr="${expr//\$topic/.*}"
+  expr="${expr//\$\{topic\}/.*}"
+  expr="${expr//\$consumer_group/.*}"
+  expr="${expr//\$\{consumer_group\}/.*}"
+  # Queue/War-room 변수
+  expr="${expr//\$match_id/.*}"
+  expr="${expr//\$\{match_id\}/.*}"
   # Grafana time range
   expr="${expr//\$__range/1h}"
   expr="${expr//\[\$__auto\]/[5m]}"
