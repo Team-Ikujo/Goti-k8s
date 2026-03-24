@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"  # karpenter 설치 후 적용
 spec:
-  project: default
+  project: infra
   source:
     repoURL: https://github.com/Team-Ikujo/Goti-k8s
     targetRevision: main
