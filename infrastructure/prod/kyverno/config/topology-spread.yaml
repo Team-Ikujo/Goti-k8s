@@ -25,15 +25,12 @@ spec:
                 matchExpressions:
                   - key: app
                     operator: DoesNotExist
-          - subjects:
-              - kind: ServiceAccount
-                name: "*"
-                namespace: kube-system
-          # 인프라 네임스페이스 제외 — Karpenter/Istio 등 자체 스케줄링 로직 보호
+          # 인프라/시스템 네임스페이스 제외 — background 모드에서 subjects 사용 불가
           - resources:
               kinds:
                 - Pod
               namespaces:
+                - kube-system
                 - karpenter
                 - istio-system
                 - cert-manager
