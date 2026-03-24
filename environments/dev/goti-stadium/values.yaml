@@ -23,10 +23,10 @@ podAnnotations:
 resources:
   requests:
     cpu: 100m
-    memory: 384Mi
+    memory: 512Mi
   limits:
     cpu: 500m
-    memory: 768Mi
+    memory: 1Gi
 
 gateway:
   enabled: true
@@ -89,7 +89,7 @@ env:
   - name: SPRING_PROFILES_ACTIVE
     value: "dev"
   - name: JAVA_TOOL_OPTIONS
-    value: "-XX:MaxRAMPercentage=60.0"
+    value: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport"
   - name: GOTI_MESH_ENABLED
     value: "true"
   - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
