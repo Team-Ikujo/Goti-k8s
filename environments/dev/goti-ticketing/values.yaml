@@ -35,6 +35,8 @@ gateway:
         - uri:
             prefix: "/api/v1/games"
         - uri:
+            prefix: "/api/v1/game-seats"
+        - uri:
             prefix: "/api/v1/tickets"
         - uri:
             prefix: "/api/v1/seats"
