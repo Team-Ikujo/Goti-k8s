@@ -135,7 +135,7 @@ istioPolicy:
                   principals: ["cluster.local/ns/goti/sa/goti-payment-dev"]
             to:
               - operation:
-                  paths: ["/api/v1/orders/*"]
+                  paths: ["/api/v1/orders/*", "/api/v1/orders/*/payment-order"]
                   methods: ["GET", "POST"]
 
   # JWT 검증: issuer/outputClaimToHeaders는 base values 상속
