@@ -135,7 +135,7 @@ istioPolicy:
                   principals: ["cluster.local/ns/goti/sa/goti-payment-dev"]
             to:
               - operation:
-                  paths: ["/api/v1/orders/*", "/api/v1/orders/*/payment-order"]
+                  paths: ["/api/v1/orders/*"]  # prefix match: 모든 /api/v1/orders/ 하위 경로 포함
                   methods: ["GET", "POST"]
 
   # JWT 검증: issuer/outputClaimToHeaders는 base values 상속
@@ -151,8 +151,8 @@ istioPolicy:
       - "/api/v1/games/*"
       - "/api/v1/stadiums"
       - "/api/v1/stadiums/*"
-      - "/api/v1/orders/*/payment-order"          # 내부용: payment → ticketing (mTLS principal로 보호)
-      - "/api/v1/orders/*/payment-confirmations"  # 내부용: payment → ticketing (결제 확인 콜백)
+      - "*/payment-order"          # 내부용: payment → ticketing (mTLS principal로 보호, suffix match)
+      - "*/payment-confirmations"  # 내부용: payment → ticketing (결제 확인 콜백, suffix match)
       - "/actuator"
       - "/actuator/*"
       - "/swagger-ui"
