@@ -25,3 +25,4 @@ gateway:
 sharedGateway:
   hosts:
     - "dev.go-ti.shop"
+    - "api.go-ti.shop"
