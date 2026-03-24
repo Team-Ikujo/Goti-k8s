@@ -1,18 +1,18 @@
-# Kafka JMX 메트릭 → Alloy 스크래핑
-# metrics-service.yaml의 headless Service를 통해 Pod의 JMX Exporter(9404) 수집
+# Kafka Exporter 메트릭 → Alloy 스크래핑
+# Consumer group lag 등 kafka-exporter 전용 메트릭 수집
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: kafka-metrics
+  name: kafka-exporter-metrics
   namespace: kafka
   labels:
-    release: kube-prometheus-stack-prod   # Alloy serviceMonitorSelector 매칭
+    release: kube-prometheus-stack-dev
     strimzi.io/cluster: goti-kafka
 spec:
   selector:
     matchLabels:
       strimzi.io/cluster: goti-kafka
-      app.kubernetes.io/component: metrics
+      strimzi.io/component-type: kafka-exporter
   namespaceSelector:
     matchNames:
       - kafka
@@ -20,3 +20,4 @@ spec:
     - port: tcp-prometheus
       path: /metrics
       interval: 30s
+      scrapeTimeout: 15s

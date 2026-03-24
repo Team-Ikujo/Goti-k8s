@@ -57,6 +57,32 @@ spec:
         - port: 53
           protocol: TCP
 ---
+# monitoring(Alloy)에서 ArgoCD metrics scrape 허용
+# ServiceMonitor가 8082(controller), 8083(server), 8084(repo-server), 8080(appset) 수집
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-metrics-scrape
+  namespace: argocd
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - port: 8080
+          protocol: TCP
+        - port: 8082
+          protocol: TCP
+        - port: 8083
+          protocol: TCP
+        - port: 8084
+          protocol: TCP
+---
 # repo-server: GitHub HTTPS egress (Git clone)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -70,7 +96,13 @@ spec:
   policyTypes:
     - Egress
   egress:
-    - ports:
+    # Kind 환경에서 GitHub IP가 동적이므로 0.0.0.0/0 허용, IMDS만 차단
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 169.254.169.254/32
+      ports:
         - port: 443
           protocol: TCP
 ---
@@ -87,7 +119,14 @@ spec:
   policyTypes:
     - Egress
   egress:
-    - ports:
+    # Kind 환경에서 K8s API 서버 IP가 동적이므로 0.0.0.0/0 허용, IMDS만 차단
+    # prod에서는 API 서버 ClusterIP/대역으로 제한 필요
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 169.254.169.254/32
+      ports:
         - port: 443
           protocol: TCP
         - port: 6443

@@ -12,6 +12,12 @@ spec:
       server: "https://kubernetes.default.svc"
     - namespace: istio-system
       server: "https://kubernetes.default.svc"
+    - namespace: monitoring
+      server: "https://kubernetes.default.svc"
+    - namespace: goti
+      server: "https://kubernetes.default.svc"
+    - namespace: kafka
+      server: "https://kubernetes.default.svc"
     - namespace: kyverno
       server: "https://kubernetes.default.svc"
     - namespace: karpenter
@@ -29,6 +35,9 @@ spec:
       kind: MutatingWebhookConfiguration
     - group: "admissionregistration.k8s.io"
       kind: ValidatingWebhookConfiguration
+    # External Secrets (cluster-scoped)
+    - group: "external-secrets.io"
+      kind: ClusterSecretStore
     - group: "kyverno.io"
       kind: ClusterPolicy
     - group: "karpenter.sh"
@@ -39,5 +48,88 @@ spec:
       kind: EC2NodeClass
   # Istio, ArgoCD 리소스 타입이 다양하므로 namespace 경계로 격리
   namespaceResourceWhitelist:
-    - group: "*"
-      kind: "*"
+    # Core
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: ServiceAccount
+    - group: ""
+      kind: Endpoints
+    # Apps
+    - group: "apps"
+      kind: Deployment
+    - group: "apps"
+      kind: DaemonSet
+    - group: "apps"
+      kind: StatefulSet
+    # RBAC
+    - group: "rbac.authorization.k8s.io"
+      kind: Role
+    - group: "rbac.authorization.k8s.io"
+      kind: RoleBinding
+    # Istio
+    - group: "networking.istio.io"
+      kind: Gateway
+    - group: "networking.istio.io"
+      kind: VirtualService
+    - group: "networking.istio.io"
+      kind: DestinationRule
+    - group: "networking.istio.io"
+      kind: EnvoyFilter
+    - group: "networking.istio.io"
+      kind: ServiceEntry
+    - group: "networking.istio.io"
+      kind: Sidecar
+    - group: "security.istio.io"
+      kind: PeerAuthentication
+    - group: "security.istio.io"
+      kind: AuthorizationPolicy
+    - group: "security.istio.io"
+      kind: RequestAuthentication
+    # Monitoring
+    - group: "monitoring.coreos.com"
+      kind: ServiceMonitor
+    - group: "monitoring.coreos.com"
+      kind: PodMonitor
+    - group: "monitoring.coreos.com"
+      kind: PrometheusRule
+    # ArgoCD
+    - group: "argoproj.io"
+      kind: Application
+    - group: "argoproj.io"
+      kind: ApplicationSet
+    - group: "argoproj.io"
+      kind: AppProject
+    # NetworkPolicy
+    - group: "networking.k8s.io"
+      kind: NetworkPolicy
+    # OTel
+    - group: "opentelemetry.io"
+      kind: Instrumentation
+    - group: "opentelemetry.io"
+      kind: OpenTelemetryCollector
+    # Strimzi Kafka
+    - group: "kafka.strimzi.io"
+      kind: Kafka
+    - group: "kafka.strimzi.io"
+      kind: KafkaTopic
+    - group: "kafka.strimzi.io"
+      kind: KafkaUser
+    # External Secrets
+    - group: "external-secrets.io"
+      kind: ExternalSecret
+    # Batch
+    - group: "batch"
+      kind: CronJob
+    - group: "batch"
+      kind: Job
+    # Policy
+    - group: "policy"
+      kind: PodDisruptionBudget
+    # Autoscaling
+    - group: "autoscaling"
+      kind: HorizontalPodAutoscaler

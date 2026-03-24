@@ -1,0 +1,21 @@
+# Kafka Exporter 메트릭 전용 headless Service
+# Strimzi kafka-exporter는 별도 Service를 자동 생성하지 않으므로
+# ServiceMonitor 타겟용 수동 생성
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-exporter-metrics
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: goti-kafka
+    strimzi.io/component-type: kafka-exporter
+spec:
+  clusterIP: None
+  selector:
+    strimzi.io/cluster: goti-kafka
+    strimzi.io/component-type: kafka-exporter
+  ports:
+    - name: tcp-prometheus
+      port: 9404
+      targetPort: 9404
+      protocol: TCP

@@ -32,9 +32,6 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
   name: goti-kafka
-  annotations:
-    strimzi.io/node-pools: enabled
-    strimzi.io/kraft: enabled
 spec:
   kafka:
     version: "4.2.0"
@@ -64,6 +61,27 @@ spec:
         configMapKeyRef:
           name: kafka-metrics
           key: kafka-metrics-config.yml
+  kafkaExporter:
+    # Go RE2 엔진은 negative lookahead (?!) 미지원 — 전체 수집 후 Grafana/alert에서 필터링
+    topicRegex: ".*"
+    groupRegex: ".*"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+    template:
+      pod:
+        securityContext:
+          runAsNonRoot: true
+      container:
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
   entityOperator:
     topicOperator:
       resources:

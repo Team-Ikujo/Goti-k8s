@@ -4,7 +4,7 @@ replicaCount: 2
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-ticketing"
-  tag: "dev-35-de629ba"
+  tag: "dev-37-71dcf1b"
   pullPolicy: Always
 
 imagePullSecrets:
@@ -26,6 +26,7 @@ gateway:
   enabled: true
   hosts:
     - "dev.go-ti.shop"
+    - "api.go-ti.shop"
   gatewayRef: "istio-system/goti-shared-gateway"
   httpRoutes:
     - match:
@@ -33,6 +34,8 @@ gateway:
             prefix: "/api/v1/orders"
         - uri:
             prefix: "/api/v1/games"
+        - uri:
+            prefix: "/api/v1/game-seats"
         - uri:
             prefix: "/api/v1/tickets"
         - uri:
@@ -95,6 +98,10 @@ env:
     value: "dev"
   - name: JAVA_TOOL_OPTIONS
     value: "-XX:MaxRAMPercentage=60.0"
+  - name: GOTI_MESH_ENABLED
+    value: "true"
+  - name: STADIUM_API_URL
+    value: "http://goti-stadium-dev.goti.svc.cluster.local:8080"
   - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
     value: "/api/docs/ticketing/v3/api-docs/swagger-config"
   - name: SPRINGDOC_SWAGGER_UI_URL
@@ -128,8 +135,30 @@ istioPolicy:
                   principals: ["cluster.local/ns/goti/sa/goti-payment-dev"]
             to:
               - operation:
-                  paths: ["/api/v1/orders/*"]
-                  methods: ["POST"]
+                  paths: ["/api/v1/orders/*"]  # prefix match: 모든 /api/v1/orders/ 하위 경로 포함
+                  methods: ["GET", "POST"]
+
+  # JWT 검증: issuer/outputClaimToHeaders는 base values 상속
+  requestAuthentication:
+    enabled: true
+    jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
+
+  # JWT 필수 강제: 공개 API 외 경로에 JWT 없으면 403
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/api/v1/games"
+      - "/api/v1/games/*"
+      - "/api/v1/stadiums"
+      - "/api/v1/stadiums/*"
+      - "*/payment-order"          # 내부용: payment → ticketing (mTLS principal로 보호, suffix match)
+      - "*/payment-confirmations"  # 내부용: payment → ticketing (결제 확인 콜백, suffix match)
+      - "/actuator"
+      - "/actuator/*"
+      - "/swagger-ui"
+      - "/swagger-ui/*"
+      - "/v3/api-docs"
+      - "/v3/api-docs/*"
 
   # Phase 2: Resilience (공통 설정은 goti-server/values.yaml 기본값 사용)
   destinationRule:
@@ -142,6 +171,6 @@ istioPolicy:
       - hosts:
           - "istio-system/*"
           - "./*"
-          - "monitoring/alloy-dev.monitoring.svc.cluster.local"
+          - "monitoring/*"
           - "kafka/*"
           - "~/*.amazonaws.com"

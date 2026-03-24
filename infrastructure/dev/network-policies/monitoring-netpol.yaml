@@ -60,6 +60,44 @@ spec:
         - port: 53
           protocol: TCP
 ---
+# Grafana sidecar: K8s API server egress (ConfigMap watch)
+# grafana-sc-dashboard sidecar가 ConfigMap 변경을 watch하려면
+# K8s API server(443,6443)에 접근 가능해야 함
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-grafana-apiserver-egress
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: grafana
+  policyTypes:
+    - Egress
+  egress:
+    # K8s API server (ClusterIP 또는 노드 IP)
+    - ports:
+        - port: 443
+          protocol: TCP
+        - port: 6443
+          protocol: TCP
+    # DNS (ConfigMap watch에 필요)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Grafana → datasource 접근 (monitoring 내부: Mimir, Loki, Tempo 등)
+    - to:
+        - podSelector: {}
+---
 # Alloy: goti namespace에서 OTLP 수신
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -106,6 +144,27 @@ spec:
         - port: 15020
           protocol: TCP
         - port: 15090
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kafka
+      ports:
+        - port: 9404
+          protocol: TCP
+    # ArgoCD metrics scrape (8080=appset, 8082=controller, 8083=server, 8084=repo-server)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: argocd
+      ports:
+        - port: 8080
+          protocol: TCP
+        - port: 8082
+          protocol: TCP
+        - port: 8083
+          protocol: TCP
+        - port: 8084
           protocol: TCP
     - to:
         - namespaceSelector:

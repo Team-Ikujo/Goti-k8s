@@ -4,7 +4,7 @@ replicaCount: 2
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-user"
-  tag: "dev-35-de629ba"
+  tag: "dev-37-71dcf1b"
   pullPolicy: Always
 
 imagePullSecrets:
@@ -27,6 +27,7 @@ gateway:
   enabled: true
   hosts:
     - "dev.go-ti.shop"
+    - "api.go-ti.shop"
   gatewayRef: "istio-system/goti-shared-gateway"
   httpRoutes:
     - match:
@@ -100,8 +101,12 @@ externalSecret:
     name: aws-parameter-store
     kind: ClusterSecretStore
   remoteRef:
-    path: /dev/server  # TODO: 서비스별 경로 분리 예정 (/dev/user 등)
+    path: /dev/server  # 공통 (DB, Redis, JWT_RSA_PUBLIC_KEY 등)
     overridePath: /dev/kind/server
+  # 동일 key는 마지막 path 값으로 덮어씀 (Kind override용)
+  additionalPaths:
+    - path: /dev/user       # user 전용 (JWT_RSA_PRIVATE_KEY)
+    - path: /dev/kind/user  # Kind 환경 override
 
 # --- Istio 보안/네트워크 정책 ---
 
@@ -110,6 +115,28 @@ istioPolicy:
   authorizationPolicy:
     enabled: true
     allowFrom: []
+
+  # JWT 검증: issuer/outputClaimToHeaders는 base values 상속
+  requestAuthentication:
+    enabled: true
+    jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
+
+  # JWT 필수 강제: 공개 API 외 경로에 JWT 없으면 403
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/api/v1/auth"
+      - "/api/v1/auth/*"
+      - "/api/v1/test"
+      - "/api/v1/test/*"
+      - "/actuator"
+      - "/actuator/*"
+      - "/swagger-ui"
+      - "/swagger-ui/*"
+      - "/v3/api-docs"
+      - "/v3/api-docs/*"
+      - "/.well-known"
+      - "/.well-known/*"
 
   # Phase 2: Resilience (공통 설정은 goti-server/values.yaml 기본값 사용)
   destinationRule:
@@ -122,7 +149,7 @@ istioPolicy:
       - hosts:
           - "istio-system/*"
           - "./*"
-          - "monitoring/alloy-dev.monitoring.svc.cluster.local"
+          - "monitoring/*"
           - "kafka/*"
           # OAuth 소셜 로그인 (Google, Naver, Kakao)
           - "~/*.googleapis.com"
