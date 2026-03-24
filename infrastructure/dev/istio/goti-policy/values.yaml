@@ -21,10 +21,13 @@ peerAuth:
 allowKubeletProbes:
   enabled: true
 
-# istiod → user JWKS 엔드포인트 접근 허용 (RequestAuthentication용)
+# istiod + envoy sidecar → user JWKS 엔드포인트 접근 허용 (RequestAuthentication용)
 allowIstiodJwks:
   enabled: true
   istiodSA: "cluster.local/ns/istio-system/sa/istiod"
+  additionalPrincipals:
+    - "cluster.local/ns/istio-system/sa/istio-gateway"
+    - "cluster.local/ns/goti/sa/*"
   targetSelector:
     app.kubernetes.io/name: goti-user
 
