@@ -39,7 +39,7 @@ spec:
       preconditions:
         all:
           # 이미 topologySpreadConstraints가 있는 경우 제외
-          - key: "{{ request.object.spec.topologySpreadConstraints[] | length(@) }}"
+          - key: "{{ request.object.spec.topologySpreadConstraints | length(@) }}"
             operator: Equals
             value: 0
           # DaemonSet 소유 Pod 제외
