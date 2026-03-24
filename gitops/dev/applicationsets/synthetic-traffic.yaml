@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: synthetic-traffic
+  namespace: argocd
+spec:
+  project: goti
+  source:
+    repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+    targetRevision: main
+    path: "charts/synthetic-traffic"
+    helm:
+      valueFiles:
+        - "../../environments/dev/synthetic-traffic/values.yaml"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: goti
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

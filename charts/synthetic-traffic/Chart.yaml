@@ -1,0 +1,5 @@
+apiVersion: v2
+name: synthetic-traffic
+description: K6 상시 합성 트래픽 (CronJob + Istio AuthorizationPolicy)
+version: 0.1.0
+type: application
