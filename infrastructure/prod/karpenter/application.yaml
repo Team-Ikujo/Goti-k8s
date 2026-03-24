@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
 spec:
-  project: default
+  project: infra
   source:
     # v1.x는 OCI 레지스트리 사용 (charts.karpenter.sh는 v0.x 전용)
     repoURL: public.ecr.aws/karpenter
