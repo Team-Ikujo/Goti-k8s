@@ -62,3 +62,7 @@ spec:
       kind: ExternalSecret
     - group: "monitoring.coreos.com"
       kind: PodMonitor
+    - group: "batch"
+      kind: CronJob
+    - group: "batch"
+      kind: Job
