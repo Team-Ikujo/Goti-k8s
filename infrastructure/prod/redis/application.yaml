@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: goti-redis
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"  # MSA 서비스보다 먼저 배포 (goti-applicationsets wave 0 이전)
 spec:
   project: default
   sources:
