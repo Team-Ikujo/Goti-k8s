@@ -1,25 +1,23 @@
 {{- if .Values.allowIstiodJwks.enabled }}
-# istiod + envoy sidecar → user 서비스 JWKS 엔드포인트 접근 허용
-# RequestAuthentication의 jwksUri를 istiod와 각 서비스의 envoy sidecar가 fetch한다
-# deny-all 하에서 이 접근을 명시적으로 허용해야 한다
+# JWKS 엔드포인트 공개 허용 (인증 불필요)
+#
+# 근본 원인: istiod는 sidecar 없이 직접 HTTP로 JWKS를 fetch한다.
+# mTLS identity가 없어 principals/namespaces 매칭 불가 → deny-all에 의해 차단.
+#
+# JWKS는 공개키(public key)만 포함하므로 인증 없이 노출해도 안전하다.
+# Auth0, Keycloak 등 모든 OIDC provider가 동일한 방식으로 운영한다.
+# from 절을 생략하면 모든 source(mTLS 없는 요청 포함)를 허용한다.
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-istiod-jwks
+  name: allow-jwks-public
 spec:
   selector:
     matchLabels:
       {{- toYaml .Values.allowIstiodJwks.targetSelector | nindent 6 }}
   action: ALLOW
   rules:
-    - from:
-        - source:
-            principals:
-              - {{ .Values.allowIstiodJwks.istiodSA | quote }}
-            {{- range .Values.allowIstiodJwks.additionalPrincipals }}
-              - {{ . | quote }}
-            {{- end }}
-      to:
+    - to:
         - operation:
             paths: ["/.well-known/jwks.json"]
             methods: ["GET"]
