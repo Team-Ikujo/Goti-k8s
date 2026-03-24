@@ -4,7 +4,9 @@ metadata:
   name: goti-app
 spec:
   # Bottlerocket — 불변 읽기전용 OS, 공격 표면 최소화
-  amiFamily: Bottlerocket
+  # v1에서 amiFamily 단독 사용 불가 → amiSelectorTerms[].alias 로 지정
+  amiSelectorTerms:
+    - alias: bottlerocket@latest
   role: goti-prod-node-group-role  # foundation 모듈의 node_group IAM role 이름
   subnetSelectorTerms:
     - tags:
