@@ -7,6 +7,7 @@ spec:
   description: "인프라 부트스트랩 프로젝트 (Istio, AppProject, ApplicationSet)"
   sourceRepos:
     - "https://github.com/Team-Ikujo/Goti-k8s.git"
+    - "public.ecr.aws/karpenter"
   destinations:
     - namespace: argocd
       server: "https://kubernetes.default.svc"
