@@ -68,6 +68,19 @@ spec:
           protocol: UDP
         - port: 53
           protocol: TCP
+    # K8s API 서버: KubernetesSecretConfigProvider가 Secret 읽기 위해 필요
+    # Kind 환경에서 API 서버 IP가 동적이므로 0.0.0.0/0 허용, IMDS만 차단
+    # prod에서는 API 서버 ClusterIP/대역으로 제한 필요
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 169.254.169.254/32
+      ports:
+        - port: 443
+          protocol: TCP
+        - port: 6443
+          protocol: TCP
 ---
 # Strimzi Operator: Kafka 브로커 관리 + K8s API 통신
 apiVersion: networking.k8s.io/v1

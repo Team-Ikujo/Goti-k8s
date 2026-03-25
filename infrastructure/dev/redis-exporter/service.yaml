@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-exporter
+  namespace: monitoring
+  labels:
+    app: redis-exporter
+spec:
+  ports:
+    - port: 9121
+      targetPort: 9121
+      name: metrics
+      protocol: TCP
+  selector:
+    app: redis-exporter
