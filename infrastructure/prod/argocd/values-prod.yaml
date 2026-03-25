@@ -6,9 +6,6 @@ argo-cd:
   # 컨트롤러: HA를 위한 샤딩 활성화
   controller:
     replicas: 1  # StatefulSet — sharding은 단일 레플리카로 시작
-    env:
-      - name: ARGOCD_CONTROLLER_REPLICAS
-        value: "1"
 
   # 서버: 2 레플리카 HA
   server:
