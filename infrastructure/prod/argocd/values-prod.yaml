@@ -30,9 +30,20 @@ argo-cd:
   redis-ha:
     enabled: true
 
-  # Dex: SSO 연동 (GitHub OAuth 등)
+  # Dex: Google OAuth SSO
   dex:
     enabled: true
+    env:
+      - name: GOOGLE_CLIENT_ID
+        valueFrom:
+          secretKeyRef:
+            name: argocd-google-oauth
+            key: clientID
+      - name: GOOGLE_CLIENT_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: argocd-google-oauth
+            key: clientSecret
 
   # 알림: prod 이벤트 Slack/PagerDuty 연동
   notifications:
@@ -43,9 +54,23 @@ argo-cd:
       server.insecure: true
       applicationsetcontroller.policy: sync
 
+    cm:
+      url: "https://argocd.go-ti.shop"
+      dex.config: |
+        connectors:
+          - type: google
+            id: google
+            name: Google
+            config:
+              clientID: $GOOGLE_CLIENT_ID
+              clientSecret: $GOOGLE_CLIENT_SECRET
+              redirectURI: https://argocd.go-ti.shop/api/dex/callback
+              hostedDomains:
+                - gmail.com
+
     # RBAC 정책
     rbac:
-      policy.default: role:readonly
+      policy.default: ""
       policy.csv: |
         # 팀 전체: 읽기 권한
         p, role:readonly, applications, get, */*, allow
@@ -63,4 +88,7 @@ argo-cd:
         # GitHub Teams 매핑 (Dex 연동 후 활성화)
         # g, Team-Ikujo:backend, role:deployer
         # g, Team-Ikujo:infra, role:admin
-      scopes: "[groups]"
+
+        # Google 계정 매핑 (이메일 기반)
+        g, fbaudwo144@gmail.com, role:admin
+      scopes: "[groups, email]"
