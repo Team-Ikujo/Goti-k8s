@@ -46,6 +46,8 @@ substitute_vars() {
   expr="${expr//\$\{interval\}/5m}"
   expr="${expr//\$__rate_interval/5m}"
   expr="${expr//\$\{__rate_interval\}/5m}"
+  expr="${expr//\$__rate_interval/5m}"
+  expr="${expr//\$\{__rate_interval\}/5m}"
   expr="${expr//\$__interval/1m}"
   expr="${expr//\$\{__interval\}/1m}"
   expr="${expr//\$log_type/.*}"
