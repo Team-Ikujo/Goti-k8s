@@ -8,6 +8,7 @@ spec:
   sourceRepos:
     - "https://github.com/Team-Ikujo/Goti-k8s.git"
     - "public.ecr.aws/karpenter"
+    - "https://kedacore.github.io/charts"
   destinations:
     - namespace: argocd
       server: "https://kubernetes.default.svc"
@@ -22,6 +23,8 @@ spec:
     - namespace: kyverno
       server: "https://kubernetes.default.svc"
     - namespace: karpenter
+      server: "https://kubernetes.default.svc"
+    - namespace: keda
       server: "https://kubernetes.default.svc"
   clusterResourceWhitelist:
     - group: ""
