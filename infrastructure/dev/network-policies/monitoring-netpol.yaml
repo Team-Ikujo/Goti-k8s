@@ -208,6 +208,8 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: kafka
       ports:
+        - port: 9092
+          protocol: TCP
         - port: 9404
           protocol: TCP
     # ArgoCD metrics scrape (8080=appset, 8082=controller, 8083=server, 8084=repo-server)
