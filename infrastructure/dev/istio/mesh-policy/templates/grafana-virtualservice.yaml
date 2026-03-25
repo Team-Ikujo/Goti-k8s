@@ -5,7 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   hosts:
-    - "grafana.go-ti.shop"
+    - "dev-monitoring.go-ti.shop"
   gateways:
     - istio-system/goti-shared-gateway
   http:

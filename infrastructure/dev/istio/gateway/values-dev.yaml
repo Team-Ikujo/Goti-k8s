@@ -27,4 +27,4 @@ sharedGateway:
     - "dev.go-ti.shop"
     - "api.go-ti.shop"
     - "dev-api.go-ti.shop"
-    - "grafana.go-ti.shop"
+    - "dev-monitoring.go-ti.shop"
