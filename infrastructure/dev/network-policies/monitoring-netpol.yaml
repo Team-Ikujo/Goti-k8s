@@ -243,3 +243,44 @@ spec:
           protocol: UDP
         - port: 53
           protocol: TCP
+---
+# kube-state-metrics + prometheus-operator: K8s API server egress
+# API server에 접근하여 K8s 리소스 상태를 수집/감시
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-kps-apiserver-egress
+  namespace: monitoring
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - kube-state-metrics
+          - kube-prometheus-stack-prometheus-operator
+  policyTypes:
+    - Egress
+  egress:
+    # K8s API server
+    - ports:
+        - port: 443
+          protocol: TCP
+        - port: 6443
+          protocol: TCP
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # monitoring 내부 통신 (operator → alertmanager 등)
+    - to:
+        - podSelector: {}
