@@ -5,15 +5,12 @@ metadata:
   namespace: monitoring
 spec:
   hosts:
-    - "api.go-ti.shop"
+    - "monitoring.go-ti.shop"
   gateways:
     - istio-system/goti-shared-gateway
   http:
-    - match:
-        - uri:
-            prefix: "/monitoring"
-      route:
+    - route:
         - destination:
-            host: kube-prometheus-stack-prod-grafana
+            host: kube-prometheus-stack-prod-grafana.monitoring.svc.cluster.local
             port:
               number: 80
