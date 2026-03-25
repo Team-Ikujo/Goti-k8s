@@ -30,6 +30,32 @@ spec:
         - port: 3000
           protocol: TCP
 ---
+# Mimir: Istio Gateway에서 접근 허용 (K6 부하테스트 메트릭 Push + Prometheus 쿼리)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-mimir-ingress
+  namespace: monitoring
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values: ["mimir"]
+      - key: app.kubernetes.io/component
+        operator: In
+        values: ["distributor", "query-frontend"]
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - port: 8080
+          protocol: TCP
+---
 # monitoring 내부 통신 허용 (Alloy→Mimir, Alloy→Loki, Alloy→Tempo 등)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
