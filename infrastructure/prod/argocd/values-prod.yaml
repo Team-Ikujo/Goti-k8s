@@ -40,7 +40,7 @@ argo-cd:
 
   configs:
     params:
-      server.insecure: false
+      server.insecure: true
       applicationsetcontroller.policy: sync
 
     # RBAC 정책

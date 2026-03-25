@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  hosts:
+    - "go-ti.shop"
+  gateways:
+    - istio-system/goti-shared-gateway
+  http:
+    - match:
+        - uri:
+            prefix: "/monitoring"
+      route:
+        - destination:
+            host: kube-prometheus-stack-prod-grafana
+            port:
+              number: 80
