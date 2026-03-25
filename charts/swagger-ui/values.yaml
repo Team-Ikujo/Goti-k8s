@@ -18,6 +18,7 @@ service:
 
 hosts:
   - "dev.go-ti.shop"
+  - "go-ti.shop"
 
 gatewayRef: "istio-system/goti-shared-gateway"
 
