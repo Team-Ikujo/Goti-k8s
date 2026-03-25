@@ -55,6 +55,9 @@ spec:
       log.retention.hours: 168
       # 기본 파티션 수
       num.partitions: 3
+      # 메시지 크기 — 부하테스트 대규모 메트릭 push 지원 (기본 1MB → 16MB)
+      message.max.bytes: 16777216
+      replica.fetch.max.bytes: 16777216
     metricsConfig:
       type: jmxPrometheusExporter
       valueFrom:
