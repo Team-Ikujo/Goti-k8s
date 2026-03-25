@@ -1,5 +1,23 @@
 {{- define "goti-common.hpa" -}}
 {{- if .Values.autoscaling.enabled }}
+{{- if .Values.autoscaling.keda.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "goti-common.fullname" . }}
+  labels:
+    {{- include "goti-common.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "goti-common.fullname" . }}
+  minReplicaCount: {{ .Values.autoscaling.minReplicas }}
+  maxReplicaCount: {{ .Values.autoscaling.maxReplicas }}
+  cooldownPeriod: {{ .Values.autoscaling.keda.cooldownPeriod | default 60 }}
+  triggers:
+    {{- toYaml .Values.autoscaling.keda.triggers | nindent 4 }}
+{{- else }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -20,5 +38,6 @@ spec:
         target:
           type: Utilization
           averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
 {{- end }}
 {{- end }}
