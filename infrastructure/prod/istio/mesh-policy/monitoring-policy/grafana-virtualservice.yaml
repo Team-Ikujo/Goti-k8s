@@ -5,7 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   hosts:
-    - "go-ti.shop"
+    - "api.go-ti.shop"
   gateways:
     - istio-system/goti-shared-gateway
   http:
