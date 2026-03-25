@@ -52,6 +52,9 @@ spec:
       kind: NodeClaim
     - group: "karpenter.k8s.aws"
       kind: EC2NodeClass
+    # KEDA
+    - group: "apiregistration.k8s.io"
+      kind: APIService
   # Istio, ArgoCD 리소스 타입이 다양하므로 namespace 경계로 격리
   namespaceResourceWhitelist:
     # Core
