@@ -1,0 +1,11 @@
+# Kind 환경: kubelet TLS 검증 비활성화 필수
+args:
+  - --kubelet-insecure-tls
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi

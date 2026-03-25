@@ -1,0 +1,26 @@
+{{- if .Values.allowPrometheus.enabled }}
+# istiod 메트릭 수집 (citadel_*, pilot_*, galley_* 등)
+# port: http-monitoring (15014) — istiod 관측성 엔드포인트
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: istiod-metrics
+  labels:
+    release: kube-prometheus-stack-dev
+spec:
+  selector:
+    matchLabels:
+      app: istiod
+  namespaceSelector:
+    matchNames:
+      - istio-system
+  endpoints:
+    - port: http-monitoring
+      path: /metrics
+      interval: 30s
+      metricRelabelings:
+        # 대시보드/알림에서 사용하는 메트릭만 유지
+        - sourceLabels: [__name__]
+          regex: "citadel_server_root_cert_expiry_seconds|citadel_server_csr_count|citadel_server_csr_parsing_err_count|citadel_server_success_cert_issuance_count|pilot_xds_pushes|pilot_xds_push_errors|pilot_xds_push_time_bucket|pilot_xds_push_time_count|pilot_xds_push_time_sum|istio_agent_cert_rotation_count|istio_agent_cert_expiry_seconds|galley_validation_config_updates|process_cpu_seconds_total|process_resident_memory_bytes|go_goroutines"
+          action: keep
+{{- end }}

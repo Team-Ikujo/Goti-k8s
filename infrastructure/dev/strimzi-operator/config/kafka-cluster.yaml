@@ -19,13 +19,13 @@ spec:
     deleteClaim: true
   resources:
     requests:
-      memory: 1Gi
-      cpu: 200m
+      memory: 512Mi
+      cpu: 100m
     limits:
       memory: 2Gi
       cpu: 500m
   jvmOptions:
-    -Xms: 512m
+    -Xms: 256m
     -Xmx: 1024m
 ---
 apiVersion: kafka.strimzi.io/v1beta2

@@ -1,0 +1,206 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k6-synthetic-scripts
+  labels:
+    app: synthetic-traffic
+    app.kubernetes.io/part-of: goti
+data:
+  synthetic-traffic.js: |
+    import http from 'k6/http';
+    import { check, sleep } from 'k6';
+    import { Rate, Trend, Counter } from 'k6/metrics';
+
+    var apiSuccessRate = new Rate('synthetic_api_success_rate');
+    var apiDuration = new Trend('synthetic_api_duration', true);
+    var apiCalls = new Counter('synthetic_api_calls');
+
+    export var options = {
+      scenarios: {
+        synthetic: {
+          executor: 'constant-vus',
+          vus: parseInt(__ENV.K6_VUS || '3'),
+          duration: __ENV.K6_DURATION || '4m',
+        },
+      },
+      thresholds: {
+        synthetic_api_success_rate: ['rate>0.95'],
+        synthetic_api_duration: ['p(95)<2000'],
+      },
+      noConnectionReuse: false,
+    };
+
+    var SVC = {
+      ticketing: __ENV.SVC_TICKETING,
+      user:      __ENV.SVC_USER,
+      stadium:   __ENV.SVC_STADIUM,
+      payment:   __ENV.SVC_PAYMENT,
+    };
+
+    function apiGet(baseUrl, path, authToken) {
+      var url = baseUrl + path;
+      var headers = { 'Content-Type': 'application/json' };
+      if (authToken) { headers['Authorization'] = 'Bearer ' + authToken; }
+      var res = http.get(url, { headers: headers });
+      apiCalls.add(1);
+      apiDuration.add(res.timings.duration);
+      apiSuccessRate.add(res.status >= 200 && res.status < 400);
+      if (res.status >= 400) { console.warn('GET ' + path + ' -> ' + res.status); }
+      return res;
+    }
+
+    function apiPost(baseUrl, path, body, authToken) {
+      var url = baseUrl + path;
+      var headers = { 'Content-Type': 'application/json' };
+      if (authToken) { headers['Authorization'] = 'Bearer ' + authToken; }
+      var payload = typeof body === 'string' ? body : JSON.stringify(body);
+      var res = http.post(url, payload, { headers: headers });
+      apiCalls.add(1);
+      apiDuration.add(res.timings.duration);
+      apiSuccessRate.add(res.status >= 200 && res.status < 400);
+      if (res.status >= 400) { console.warn('POST ' + path + ' -> ' + res.status); }
+      return res;
+    }
+
+    function extractData(res) {
+      if (res.status !== 200) return null;
+      try { var body = JSON.parse(res.body); return body.data || body; }
+      catch (e) { return null; }
+    }
+
+    export function setup() {
+      var signupRes = apiPost(SVC.user, '/api/v1/test/users', {
+        name: 'K6-Synthetic', mobile: '00099990001', gender: 'MALE', birthDate: '1990-01-01',
+      });
+      var signupData = extractData(signupRes);
+      if (!signupData || !signupData.accessToken) {
+        console.error('setup: 유저 생성 실패 (status=' + (signupRes ? signupRes.status : 'null') + ')');
+        return null;
+      }
+      var token = signupData.accessToken;
+
+      var gamesRes = apiGet(SVC.ticketing, '/api/v1/games/schedules?today=false', token);
+      var games = extractData(gamesRes);
+      if (!Array.isArray(games) || games.length === 0) {
+        console.error('setup: 경기 일정 없음');
+        return null;
+      }
+
+      var game = null;
+      for (var i = 0; i < games.length; i++) {
+        if (games[i].ticketingStatus === 'AVAILABLE') { game = games[i]; break; }
+      }
+      if (!game) game = games[0];
+
+      var gameId = String(game.gameId);
+      var stadiumId = String(game.stadiumId);
+      var homeTeamId = String(game.homeTeamId);
+
+      var sectionsRes = apiGet(SVC.ticketing, '/api/v1/stadium-seats/stadiums/' + stadiumId + '/seat-sections', token);
+      var sections = extractData(sectionsRes);
+      var sectionIds = [];
+      if (Array.isArray(sections)) {
+        for (var j = 0; j < sections.length; j++) { sectionIds.push(String(sections[j].sectionId)); }
+      }
+
+      var teamSet = {};
+      var teamIds = [];
+      var limit = Math.min(games.length, 10);
+      for (var k = 0; k < limit; k++) {
+        var g = games[k];
+        if (g.homeTeamId && !teamSet[g.homeTeamId]) { teamSet[g.homeTeamId] = true; teamIds.push(String(g.homeTeamId)); }
+        if (g.awayTeamId && !teamSet[g.awayTeamId]) { teamSet[g.awayTeamId] = true; teamIds.push(String(g.awayTeamId)); }
+        if (teamIds.length >= 5) break;
+      }
+
+      console.log('setup: gameId=' + gameId + ', stadiumId=' + stadiumId + ', sections=' + sectionIds.length + ', teams=' + teamIds.length);
+      return { token: token, gameId: gameId, stadiumId: stadiumId, homeTeamId: homeTeamId, sectionIds: sectionIds, teamIds: teamIds };
+    }
+
+    // 쓰기: 좌석 HOLD (자연 만료로 데이터 소모 없음)
+    function trySeatHold(testData, token) {
+      if (testData.sectionIds.length === 0) return;
+      var sid = testData.sectionIds[Math.floor(Math.random() * testData.sectionIds.length)];
+      var statusRes = apiGet(SVC.ticketing, '/api/v1/game-seats/' + testData.gameId + '/sections/' + sid + '/seat-statuses', token);
+      var seats = extractData(statusRes);
+      if (!Array.isArray(seats)) return;
+      var available = [];
+      for (var i = 0; i < seats.length; i++) {
+        if (seats[i].status === 'AVAILABLE') available.push(seats[i]);
+      }
+      if (available.length === 0) return;
+      var seat = available[Math.floor(Math.random() * available.length)];
+      var queueJti = 'synthetic-' + __VU + '-' + Date.now();
+      apiPost(SVC.ticketing, '/api/v1/seat-reservations/seats/' + seat.seatId, {
+        gameId: testData.gameId,
+        queueTokenJti: queueJti,
+      }, token);
+      // HOLD는 자연 만료 (TTL) — 별도 해제 불필요
+    }
+
+    // 쓰기: 유저 생성 (로그인 시뮬레이션)
+    function trySignup() {
+      var ts = Date.now();
+      var mobile = '000' + String(ts).slice(-8);
+      apiPost(SVC.user, '/api/v1/test/users', {
+        name: 'K6-Syn-' + __VU + '-' + ts,
+        mobile: mobile,
+        gender: Math.random() > 0.5 ? 'MALE' : 'FEMALE',
+        birthDate: '1990-01-01',
+      });
+    }
+
+    export default function (testData) {
+      if (!testData) { sleep(60); return; }
+      var t = testData.token;
+      var roll = Math.random() * 100;
+
+      if (roll < 22) {
+        // 홈: 경기 일정 (22%)
+        apiGet(SVC.ticketing, '/api/v1/games/schedules?today=false', t);
+      } else if (roll < 30) {
+        // 홈: 팀 상세 (8%)
+        if (testData.teamIds.length > 0) {
+          var tid = testData.teamIds[Math.floor(Math.random() * testData.teamIds.length)];
+          apiGet(SVC.stadium, '/api/v1/baseball-teams/' + tid, t);
+        }
+      } else if (roll < 43) {
+        // 구역 선택: 좌석 등급 (13%)
+        apiGet(SVC.ticketing, '/api/v1/stadium-seats/stadiums/' + testData.stadiumId + '/games/' + testData.gameId + '/seat-grades', t);
+      } else if (roll < 52) {
+        // 구역 선택: 구역 목록 (9%)
+        apiGet(SVC.ticketing, '/api/v1/stadium-seats/stadiums/' + testData.stadiumId + '/seat-sections', t);
+      } else if (roll < 57) {
+        // 구역 선택: 가격 정책 (5%)
+        apiGet(SVC.ticketing, '/api/v1/teams/' + testData.homeTeamId + '/ticket-pricing-policies', t);
+      } else if (roll < 66) {
+        // 좌석맵: 좌석 목록 (9%)
+        if (testData.sectionIds.length > 0) {
+          var sid1 = testData.sectionIds[Math.floor(Math.random() * testData.sectionIds.length)];
+          apiGet(SVC.ticketing, '/api/v1/seats/seat-sections/' + sid1 + '/seats', t);
+        }
+      } else if (roll < 80) {
+        // 좌석 상태: 실시간 (14%)
+        if (testData.sectionIds.length > 0) {
+          var sid2 = testData.sectionIds[Math.floor(Math.random() * testData.sectionIds.length)];
+          apiGet(SVC.ticketing, '/api/v1/game-seats/' + testData.gameId + '/sections/' + sid2 + '/seat-statuses', t);
+        }
+      } else if (roll < 85) {
+        // 마이페이지: 주문 목록 (5%)
+        apiGet(SVC.ticketing, '/api/v1/orders', t);
+      } else if (roll < 90) {
+        // 오늘 경기 (5%)
+        apiGet(SVC.ticketing, '/api/v1/games/schedules?today=true', t);
+      } else if (roll < 97) {
+        // [쓰기] 좌석 HOLD (7%) — 자연 만료
+        trySeatHold(testData, t);
+      } else {
+        // [쓰기] 유저 생성 (3%) — 로그인 시뮬레이션
+        trySignup();
+      }
+
+      // 사용자 브라우징 패턴: 2~5초 대기
+      sleep(Math.random() * 3 + 2);
+    }
+{{- end }}

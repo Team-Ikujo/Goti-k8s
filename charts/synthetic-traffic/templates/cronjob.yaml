@@ -1,0 +1,63 @@
+{{- if .Values.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: synthetic-traffic
+  labels:
+    app: synthetic-traffic
+    app.kubernetes.io/part-of: goti
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      labels:
+        app: synthetic-traffic
+    spec:
+      activeDeadlineSeconds: 300
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: synthetic-traffic
+          annotations:
+            sidecar.istio.io/inject: "true"
+            proxy.istio.io/config: '{"holdApplicationUntilProxyStarts":true,"proxyMetadata":{"EXIT_ON_ZERO_ACTIVE_CONNECTIONS":"true"}}'
+        spec:
+          serviceAccountName: k6-synthetic
+          containers:
+            - name: k6
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              command:
+                - k6
+                - run
+                - --no-color
+                - --log-output=stdout
+                - /scripts/synthetic-traffic.js
+              env:
+                - name: K6_VUS
+                  value: {{ .Values.k6.vus | quote }}
+                - name: K6_DURATION
+                  value: {{ .Values.k6.duration | quote }}
+                - name: SVC_TICKETING
+                  value: {{ .Values.services.ticketing | quote }}
+                - name: SVC_USER
+                  value: {{ .Values.services.user | quote }}
+                - name: SVC_STADIUM
+                  value: {{ .Values.services.stadium | quote }}
+                - name: SVC_PAYMENT
+                  value: {{ .Values.services.payment | quote }}
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+          volumes:
+            - name: scripts
+              configMap:
+                name: k6-synthetic-scripts
+          restartPolicy: Never
+{{- end }}

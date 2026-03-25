@@ -1,0 +1,16 @@
+{{- if .Values.enabled }}
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-k6-synthetic
+  labels:
+    app: synthetic-traffic
+    app.kubernetes.io/part-of: goti
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - "cluster.local/ns/{{ .Release.Namespace }}/sa/k6-synthetic"
+{{- end }}

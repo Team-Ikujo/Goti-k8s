@@ -2,9 +2,15 @@ nameOverride: goti-payment
 
 replicaCount: 2
 
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-payment"
-  tag: "dev-37-71dcf1b"
+  tag: "dev-39-3cb9cce"
   pullPolicy: Always
 
 imagePullSecrets:
@@ -17,16 +23,17 @@ podAnnotations:
 resources:
   requests:
     cpu: 100m
-    memory: 384Mi
+    memory: 512Mi
   limits:
     cpu: 500m
-    memory: 768Mi
+    memory: 1Gi
 
 gateway:
   enabled: true
   hosts:
     - "dev.go-ti.shop"
     - "api.go-ti.shop"
+    - "dev-api.go-ti.shop"
   gatewayRef: "istio-system/goti-shared-gateway"
   httpRoutes:
     - match:
@@ -81,7 +88,7 @@ env:
   - name: SPRING_PROFILES_ACTIVE
     value: "dev"
   - name: JAVA_TOOL_OPTIONS
-    value: "-XX:MaxRAMPercentage=60.0"
+    value: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport"
   - name: GOTI_MESH_ENABLED
     value: "true"
   - name: TICKETING_BASE_URL
