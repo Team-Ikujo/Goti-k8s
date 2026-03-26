@@ -41,7 +41,7 @@ resources:
 
 env:
   - name: GOTI_API_URL
-    value: "http://istio-ingressgateway.istio-system.svc:80"
+    value: "http://istio-gateway.istio-system.svc:80"
   - name: POLL_INTERVAL
     value: "10s"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
