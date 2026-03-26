@@ -3,11 +3,12 @@ nameOverride: goti-load-observer
 replicaCount: 1
 
 image:
-  repository: "goti-load-observer"  # Kind 로컬 이미지 (kind load docker-image)
-  tag: "latest"
-  pullPolicy: Never  # Kind 로컬 이미지이므로 Pull 안 함
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-load-observer"
+  tag: "latest"  # CD가 자동 업데이트
+  pullPolicy: Always
 
-imagePullSecrets: []  # Kind 로컬 이미지는 pull secret 불필요
+imagePullSecrets:
+  - name: ecr-creds
 
 service:
   type: ClusterIP
