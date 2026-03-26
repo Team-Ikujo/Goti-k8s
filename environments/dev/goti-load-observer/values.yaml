@@ -12,61 +12,56 @@ imagePullSecrets:
 
 service:
   type: ClusterIP
-  port: 8080
-  name: http
+  port: 9090
+  name: metrics
 
 probes:
   liveness:
     httpGet:
-      path: /health
-      port: http
-    initialDelaySeconds: 10
+      path: /healthz
+      port: metrics
+    initialDelaySeconds: 5
     periodSeconds: 15
     failureThreshold: 3
   readiness:
     httpGet:
-      path: /ready
-      port: http
-    initialDelaySeconds: 15
+      path: /healthz
+      port: metrics
+    initialDelaySeconds: 10
     periodSeconds: 10
     failureThreshold: 3
 
 resources:
   requests:
-    cpu: 50m
-    memory: 64Mi
+    cpu: 20m
+    memory: 32Mi
   limits:
-    cpu: 200m
-    memory: 128Mi
+    cpu: 100m
+    memory: 64Mi
 
 env:
-  - name: STADIUM_URL
-    value: "http://goti-stadium-dev.goti.svc:8080"
-  - name: TICKETING_URL
-    value: "http://goti-ticketing-dev.goti.svc:8080"
-  - name: USER_URL
-    value: "http://goti-user-dev.goti.svc:8080"
-  - name: POLL_INTERVAL
-    value: "10s"
-  - name: OTEL_EXPORTER_OTLP_ENDPOINT
-    value: "alloy-dev.monitoring.svc:4317"
-  - name: OTEL_SERVICE_NAME
-    value: "goti-load-observer"
-  - name: OTEL_SERVICE_NAMESPACE
-    value: "goti"
+  - name: DB_DSN
+    value: "postgresql://goti-db-server:KSn@BAcxoQla@172.20.0.1:5432/goti?sslmode=disable"
+  - name: REDIS_ADDR
+    value: "172.20.0.1:6379"
   - name: SERVER_PORT
-    value: "8080"
+    value: "9090"
+  - name: POLL_INTERVAL_DB
+    value: "60s"
+  - name: POLL_INTERVAL_REDIS
+    value: "30s"
 
 podAnnotations:
-  # goti namespace 내부 서비스 직접 호출 — Envoy 프록시 우회 불필요
   sidecar.istio.io/inject: "true"
+  # dev: 호스트 PC DB/Redis는 Envoy 프록시 우회
+  traffic.sidecar.istio.io/excludeOutboundPorts: "5432,6379"
 
 gateway:
-  enabled: false  # 내부 서비스 (외부 노출 불필요)
+  enabled: false
 
 podSecurityContext:
   runAsNonRoot: true
-  runAsUser: 65532  # distroless nonroot UID
+  runAsUser: 65532
   fsGroup: 65532
 
 securityContext:
