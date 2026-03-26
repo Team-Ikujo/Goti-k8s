@@ -1,6 +1,6 @@
 {{- define "goti-common.hpa" -}}
 {{- if .Values.autoscaling.enabled }}
-{{- if .Values.autoscaling.keda.enabled }}
+{{- if and .Values.autoscaling.keda .Values.autoscaling.keda.enabled }}
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
