@@ -1,0 +1,88 @@
+nameOverride: goti-load-observer
+
+replicaCount: 1
+
+image:
+  repository: "goti-load-observer"  # Kind 로컬 이미지 (kind load docker-image)
+  tag: "latest"
+  pullPolicy: Never  # Kind 로컬 이미지이므로 Pull 안 함
+
+imagePullSecrets: []  # Kind 로컬 이미지는 pull secret 불필요
+
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+
+probes:
+  liveness:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /ready
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+env:
+  - name: GOTI_API_URL
+    value: "http://istio-ingressgateway.istio-system.svc:80"
+  - name: POLL_INTERVAL
+    value: "10s"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "alloy-dev.monitoring.svc:4317"
+  - name: OTEL_SERVICE_NAME
+    value: "goti-load-observer"
+  - name: OTEL_SERVICE_NAMESPACE
+    value: "goti"
+  - name: SERVER_PORT
+    value: "8080"
+
+gateway:
+  enabled: false  # 내부 서비스 (외부 노출 불필요)
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532  # distroless nonroot UID
+  fsGroup: 65532
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+configMap:
+  enabled: false
+
+externalSecret:
+  enabled: false
+
+istioPolicy:
+  authorizationPolicy:
+    enabled: false
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
