@@ -45,6 +45,10 @@ spec:
         - podSelector: {}
 ---
 # monitoring에서의 scrape 허용 (Alloy metrics + Istio sidecar)
+# - 15020: Istio merged prometheus metrics
+# - 15090: Envoy admin stats
+# - 8080: /actuator/prometheus (Spring Boot)
+# - 9090: /metrics (Go metrics-collector)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -61,6 +65,8 @@ spec:
               kubernetes.io/metadata.name: monitoring
       ports:
         - port: 8080
+          protocol: TCP
+        - port: 9090
           protocol: TCP
         - port: 15020
           protocol: TCP
