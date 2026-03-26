@@ -15,6 +15,13 @@ service:
   port: 9090
   name: metrics
 
+serviceMonitor:
+  enabled: true
+  port: metrics
+  interval: 30s
+  path: /metrics
+  release: kube-prometheus-stack-dev
+
 probes:
   liveness:
     httpGet:
