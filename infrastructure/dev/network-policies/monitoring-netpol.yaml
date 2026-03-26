@@ -192,12 +192,15 @@ spec:
   policyTypes:
     - Egress
   egress:
+    # goti namespace scrape: Spring Boot(8080), Go metrics-collector(9090), Istio(15020/15090)
     - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: goti
       ports:
         - port: 8080
+          protocol: TCP
+        - port: 9090
           protocol: TCP
         - port: 15020
           protocol: TCP
