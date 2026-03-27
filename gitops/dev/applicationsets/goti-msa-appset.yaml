@@ -22,6 +22,9 @@ spec:
           - service: resale
             namespace: goti
             valuesFile: environments/dev/goti-resale/values.yaml
+          - service: queue
+            namespace: goti
+            valuesFile: environments/dev/goti-queue/values.yaml
   template:
     metadata:
       name: "goti-{{service}}-dev"
