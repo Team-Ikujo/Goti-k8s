@@ -122,15 +122,16 @@ externalSecret:
     path: /dev/server
     overridePath: /dev/kind/server
 
-# --- Istio: POC 최소 설정 ---
-# JWT/AuthorizationPolicy는 비활성화 — 부하테스트 시 인증 오버헤드 제거
+# --- Istio: JWT 인증 활성화 ---
 istioPolicy:
   authorizationPolicy:
-    enabled: false
+    enabled: false  # POC: 서비스간 통신 제한 불필요
   requestAuthentication:
-    enabled: false
+    enabled: true
+    jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
   jwtAuthorizationPolicy:
-    enabled: false
+    enabled: true
+    excludePaths: []
   destinationRule:
     enabled: true
   sidecar:
