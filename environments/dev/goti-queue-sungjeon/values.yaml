@@ -17,7 +17,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
-  tag: "poc-sungjeon-2-5c79616"  # TODO: 성전 브랜치 빌드 후 실제 태그로 교체
+  tag: "poc-sungjeon-2-5c79616"
   pullPolicy: Always
 
 imagePullSecrets:
@@ -98,7 +98,7 @@ env:
   # --- Queue 토큰 시크릿 ---
   # 성전 구현체는 자체 TokenEncryptor 사용 (env: QUEUE_TOKEN_SECRET_KEY)
   - name: QUEUE_TOKEN_SECRET_KEY
-    value: "goti-queue-secret-key-123456789012"
+    value: "goti-queue-secret-key-1234567890"
 
 envFrom:
   - secretRef:
