@@ -10,7 +10,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-payment"
-  tag: "dev-40-5f8ab69"
+  tag: "dev-42-e0e15a6"
   pullPolicy: Always
 
 imagePullSecrets:
