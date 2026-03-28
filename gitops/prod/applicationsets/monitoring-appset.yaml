@@ -45,6 +45,8 @@ spec:
   template:
     metadata:
       name: "{{component}}-{{env}}"
+      annotations:
+        argocd.argoproj.io/compare-options: ServerSideDiff=true
     spec:
       project: monitoring
       sources:

@@ -8,6 +8,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "2"  # kps(CRD 제공) 이후 sync
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
   project: monitoring
   sources:
