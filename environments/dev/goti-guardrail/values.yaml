@@ -4,7 +4,7 @@ replicaCount: 1
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-guardrail"
-  tag: "latest"  # TODO: CI/CD 구축 후 실제 태그로 교체
+  tag: "dev-1-b7eaff7"  # TODO: CI/CD 구축 후 실제 태그로 교체
   pullPolicy: Always
 
 imagePullSecrets:
