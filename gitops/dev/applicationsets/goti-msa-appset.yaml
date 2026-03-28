@@ -25,6 +25,14 @@ spec:
           - service: queue
             namespace: goti
             valuesFile: environments/dev/goti-queue/values.yaml
+          # --- [POC] 대기열 구현체 비교용 임시 배포 ---
+          # 최종 구현체 결정 후 아래 2개 element + environments/dev/goti-queue-{name}/ 삭제
+          - service: queue-junsang
+            namespace: goti
+            valuesFile: environments/dev/goti-queue-junsang/values.yaml
+          - service: queue-sungjeon
+            namespace: goti
+            valuesFile: environments/dev/goti-queue-sungjeon/values.yaml
   template:
     metadata:
       name: "goti-{{service}}-dev"
