@@ -114,6 +114,9 @@ env:
   # 최종 결정 후 제거 (기본값 DB 0)
   - name: SPRING_DATA_REDIS_DATABASE
     value: "0"
+  # Istio mesh 인증: X-User-Id/X-User-Role 헤더 → Spring SecurityContext 변환
+  - name: GOTI_MESH_ENABLED
+    value: "true"
 
 envFrom:
   - secretRef:

@@ -94,6 +94,9 @@ env:
   # [POC] Redis DB 격리 — 수연=DB0, 준상=DB1, 성전=DB2
   - name: SPRING_DATA_REDIS_DATABASE
     value: "1"
+  # Istio mesh 인증: X-User-Id/X-User-Role 헤더 → Spring SecurityContext 변환
+  - name: GOTI_MESH_ENABLED
+    value: "true"
   # --- JWT: user 서비스와 동일한 시크릿 필요 ---
   # 준상 구현체는 JWT 기반 인증을 직접 수행 (QueueInterceptor)
   - name: JWT_ACCESS_TIME
