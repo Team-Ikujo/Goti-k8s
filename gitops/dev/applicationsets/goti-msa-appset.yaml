@@ -36,6 +36,10 @@ spec:
   template:
     metadata:
       name: "goti-{{service}}-dev"
+      annotations:
+        # SSA sync와 diff 비교를 모두 server-side로 통일 — client-side diff 불일치 방지
+        # ref: https://github.com/argoproj/argo-cd/issues/11106
+        argocd.argoproj.io/compare-options: ServerSideDiff=true
     spec:
       project: goti
       source:

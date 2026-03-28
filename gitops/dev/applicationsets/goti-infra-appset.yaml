@@ -17,6 +17,8 @@ spec:
   template:
     metadata:
       name: "goti-{{service}}-dev"
+      annotations:
+        argocd.argoproj.io/compare-options: ServerSideDiff=true
     spec:
       project: goti
       source:
