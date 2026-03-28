@@ -141,24 +141,17 @@ externalSecret:
 
 istioPolicy:
   authorizationPolicy:
-    enabled: false  # POC: 비활성화. 정식 전환 시 true + from-ticketing 규칙 복원
-    # allowFrom:
-    #   - name: from-ticketing
-    #     rules:
-    #       - from:
-    #           - source:
-    #               principals: ["cluster.local/ns/goti/sa/goti-ticketing-dev"]
-    #         to:
-    #           - operation:
-    #               paths: ["/api/v1/queue/*"]
-    #               methods: ["GET", "POST"]
+    enabled: false  # POC: 서비스간 통신 제한 불필요 (외부 직접 접근)
 
+  # JWT 검증: Istio가 JWT → X-User-Id/X-User-Role 헤더 주입
   requestAuthentication:
-    enabled: false  # POC: 비활성화. 정식 전환 시 true + jwksUri 복원
-    # jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
+    enabled: true
+    jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
 
+  # JWT 필수 강제: 모든 queue API는 인증 필수
   jwtAuthorizationPolicy:
-    enabled: false  # POC: 비활성화. 정식 전환 시 true + excludePaths 복원
+    enabled: true
+    excludePaths: []
 
   destinationRule:
     enabled: true
