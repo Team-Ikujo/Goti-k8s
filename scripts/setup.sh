@@ -30,7 +30,7 @@ kubectl label namespace goti istio-injection=enabled --overwrite
 # 3. ArgoCD Helm 설치
 echo "[3/4] ArgoCD 설치..."
 (
-  cd "${ROOT_DIR}/infrastructure/argocd"
+  cd "${ROOT_DIR}/infrastructure/dev/argocd"
   helm dependency build
   helm upgrade --install argocd . \
     -n "${ARGOCD_NAMESPACE}" \
