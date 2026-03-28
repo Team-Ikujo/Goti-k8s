@@ -22,7 +22,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
-  tag: "dev-42-e0e15a6"  # TODO: 수연 브랜치 빌드 후 실제 태그로 교체
+  tag: "poc-suyeon-3-5c79616"  # TODO: 수연 브랜치 빌드 후 실제 태그로 교체
   pullPolicy: Always
 
 imagePullSecrets:
