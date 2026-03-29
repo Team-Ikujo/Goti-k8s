@@ -32,3 +32,5 @@ spec:
         - /spec/background
         - /spec/emitWarning
         - /spec/validationFailureAction
+        - /spec/rules/skipBackgroundRequests
+        - /spec/rules/validate/allowExistingViolations
