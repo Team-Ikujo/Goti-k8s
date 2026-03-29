@@ -71,6 +71,13 @@ env:
     value: "-XX:MaxRAMPercentage=60.0"
   - name: REDIS_PORT
     value: "6379"
+  - name: SPRING_DATA_REDIS_SSL_ENABLED
+    value: "true"
+  - name: SPRING_DATA_REDIS_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: REDIS_AUTH_TOKEN
   - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
     value: "/api/docs/user/v3/api-docs/swagger-config"
   - name: SPRINGDOC_SWAGGER_UI_URL
