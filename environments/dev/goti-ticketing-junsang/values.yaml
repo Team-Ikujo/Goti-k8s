@@ -137,9 +137,9 @@ env:
   # [POC] Redis DB 격리 — 준상=DB1 (queue와 동일 DB 사용)
   - name: SPRING_DATA_REDIS_DATABASE
     value: "1"
-  # [POC] mesh 인증 비활성화 — payment→ticketing 내부 호출에 X-User-Id 미전파 → permitAll로 우회
+  # Istio mesh 인증
   - name: GOTI_MESH_ENABLED
-    value: "false"
+    value: "true"
   # --- 내부 API 통신 ---
   - name: STADIUM_API_URL
     value: "http://goti-stadium-dev.goti.svc.cluster.local:8080"
@@ -161,7 +161,17 @@ externalSecret:
 # Istio: JWT 인증
 istioPolicy:
   authorizationPolicy:
-    enabled: false
+    enabled: true
+    allowFrom:
+      - name: from-payment-junsang
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-payment-junsang-dev"]
+            to:
+              - operation:
+                  paths: ["/api/v1/orders/*"]
+                  methods: ["GET", "POST"]
   requestAuthentication:
     enabled: true
     jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
