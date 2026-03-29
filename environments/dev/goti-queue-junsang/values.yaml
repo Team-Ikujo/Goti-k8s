@@ -77,6 +77,21 @@ probes:
     initialDelaySeconds: 30
     periodSeconds: 5
 
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+  additionalPorts:
+    - name: management
+      port: 9090
+      targetPort: 9090
+
+serviceMonitor:
+  enabled: true
+  port: management
+  path: "/actuator/prometheus"
+  interval: "15s"
+
 env:
   - name: SPRING_PROFILES_ACTIVE
     value: "dev"
