@@ -17,7 +17,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
-  tag: "poc-junsang-12-4d179bb"  # TODO: 준상 브랜치 빌드 후 실제 태그로 교체
+  tag: "poc-junsang-11-1f86808"
   pullPolicy: Always
 
 imagePullSecrets:
