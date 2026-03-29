@@ -1,9 +1,9 @@
 # ============================================================================
-# [POC] 준상 대기열 전용 Ticketing 서비스 (모놀리스 api 모듈)
+# [POC] 준상 대기열 전용 Ticketing 서비스 (ticketing MSA 모듈)
 # ============================================================================
 # 목적: 준상 POC 부하테스트 시 ticketing API를 수연 ReservationSession 없이 처리
-# 특징: 준상 브랜치의 api(모놀리스) 모듈 — queue + ticketing + 전체 엔드포인트 포함
-#        대기열은 goti-queue-junsang-dev가 별도 처리 (pod 분리로 공정 비교)
+# 특징: 준상 브랜치의 ticketing 모듈 — MeshSecuritySupport, ticketing_service 스키마
+#        준상 브랜치에 수연 ReservationSession 미포함 (분기 시점 이전)
 # 라우팅: /junsang/api/v1/** → rewrite → /api/v1/** → 이 서비스
 # 삭제 시점: 최종 구현체 결정 후 이 파일 + AppSet element + ECR 이미지 삭제
 # 관련 PR: https://github.com/Team-Ikujo/Goti-server/pull/312
@@ -18,16 +18,14 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
-  tag: "poc-junsang-13-4d179bb"
+  tag: "poc-junsang-ticketing-1-0000000"  # TODO: ticketing 모듈 빌드 후 실제 태그로 교체
   pullPolicy: Always
 
 imagePullSecrets:
   - name: ecr-creds
 
 podAnnotations:
-  # OTel auto-instrumentation 비활성화 — 모놀리스(api 모듈)에 spring-boot-starter-otel이 내장되어 있어
-  # javaagent와 충돌 (otelMeterRegistry bean 중복). POC ticketing pod은 관측성 비교 대상 아님.
-  instrumentation.opentelemetry.io/inject-java: "false"
+  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
   traffic.sidecar.istio.io/excludeOutboundPorts: "5432,6379"
 
 resources:
@@ -39,7 +37,7 @@ resources:
     memory: 1Gi
 
 # [POC] Ticketing 라우팅
-# /junsang/api/v1/** → rewrite → /api/v1/** → 모놀리스가 처리
+# /junsang/api/v1/** → rewrite → /api/v1/** → ticketing MSA 모듈이 처리
 # K6에서 ticketingBase = baseUrl + "/junsang" 으로 호출
 gateway:
   enabled: true
@@ -95,18 +93,12 @@ env:
   # --- Redis: 호스트 PC ---
   - name: REDIS_HOST
     value: "172.20.0.1"
-  # [POC] Redis DB 격리 — 준상=DB1 (queue와 동일 DB로 QueueInterceptor 토큰 검증 가능)
+  # [POC] Redis DB 격리 — 준상=DB1 (queue와 동일 DB 사용)
   - name: SPRING_DATA_REDIS_DATABASE
     value: "1"
-  # [POC] 대기열 최대 수용인원 (queue pod과 동일)
-  - name: QUEUE_MAX_CAPACITY
-    value: "100"
-  # --- JWT ---
-  - name: JWT_ACCESS_TIME
-    value: "3600000"
-  - name: JWT_REFRESH_TIME
-    value: "604800000"
-  # 모놀리스는 자체 JwtAuthenticationFilter(RS256)로 인증 처리 — GOTI_MESH_ENABLED 불필요
+  # Istio mesh 인증: X-User-Id/X-User-Role 헤더 → Spring SecurityContext
+  - name: GOTI_MESH_ENABLED
+    value: "true"
   # --- 내부 API 통신 ---
   - name: STADIUM_API_URL
     value: "http://goti-stadium-dev.goti.svc.cluster.local:8080"
@@ -115,7 +107,6 @@ envFrom:
   - secretRef:
       name: goti-ticketing-junsang-dev-secrets
 
-# 준상 모놀리스에 필요한 시크릿: DATASOURCE_PASSWORD, JWT_SECRET_KEY
 externalSecret:
   enabled: true
   refreshInterval: "1h"
@@ -125,12 +116,8 @@ externalSecret:
   remoteRef:
     path: /dev/server
     overridePath: /dev/kind/server
-  # JWT RSA private key는 /dev/user 경로에 있음 — 모놀리스 JWT 검증에 필요
-  additionalPaths:
-    - path: /dev/user
-    - path: /dev/kind/user
 
-# Istio: JWT 인증 (queue와 동일)
+# Istio: JWT 인증
 istioPolicy:
   authorizationPolicy:
     enabled: false
