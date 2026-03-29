@@ -1,16 +1,12 @@
 nameOverride: goti-stadium
-
 image:
-  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-stadium"
-  tag: "dev-35-de629ba"
+  repository: "harbor.go-ti.shop/prod/goti-stadium"
+  tag: "prod-26-71dcf1b"
   pullPolicy: IfNotPresent
-
 imagePullSecrets:
-  - name: ecr-creds
-
+  - name: harbor-creds
 podAnnotations:
   instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
-
 resources:
   requests:
     cpu: 250m
@@ -18,7 +14,6 @@ resources:
   limits:
     cpu: 1000m
     memory: 768Mi
-
 gateway:
   enabled: true
   hosts:
@@ -56,7 +51,6 @@ gateway:
             host: goti-stadium-prod
             port:
               number: 8080
-
 probes:
   liveness:
     httpGet:
@@ -70,7 +64,6 @@ probes:
       port: http
     initialDelaySeconds: 30
     periodSeconds: 5
-
 env:
   - name: SPRING_PROFILES_ACTIVE
     value: "prod"
@@ -89,11 +82,9 @@ env:
     value: "/api/docs/stadium/v3/api-docs/swagger-config"
   - name: SPRINGDOC_SWAGGER_UI_URL
     value: "/api/docs/stadium/v3/api-docs"
-
 envFrom:
   - secretRef:
       name: goti-stadium-prod-secrets
-
 externalSecret:
   enabled: true
   refreshInterval: "1h"
