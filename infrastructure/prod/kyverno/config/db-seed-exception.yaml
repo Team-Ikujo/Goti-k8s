@@ -20,6 +20,9 @@ spec:
     - policyName: disallow-privilege-escalation
       ruleNames:
         - deny-privilege-escalation
+    - policyName: add-topology-spread-constraints
+      ruleNames:
+        - add-zone-spread
   match:
     any:
       - resources:
