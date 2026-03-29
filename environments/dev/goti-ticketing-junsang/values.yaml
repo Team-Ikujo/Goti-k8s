@@ -37,8 +37,9 @@ resources:
     memory: 1Gi
 
 # [POC] Ticketing 라우팅
-# /junsang/api/v1/** → rewrite → /api/v1/** → ticketing MSA 모듈이 처리
-# K6에서 ticketingBase = baseUrl + "/junsang" 으로 호출
+# ticketing 전용 경로 (payment는 payment-junsang이 별도 처리)
+# Istio가 같은 host의 여러 VS를 머지할 때 longest prefix 우선이 보장 안 되므로
+# catch-all /junsang/api/v1 대신 ticketing 경로만 명시적으로 매칭
 gateway:
   enabled: true
   hosts:
@@ -49,14 +50,54 @@ gateway:
   httpRoutes:
     - match:
         - uri:
-            prefix: "/junsang/api/v1"
+            prefix: "/junsang/api/v1/orders"
       rewrite:
-        uri: "/api/v1"
+        uri: "/api/v1/orders"
       timeout: 10s
-      retries:
-        attempts: 2
-        perTryTimeout: 5s
-        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-ticketing-junsang-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/junsang/api/v1/stadium-seats"
+      rewrite:
+        uri: "/api/v1/stadium-seats"
+      timeout: 10s
+      route:
+        - destination:
+            host: goti-ticketing-junsang-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/junsang/api/v1/seat-reservations"
+      rewrite:
+        uri: "/api/v1/seat-reservations"
+      timeout: 10s
+      route:
+        - destination:
+            host: goti-ticketing-junsang-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/junsang/api/v1/game-seats"
+      rewrite:
+        uri: "/api/v1/game-seats"
+      timeout: 10s
+      route:
+        - destination:
+            host: goti-ticketing-junsang-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/junsang/api/v1/teams"
+      rewrite:
+        uri: "/api/v1/teams"
+      timeout: 10s
       route:
         - destination:
             host: goti-ticketing-junsang-dev
