@@ -30,6 +30,32 @@ spec:
         - port: 3000
           protocol: TCP
 ---
+# Mimir: Istio Gateway에서 접근 허용 (K6 부하테스트 메트릭 Push + Prometheus 쿼리)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-mimir-ingress
+  namespace: monitoring
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values: ["mimir"]
+      - key: app.kubernetes.io/component
+        operator: In
+        values: ["distributor", "query-frontend"]
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - port: 8080
+          protocol: TCP
+---
 # monitoring 내부 통신 허용 (Alloy→Mimir, Alloy→Loki, Alloy→Tempo 등)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -166,12 +192,15 @@ spec:
   policyTypes:
     - Egress
   egress:
+    # goti namespace scrape: Spring Boot(8080), Go metrics-collector(9090), Istio(15020/15090)
     - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: goti
       ports:
         - port: 8080
+          protocol: TCP
+        - port: 9090
           protocol: TCP
         - port: 15020
           protocol: TCP
@@ -182,6 +211,8 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: kafka
       ports:
+        - port: 9092
+          protocol: TCP
         - port: 9404
           protocol: TCP
     # ArgoCD metrics scrape (8080=appset, 8082=controller, 8083=server, 8084=repo-server)
@@ -217,3 +248,44 @@ spec:
           protocol: UDP
         - port: 53
           protocol: TCP
+---
+# kube-state-metrics + prometheus-operator: K8s API server egress
+# API server에 접근하여 K8s 리소스 상태를 수집/감시
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-kps-apiserver-egress
+  namespace: monitoring
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - kube-state-metrics
+          - kube-prometheus-stack-prometheus-operator
+  policyTypes:
+    - Egress
+  egress:
+    # K8s API server
+    - ports:
+        - port: 443
+          protocol: TCP
+        - port: 6443
+          protocol: TCP
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # monitoring 내부 통신 (operator → alertmanager 등)
+    - to:
+        - podSelector: {}

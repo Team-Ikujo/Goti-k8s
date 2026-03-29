@@ -10,10 +10,15 @@ spec:
           - service: guardrail
             namespace: goti
             valuesFile: environments/dev/goti-guardrail/values.yaml
+          - service: load-observer
+            namespace: goti
+            valuesFile: environments/dev/goti-load-observer/values.yaml
           # TODO: queue-gate (Go), bot-detection (Python) 추가 예정
   template:
     metadata:
       name: "goti-{{service}}-dev"
+      annotations:
+        argocd.argoproj.io/compare-options: ServerSideDiff=true
     spec:
       project: goti
       source:

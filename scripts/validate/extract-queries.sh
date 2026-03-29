@@ -46,6 +46,8 @@ substitute_vars() {
   expr="${expr//\$\{interval\}/5m}"
   expr="${expr//\$__rate_interval/5m}"
   expr="${expr//\$\{__rate_interval\}/5m}"
+  expr="${expr//\$__rate_interval/5m}"
+  expr="${expr//\$\{__rate_interval\}/5m}"
   expr="${expr//\$__interval/1m}"
   expr="${expr//\$\{__interval\}/1m}"
   expr="${expr//\$log_type/.*}"
@@ -106,6 +108,11 @@ substitute_vars() {
   # Queue/War-room 변수
   expr="${expr//\$match_id/.*}"
   expr="${expr//\$\{match_id\}/.*}"
+  # K6 부하테스트 변수 (devops/load-test-command-center)
+  expr="${expr//\$test_name/.*}"
+  expr="${expr//\$\{test_name\}/.*}"
+  expr="${expr//\$runner/.*}"
+  expr="${expr//\$\{runner\}/.*}"
   # Grafana time range
   expr="${expr//\$__range/1h}"
   expr="${expr//\[\$__auto\]/[5m]}"
