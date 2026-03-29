@@ -17,7 +17,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
-  tag: "poc-junsang-15-653bafa"
+  tag: "poc-junsang-16-653bafa"
   pullPolicy: Always
 
 imagePullSecrets:
