@@ -103,6 +103,9 @@ env:
   # Istio mesh 인증: X-User-Id/X-User-Role 헤더 → Spring SecurityContext 변환
   - name: GOTI_MESH_ENABLED
     value: "true"
+  # [POC] 부하테스트용 — 대기열 최대 수용인원 (기본 5000 → 100, 수연과 동일 조건)
+  - name: QUEUE_MAX_CAPACITY
+    value: "100"
   # --- JWT: user 서비스와 동일한 시크릿 필요 ---
   # 준상 구현체는 JWT 기반 인증을 직접 수행 (QueueInterceptor)
   - name: JWT_ACCESS_TIME
