@@ -5,7 +5,7 @@
 # - 15020: Istio merged prometheus metrics
 # - 15090: Envoy admin stats
 # - 8080: /actuator/prometheus (Spring Boot)
-# - 9090: /metrics (Go metrics-collector)
+# - 9090: /metrics (Go metrics-collector), /actuator/prometheus (Spring Boot management port)
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
@@ -26,6 +26,6 @@ spec:
             methods: ["GET"]
         - operation:
             ports: ["9090"]
-            paths: ["/metrics", "/healthz"]
+            paths: ["/metrics", "/healthz", "/actuator/prometheus"]
             methods: ["GET"]
 {{- end }}

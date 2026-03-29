@@ -12,6 +12,12 @@ spec:
       targetPort: {{ default "http" .Values.service.name }}
       protocol: TCP
       name: {{ default "http" .Values.service.name }}
+    {{- range .Values.service.additionalPorts | default list }}
+    - port: {{ .port }}
+      targetPort: {{ .targetPort | default .port }}
+      protocol: {{ .protocol | default "TCP" }}
+      name: {{ .name }}
+    {{- end }}
   selector:
     {{- include "goti-common.selectorLabels" . | nindent 4 }}
 {{- end }}

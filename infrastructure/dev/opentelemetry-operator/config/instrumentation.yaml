@@ -29,6 +29,9 @@ spec:
       # gRPC 프로토콜 명시 (Java agent 2.25.0 기본값이 http/protobuf로 변경됨)
       - name: OTEL_EXPORTER_OTLP_PROTOCOL
         value: grpc
+      # Micrometer → OTel 메트릭 브릿지 (커스텀 비즈니스 메트릭 OTLP export)
+      - name: OTEL_INSTRUMENTATION_MICROMETER_ENABLED
+        value: "true"
       # Logback appender → OTel Logs SDK 브릿지 (Spring Boot = Logback 사용)
       # Log4j가 아닌 Logback을 명시적으로 활성화해야 로그가 OTLP로 전송됨
       - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_ENABLED
