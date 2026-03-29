@@ -106,6 +106,7 @@ env:
     value: "3600000"
   - name: JWT_REFRESH_TIME
     value: "604800000"
+  # 모놀리스는 자체 JwtAuthenticationFilter(RS256)로 인증 처리 — GOTI_MESH_ENABLED 불필요
   # --- 내부 API 통신 ---
   - name: STADIUM_API_URL
     value: "http://goti-stadium-dev.goti.svc.cluster.local:8080"
@@ -124,6 +125,10 @@ externalSecret:
   remoteRef:
     path: /dev/server
     overridePath: /dev/kind/server
+  # JWT RSA private key는 /dev/user 경로에 있음 — 모놀리스 JWT 검증에 필요
+  additionalPaths:
+    - path: /dev/user
+    - path: /dev/kind/user
 
 # Istio: JWT 인증 (queue와 동일)
 istioPolicy:
@@ -136,8 +141,6 @@ istioPolicy:
     enabled: true
     excludePaths:
       - "/actuator/*"
-      - "/swagger-ui/*"
-      - "/v3/api-docs/*"
       - "/api/v1/games/*"
       - "/api/v1/stadiums/*"
       - "/api/v1/baseball-teams/*"
