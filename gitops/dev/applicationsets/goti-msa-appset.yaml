@@ -36,6 +36,9 @@ spec:
           - service: ticketing-junsang
             namespace: goti
             valuesFile: environments/dev/goti-ticketing-junsang/values.yaml
+          - service: payment-junsang
+            namespace: goti
+            valuesFile: environments/dev/goti-payment-junsang/values.yaml
   template:
     metadata:
       name: "goti-{{service}}-dev"
