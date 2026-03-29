@@ -67,28 +67,19 @@ probes:
   liveness:
     httpGet:
       path: /actuator/health/liveness
-      port: 9090
+      port: http
     initialDelaySeconds: 60
     periodSeconds: 10
   readiness:
     httpGet:
       path: /actuator/health/readiness
-      port: 9090
+      port: http
     initialDelaySeconds: 30
     periodSeconds: 5
 
-service:
-  type: ClusterIP
-  port: 8080
-  name: http
-  additionalPorts:
-    - name: management
-      port: 9090
-      targetPort: 9090
-
 serviceMonitor:
   enabled: true
-  port: management
+  port: http
   path: "/actuator/prometheus"
   interval: "15s"
 
