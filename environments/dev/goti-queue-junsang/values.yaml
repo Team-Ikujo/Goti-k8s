@@ -140,7 +140,8 @@ istioPolicy:
     jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
   jwtAuthorizationPolicy:
     enabled: true
-    excludePaths: []
+    excludePaths:
+      - "/actuator/*"
   destinationRule:
     enabled: true
   sidecar:
