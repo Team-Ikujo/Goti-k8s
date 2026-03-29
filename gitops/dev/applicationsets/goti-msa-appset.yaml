@@ -33,6 +33,9 @@ spec:
           - service: queue-sungjeon
             namespace: goti
             valuesFile: environments/dev/goti-queue-sungjeon/values.yaml
+          - service: ticketing-junsang
+            namespace: goti
+            valuesFile: environments/dev/goti-ticketing-junsang/values.yaml
   template:
     metadata:
       name: "goti-{{service}}-dev"

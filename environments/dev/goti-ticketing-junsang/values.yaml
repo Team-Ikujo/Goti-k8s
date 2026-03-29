@@ -1,0 +1,152 @@
+# ============================================================================
+# [POC] 준상 대기열 전용 Ticketing 서비스 (모놀리스 api 모듈)
+# ============================================================================
+# 목적: 준상 POC 부하테스트 시 ticketing API를 수연 ReservationSession 없이 처리
+# 특징: 준상 브랜치의 api(모놀리스) 모듈 — queue + ticketing + 전체 엔드포인트 포함
+#        대기열은 goti-queue-junsang-dev가 별도 처리 (pod 분리로 공정 비교)
+# 라우팅: /junsang/api/v1/** → rewrite → /api/v1/** → 이 서비스
+# 삭제 시점: 최종 구현체 결정 후 이 파일 + AppSet element + ECR 이미지 삭제
+# 관련 PR: https://github.com/Team-Ikujo/Goti-server/pull/312
+# ============================================================================
+
+nameOverride: goti-ticketing-junsang
+
+replicaCount: 1
+
+autoscaling:
+  enabled: false
+
+image:
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
+  tag: "poc-junsang-api-1-0000000"  # TODO: api 모듈 빌드 후 실제 태그로 교체
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: ecr-creds
+
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+  traffic.sidecar.istio.io/excludeOutboundPorts: "5432,6379"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+# [POC] Ticketing 라우팅
+# /junsang/api/v1/** → rewrite → /api/v1/** → 모놀리스가 처리
+# K6에서 ticketingBase = baseUrl + "/junsang" 으로 호출
+gateway:
+  enabled: true
+  hosts:
+    - "dev.go-ti.shop"
+    - "api.go-ti.shop"
+    - "dev-api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/junsang/api/v1"
+      rewrite:
+        uri: "/api/v1"
+      timeout: 10s
+      retries:
+        attempts: 2
+        perTryTimeout: 5s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-ticketing-junsang-dev
+            port:
+              number: 8080
+
+probes:
+  liveness:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+  readiness:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 5
+
+serviceMonitor:
+  enabled: false  # ticketing pod 메트릭은 비교 대상 아님
+
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "dev"
+  - name: JAVA_TOOL_OPTIONS
+    value: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport"
+  # --- DB: 호스트 PC PostgreSQL ---
+  - name: DATASOURCE_URL
+    value: "jdbc:postgresql://172.20.0.1:5432/goti"
+  - name: DATASOURCE_USERNAME
+    value: "goti-db-server"
+  # --- Redis: 호스트 PC ---
+  - name: REDIS_HOST
+    value: "172.20.0.1"
+  # [POC] Redis DB 격리 — 준상=DB1 (queue와 동일 DB로 QueueInterceptor 토큰 검증 가능)
+  - name: SPRING_DATA_REDIS_DATABASE
+    value: "1"
+  # [POC] 대기열 최대 수용인원 (queue pod과 동일)
+  - name: QUEUE_MAX_CAPACITY
+    value: "100"
+  # --- JWT ---
+  - name: JWT_ACCESS_TIME
+    value: "3600000"
+  - name: JWT_REFRESH_TIME
+    value: "604800000"
+  # --- 내부 API 통신 ---
+  - name: STADIUM_API_URL
+    value: "http://goti-stadium-dev.goti.svc.cluster.local:8080"
+
+envFrom:
+  - secretRef:
+      name: goti-ticketing-junsang-dev-secrets
+
+# 준상 모놀리스에 필요한 시크릿: DATASOURCE_PASSWORD, JWT_SECRET_KEY
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-parameter-store
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /dev/server
+    overridePath: /dev/kind/server
+
+# Istio: JWT 인증 (queue와 동일)
+istioPolicy:
+  authorizationPolicy:
+    enabled: false
+  requestAuthentication:
+    enabled: true
+    jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/actuator/*"
+      - "/swagger-ui/*"
+      - "/v3/api-docs/*"
+      - "/api/v1/games/*"
+      - "/api/v1/stadiums/*"
+      - "/api/v1/baseball-teams/*"
+      - "/api/v1/stadium-seats/seat-sections"
+      - "/api/v1/stadium-seats/seat-grades"
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
