@@ -7,7 +7,7 @@ metadata:
   namespace: goti
 spec:
   exporter:
-    endpoint: http://alloy.monitoring.svc:4317
+    endpoint: http://alloy-prod.monitoring.svc:4317
   propagators:
     - tracecontext
     - baggage
@@ -38,6 +38,6 @@ spec:
           fieldRef:
             fieldPath: metadata.labels['app.kubernetes.io/name']
       - name: PYROSCOPE_SERVER_ADDRESS
-        value: http://pyroscope.monitoring.svc:4040
+        value: http://pyroscope-prod-alloy.monitoring.svc:4040
       - name: PYROSCOPE_LABELS
         value: service_namespace=goti,deployment_environment_name=prod
