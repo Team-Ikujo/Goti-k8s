@@ -117,6 +117,9 @@ env:
   # Istio mesh 인증: X-User-Id/X-User-Role 헤더 → Spring SecurityContext 변환
   - name: GOTI_MESH_ENABLED
     value: "true"
+  # [POC] 부하테스트용 — 대기열 최대 수용인원 (기본 5000 → 100)
+  - name: QUEUE_MAX_CAPACITY
+    value: "100"
 
 envFrom:
   - secretRef:
