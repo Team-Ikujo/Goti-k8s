@@ -25,7 +25,9 @@ imagePullSecrets:
   - name: ecr-creds
 
 podAnnotations:
-  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+  # OTel auto-instrumentation 비활성화 — 모놀리스(api 모듈)에 spring-boot-starter-otel이 내장되어 있어
+  # javaagent와 충돌 (otelMeterRegistry bean 중복). POC ticketing pod은 관측성 비교 대상 아님.
+  instrumentation.opentelemetry.io/inject-java: "false"
   traffic.sidecar.istio.io/excludeOutboundPorts: "5432,6379"
 
 resources:
