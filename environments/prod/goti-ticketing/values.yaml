@@ -1,16 +1,12 @@
 nameOverride: goti-ticketing
-
 image:
-  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-ticketing"
-  tag: "dev-35-de629ba"
+  repository: "harbor.go-ti.shop/prod/goti-ticketing"
+  tag: "prod-28-71dcf1b"
   pullPolicy: IfNotPresent
-
 imagePullSecrets:
-  - name: ecr-creds
-
+  - name: harbor-creds
 podAnnotations:
   instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
-
 resources:
   requests:
     cpu: 500m
@@ -18,7 +14,6 @@ resources:
   limits:
     cpu: 2000m
     memory: 1Gi
-
 gateway:
   enabled: true
   hosts:
@@ -68,7 +63,6 @@ gateway:
             host: goti-ticketing-prod
             port:
               number: 8080
-
 autoscaling:
   enabled: true
   minReplicas: 1
@@ -83,7 +77,6 @@ autoscaling:
           metricName: http_rps_ticketing
           query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-ticketing"}[1m]))
           threshold: "50"
-
 probes:
   liveness:
     httpGet:
@@ -97,7 +90,6 @@ probes:
       port: http
     initialDelaySeconds: 30
     periodSeconds: 5
-
 env:
   - name: SPRING_PROFILES_ACTIVE
     value: "prod"
@@ -116,11 +108,9 @@ env:
     value: "/api/docs/ticketing/v3/api-docs/swagger-config"
   - name: SPRINGDOC_SWAGGER_UI_URL
     value: "/api/docs/ticketing/v3/api-docs"
-
 envFrom:
   - secretRef:
       name: goti-ticketing-prod-secrets
-
 externalSecret:
   enabled: true
   refreshInterval: "1h"
