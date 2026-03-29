@@ -165,15 +165,9 @@ istioPolicy:
   requestAuthentication:
     enabled: true
     jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
+  # [POC] JWT 강제 비활성화 — 서비스간 내부 호출(payment→ticketing)에 JWT 없음
   jwtAuthorizationPolicy:
-    enabled: true
-    excludePaths:
-      - "/actuator/*"
-      - "/api/v1/games/*"
-      - "/api/v1/stadiums/*"
-      - "/api/v1/baseball-teams/*"
-      - "/api/v1/stadium-seats/seat-sections"
-      - "/api/v1/stadium-seats/seat-grades"
+    enabled: false
   destinationRule:
     enabled: true
   sidecar:
