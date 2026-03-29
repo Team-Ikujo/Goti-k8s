@@ -76,8 +76,6 @@ env:
     value: "prod"
   - name: JAVA_TOOL_OPTIONS
     value: "-XX:MaxRAMPercentage=60.0"
-  - name: DATASOURCE_URL
-    value: "jdbc:postgresql://goti-postgresql:5432/goti?currentSchema=stadium_service"
   - name: REDIS_PORT
     value: "6379"
   - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
@@ -97,3 +95,4 @@ externalSecret:
     kind: ClusterSecretStore
   remoteRef:
     path: /prod/server
+    overridePath: /prod/stadium
