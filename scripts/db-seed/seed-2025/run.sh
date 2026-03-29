@@ -91,6 +91,25 @@ run_sql() {
   kubectl run "psql-seed-$(date +%s)" -n "$NAMESPACE" --rm -i --restart=Never \
     --image=postgres:17-alpine \
     --env="PGPASSWORD=$DB_PASS" \
+    --labels="app=psql-seed,version=seed" \
+    --overrides='{
+      "spec": {
+        "containers": [{
+          "name": "psql-seed",
+          "image": "postgres:17-alpine",
+          "stdin": true,
+          "env": [{"name": "PGPASSWORD", "value": "'"$DB_PASS"'"}],
+          "command": ["psql", "-h", "'"$DB_HOST"'", "-p", "'"$DB_PORT"'", "-U", "'"$DB_USER"'", "-d", "'"$DB_NAME"'"],
+          "securityContext": {"allowPrivilegeEscalation": false},
+          "resources": {
+            "requests": {"cpu": "100m", "memory": "128Mi"},
+            "limits": {"cpu": "500m", "memory": "512Mi"}
+          },
+          "livenessProbe": {"exec": {"command": ["true"]}, "initialDelaySeconds": 5, "periodSeconds": 10},
+          "readinessProbe": {"exec": {"command": ["true"]}, "initialDelaySeconds": 5, "periodSeconds": 10}
+        }]
+      }
+    }' \
     -- psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
     < "$sql_file"
 
