@@ -4,7 +4,7 @@ replicaCount: 1
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-guardrail"
-  tag: "latest"  # TODO: CI/CD 구축 후 실제 태그로 교체
+  tag: "dev-1-b7eaff7"
   pullPolicy: Always
 
 imagePullSecrets:
@@ -24,14 +24,14 @@ probes:
     httpGet:
       path: /health
       port: http
-    initialDelaySeconds: 15
+    initialDelaySeconds: 5
     periodSeconds: 10
     failureThreshold: 3
   readiness:
     httpGet:
       path: /health/ready
       port: http
-    initialDelaySeconds: 10
+    initialDelaySeconds: 3
     periodSeconds: 5
     failureThreshold: 3
 
@@ -45,19 +45,15 @@ resources:
 
 env:
   - name: GUARDRAIL_REDIS_URL
-    value: "redis://host.docker.internal:6379/1"  # dev only: 호스트 PC Redis, DB 1번. prod에서는 ExternalSecret으로 교체
-  - name: PYTHONDONTWRITEBYTECODE
-    value: "1"
-  - name: PYTHONUNBUFFERED
-    value: "1"
+    value: "redis://172.20.0.1:6379/1"  # dev only: 호스트 PC Redis (Kind bridge GW), DB 1번. prod에서는 ExternalSecret으로 교체
 
 gateway:
   enabled: false  # Guardrail은 Istio ExtAuthz로 연동 (VirtualService 불필요)
 
 podSecurityContext:
   runAsNonRoot: true
-  runAsUser: 1000
-  fsGroup: 1000
+  runAsUser: 65534
+  fsGroup: 65534
 
 securityContext:
   allowPrivilegeEscalation: false

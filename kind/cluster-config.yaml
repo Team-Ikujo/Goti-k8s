@@ -10,6 +10,10 @@ nodes:
   # 첫 번째 control-plane에만 extraPortMappings (hostPort 충돌 방지)
   - role: control-plane
     image: &nodeImage kindest/node:v1.34.3
+    extraMounts: &timezoneMount
+      - hostPath: /etc/localtime
+        containerPath: /etc/localtime
+        readOnly: true
     kubeadmConfigPatches:
       - |
         kind: InitConfiguration
@@ -33,13 +37,19 @@ nodes:
   # 2-3번 CP: extraPortMappings/labels 불필요 (첫 번째 CP만 외부 트래픽 수신)
   - role: control-plane
     image: *nodeImage
+    extraMounts: *timezoneMount
   - role: control-plane
     image: *nodeImage
+    extraMounts: *timezoneMount
   - role: worker
     image: *nodeImage
+    extraMounts: *timezoneMount
   - role: worker
     image: *nodeImage
+    extraMounts: *timezoneMount
   - role: worker
     image: *nodeImage
+    extraMounts: *timezoneMount
   - role: worker
     image: *nodeImage
+    extraMounts: *timezoneMount
