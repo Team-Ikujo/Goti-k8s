@@ -43,7 +43,7 @@ spec:
             operator: Equals
             value: 0
           # DaemonSet 소유 Pod 제외
-          - key: "{{ request.object.metadata.ownerReferences[?kind=='DaemonSet'] | length(@) }}"
+          - key: "{{ request.object.metadata.ownerReferences || `[]` | [?kind=='DaemonSet'] | length(@) }}"
             operator: Equals
             value: 0
       mutate:
