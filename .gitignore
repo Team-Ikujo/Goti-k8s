@@ -20,6 +20,7 @@ Thumbs.db
 *.crt
 .env
 .env.*
+*.env
 *kubeconfig*
 values-secret*.yaml
 *-secret.yaml

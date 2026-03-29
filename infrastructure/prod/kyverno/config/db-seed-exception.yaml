@@ -1,0 +1,31 @@
+# DB 시드 임시 파드 Kyverno 정책 예외
+# psql-seed-* 파드는 일회성 작업이므로 프로브/리소스/레이블/권한 정책 면제
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: db-seed-exception
+  namespace: goti
+spec:
+  exceptions:
+    - policyName: require-labels
+      ruleNames:
+        - require-app-label
+        - require-version-label
+    - policyName: require-pod-probes
+      ruleNames:
+        - validate-probes
+    - policyName: require-resource-limits
+      ruleNames:
+        - validate-resource-limits
+    - policyName: disallow-privilege-escalation
+      ruleNames:
+        - deny-privilege-escalation
+  match:
+    any:
+      - resources:
+          kinds:
+            - Pod
+          namespaces:
+            - goti
+          names:
+            - "psql-seed-*"
