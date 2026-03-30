@@ -18,6 +18,9 @@ argo-cd:
   # 서버: 단일 레플리카 + NodePort + 메트릭
   server:
     replicas: 1
+    # Istio sidecar race condition 방지 — sidecar ready 전 K8s API 호출 불가 (Issue #10391)
+    podAnnotations:
+      proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true}'
     resources:
       requests:
         cpu: 100m
