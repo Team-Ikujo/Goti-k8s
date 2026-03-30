@@ -18,9 +18,9 @@ istiod:
     accessLogFile: "/dev/stdout"
     # 분산 트레이싱 활성화
     enableTracing: true
-    # OTLP 트레이싱 프로바이더 (Alloy 연동)
+    # OTLP 트레이싱 프로바이더 (OTel Collector 연동)
     extensionProviders:
       - name: otel-tracing
         opentelemetry:
-          service: alloy.monitoring.svc.cluster.local
+          service: otel-collector-front-dev-opentelemetry-collector.monitoring.svc.cluster.local
           port: 4317
