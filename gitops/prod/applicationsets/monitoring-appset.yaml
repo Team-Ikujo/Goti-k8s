@@ -42,6 +42,11 @@ spec:
                   chartName: pyroscope
                   chartVersion: "1.18.1"
                   valuesFile: values-stacks/prod/pyroscope-values.yaml
+                - component: otel-collector-s3
+                  chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
+                  chartName: opentelemetry-collector
+                  chartVersion: "0.120.0"
+                  valuesFile: values-stacks/prod/otel-collector-s3-values.yaml
   template:
     metadata:
       name: "{{component}}-{{env}}"
