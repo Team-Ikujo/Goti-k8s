@@ -9,7 +9,7 @@
 
 nameOverride: goti-queue-sungjeon
 
-replicaCount: 1
+replicaCount: 0  # 리소스 절감 — POC 테스트 시 1로 복원
 
 # POC이므로 오토스케일링 비활성화 — 고정 리소스로 공정한 비교
 autoscaling:
