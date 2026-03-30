@@ -39,6 +39,12 @@ spec:
           - service: payment-junsang
             namespace: goti
             valuesFile: environments/dev/goti-payment-junsang/values.yaml
+          - service: ticketing-sungjeon
+            namespace: goti
+            valuesFile: environments/dev/goti-ticketing-sungjeon/values.yaml
+          - service: payment-sungjeon
+            namespace: goti
+            valuesFile: environments/dev/goti-payment-sungjeon/values.yaml
   template:
     metadata:
       name: "goti-{{service}}-dev"
