@@ -1,7 +1,7 @@
 nameOverride: goti-user
 image:
   repository: "harbor.go-ti.shop/prod/goti-user"
-  tag: "prod-21-71dcf1b"
+  tag: "prod-33-57bdd30"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
@@ -94,19 +94,15 @@ externalSecret:
   remoteRef:
     path: /prod/server
     overridePath: /prod/user
-
 # --- Istio 보안/네트워크 정책 ---
-
 istioPolicy:
   # user 서비스는 다른 서비스로부터 호출받지 않음 (Gateway 통해서만 접근)
   authorizationPolicy:
     enabled: true
     allowFrom: []
-
   requestAuthentication:
     enabled: true
     jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
-
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
@@ -122,10 +118,8 @@ istioPolicy:
       - "/v3/api-docs/*"
       - "/.well-known"
       - "/.well-known/*"
-
   destinationRule:
     enabled: true
-
   sidecar:
     enabled: true
     egress:
