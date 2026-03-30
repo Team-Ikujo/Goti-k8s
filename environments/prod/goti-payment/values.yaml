@@ -1,7 +1,7 @@
 nameOverride: goti-payment
 image:
   repository: "harbor.go-ti.shop/prod/goti-payment"
-  tag: "prod-30-71dcf1b"
+  tag: "prod-36-57bdd30"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
@@ -96,9 +96,7 @@ externalSecret:
   remoteRef:
     path: /prod/server
     overridePath: /prod/payment
-
 # --- Istio 보안/네트워크 정책 ---
-
 istioPolicy:
   # resale → payment (양도 결제/환불)
   authorizationPolicy:
@@ -113,11 +111,9 @@ istioPolicy:
               - operation:
                   paths: ["/api/v1/resales/payments", "/api/v1/resales/payments/*"]
                   methods: ["POST", "PATCH"]
-
   requestAuthentication:
     enabled: true
     jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
-
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
@@ -127,10 +123,8 @@ istioPolicy:
       - "/swagger-ui/*"
       - "/v3/api-docs"
       - "/v3/api-docs/*"
-
   destinationRule:
     enabled: true
-
   sidecar:
     enabled: true
     egress:

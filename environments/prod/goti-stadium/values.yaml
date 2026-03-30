@@ -1,7 +1,7 @@
 nameOverride: goti-stadium
 image:
   repository: "harbor.go-ti.shop/prod/goti-stadium"
-  tag: "prod-31-71dcf1b"
+  tag: "prod-34-57bdd30"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
@@ -96,9 +96,7 @@ externalSecret:
   remoteRef:
     path: /prod/server
     overridePath: /prod/stadium
-
 # --- Istio 보안/네트워크 정책 ---
-
 istioPolicy:
   # ticketing → stadium (경기장/팀 조회)
   authorizationPolicy:
@@ -113,11 +111,9 @@ istioPolicy:
               - operation:
                   paths: ["/api/v1/stadiums*", "/api/v1/baseball-teams*"]
                   methods: ["GET"]
-
   requestAuthentication:
     enabled: true
     jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
-
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
@@ -131,10 +127,8 @@ istioPolicy:
       - "/swagger-ui/*"
       - "/v3/api-docs"
       - "/v3/api-docs/*"
-
   destinationRule:
     enabled: true
-
   sidecar:
     enabled: true
     egress:
