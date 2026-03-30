@@ -1,7 +1,7 @@
 nameOverride: goti-ticketing
 image:
   repository: "harbor.go-ti.shop/prod/goti-ticketing"
-  tag: "prod-28-71dcf1b"
+  tag: "prod-37-57bdd30"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
@@ -124,9 +124,7 @@ externalSecret:
   remoteRef:
     path: /prod/server
     overridePath: /prod/ticketing
-
 # --- Istio 보안/네트워크 정책 ---
-
 istioPolicy:
   # payment → ticketing (결제 확인 콜백)
   authorizationPolicy:
@@ -141,11 +139,9 @@ istioPolicy:
               - operation:
                   paths: ["/api/v1/orders/*"]
                   methods: ["GET", "POST"]
-
   requestAuthentication:
     enabled: true
     jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
-
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
@@ -161,10 +157,8 @@ istioPolicy:
       - "/swagger-ui/*"
       - "/v3/api-docs"
       - "/v3/api-docs/*"
-
   destinationRule:
     enabled: true
-
   sidecar:
     enabled: true
     egress:
