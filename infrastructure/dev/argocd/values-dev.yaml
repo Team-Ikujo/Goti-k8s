@@ -66,6 +66,6 @@ argo-cd:
       server.insecure: true
       # chart 9.x에서 기본값 제거됨 — ApplicationSet 자동 sync 필요 시 명시
       applicationsetcontroller.policy: sync
-      # ArgoCD 트레이싱 → Alloy → Tempo (sync, reconcile, repo-server 등)
-      otlp.address: "alloy-dev.monitoring.svc:4317"
+      # ArgoCD 트레이싱 → OTel Collector → Kafka → Tempo
+      otlp.address: "otel-collector-front-dev-opentelemetry-collector.monitoring.svc:4317"
       otlp.insecure: "true"
