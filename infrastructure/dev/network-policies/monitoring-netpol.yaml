@@ -31,6 +31,7 @@ spec:
           protocol: TCP
 ---
 # Mimir: Istio Gateway에서 접근 허용 (K6 부하테스트 메트릭 Push + Prometheus 쿼리)
+# SingleBinary 모드: component 레이블 없이 name만으로 매칭
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -38,13 +39,8 @@ metadata:
   namespace: monitoring
 spec:
   podSelector:
-    matchExpressions:
-      - key: app.kubernetes.io/name
-        operator: In
-        values: ["mimir"]
-      - key: app.kubernetes.io/component
-        operator: In
-        values: ["distributor", "query-frontend"]
+    matchLabels:
+      app.kubernetes.io/name: mimir
   policyTypes:
     - Ingress
   ingress:
