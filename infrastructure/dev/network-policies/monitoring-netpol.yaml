@@ -156,16 +156,16 @@ spec:
         - port: 53
           protocol: TCP
 ---
-# Alloy: goti namespace에서 OTLP 수신
+# OTel Collector Front: goti namespace에서 OTLP 수신
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-alloy-ingress
+  name: allow-otel-collector-ingress
   namespace: monitoring
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: alloy
+      app.kubernetes.io/name: opentelemetry-collector
   policyTypes:
     - Ingress
   ingress:
@@ -174,67 +174,30 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: goti
       ports:
-        - port: 4317
+        - port: 4317    # OTLP gRPC
           protocol: TCP
-        - port: 4318
+        - port: 4318    # OTLP HTTP
           protocol: TCP
 ---
-# Alloy: goti namespace scrape egress + kube-system metrics
+# OTel Collector: Kafka broker egress (traces/logs 버퍼링)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-alloy-scrape-egress
+  name: allow-otel-collector-kafka-egress
   namespace: monitoring
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: alloy
+      app.kubernetes.io/name: opentelemetry-collector
   policyTypes:
     - Egress
   egress:
-    # goti namespace scrape: Spring Boot(8080), Go metrics-collector(9090), Istio(15020/15090)
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: goti
-      ports:
-        - port: 8080
-          protocol: TCP
-        - port: 9090
-          protocol: TCP
-        - port: 15020
-          protocol: TCP
-        - port: 15090
-          protocol: TCP
     - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: kafka
       ports:
-        - port: 9092
-          protocol: TCP
-        - port: 9404
-          protocol: TCP
-    # ArgoCD metrics scrape (8080=appset, 8082=controller, 8083=server, 8084=repo-server)
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: argocd
-      ports:
-        - port: 8080
-          protocol: TCP
-        - port: 8082
-          protocol: TCP
-        - port: 8083
-          protocol: TCP
-        - port: 8084
-          protocol: TCP
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-      ports:
-        - port: 8080
+        - port: 9092    # Kafka broker
           protocol: TCP
     - to:
         - namespaceSelector:

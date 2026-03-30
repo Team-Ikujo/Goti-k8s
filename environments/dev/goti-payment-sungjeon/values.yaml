@@ -9,7 +9,7 @@
 
 nameOverride: goti-payment-sungjeon
 
-replicaCount: 1
+replicaCount: 0  # 리소스 절감 — POC 테스트 시 1로 복원
 
 autoscaling:
   enabled: false
