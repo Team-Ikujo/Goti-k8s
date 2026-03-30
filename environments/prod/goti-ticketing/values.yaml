@@ -95,6 +95,10 @@ env:
     value: "prod"
   - name: JAVA_TOOL_OPTIONS
     value: "-XX:MaxRAMPercentage=60.0"
+  - name: GOTI_MESH_ENABLED
+    value: "true"
+  - name: STADIUM_API_URL
+    value: "http://goti-stadium-prod.goti.svc.cluster.local:8080"
   - name: REDIS_PORT
     value: "6379"
   - name: SPRING_DATA_REDIS_SSL_ENABLED
@@ -120,3 +124,53 @@ externalSecret:
   remoteRef:
     path: /prod/server
     overridePath: /prod/ticketing
+
+# --- Istio 보안/네트워크 정책 ---
+
+istioPolicy:
+  # payment → ticketing (결제 확인 콜백)
+  authorizationPolicy:
+    enabled: true
+    allowFrom:
+      - name: from-payment
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-payment-prod"]
+            to:
+              - operation:
+                  paths: ["/api/v1/orders/*"]
+                  methods: ["GET", "POST"]
+
+  requestAuthentication:
+    enabled: true
+    jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
+
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/api/v1/games"
+      - "/api/v1/games/*"
+      - "/api/v1/stadiums"
+      - "/api/v1/stadiums/*"
+      - "*/payment-order"
+      - "*/payment-confirmations"
+      - "/actuator"
+      - "/actuator/*"
+      - "/swagger-ui"
+      - "/swagger-ui/*"
+      - "/v3/api-docs"
+      - "/v3/api-docs/*"
+
+  destinationRule:
+    enabled: true
+
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "kafka/*"
+          - "~/*.amazonaws.com"
