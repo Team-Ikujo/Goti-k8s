@@ -94,3 +94,51 @@ externalSecret:
   remoteRef:
     path: /prod/server
     overridePath: /prod/user
+
+# --- Istio 보안/네트워크 정책 ---
+
+istioPolicy:
+  # user 서비스는 다른 서비스로부터 호출받지 않음 (Gateway 통해서만 접근)
+  authorizationPolicy:
+    enabled: true
+    allowFrom: []
+
+  requestAuthentication:
+    enabled: true
+    jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
+
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/api/v1/auth"
+      - "/api/v1/auth/*"
+      - "/api/v1/test"
+      - "/api/v1/test/*"
+      - "/actuator"
+      - "/actuator/*"
+      - "/swagger-ui"
+      - "/swagger-ui/*"
+      - "/v3/api-docs"
+      - "/v3/api-docs/*"
+      - "/.well-known"
+      - "/.well-known/*"
+
+  destinationRule:
+    enabled: true
+
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "kafka/*"
+          # OAuth 소셜 로그인 (Google, Naver, Kakao)
+          - "~/*.googleapis.com"
+          - "~/*.naver.com"
+          - "~/*.kakao.com"
+          # SMS 발송 (Nurigo/CoolSMS)
+          - "~/*.nurigo.com"
+          # AWS (SSM Parameter Store, STS)
+          - "~/*.amazonaws.com"
