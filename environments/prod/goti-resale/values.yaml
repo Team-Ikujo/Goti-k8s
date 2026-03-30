@@ -67,6 +67,8 @@ env:
     value: "prod"
   - name: JAVA_TOOL_OPTIONS
     value: "-XX:MaxRAMPercentage=60.0"
+  - name: GOTI_MESH_ENABLED
+    value: "true"
   - name: REDIS_PORT
     value: "6379"
   - name: SPRING_DATA_REDIS_SSL_ENABLED
@@ -92,3 +94,49 @@ externalSecret:
   remoteRef:
     path: /prod/server
     overridePath: /prod/resale
+
+# --- Istio 보안/네트워크 정책 ---
+
+istioPolicy:
+  # payment → resale (양도 완료/거래 조회)
+  authorizationPolicy:
+    enabled: true
+    allowFrom:
+      - name: from-payment
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-payment-prod"]
+            to:
+              - operation:
+                  paths: ["/api/v1/resales/orders/*"]
+                  methods: ["GET", "PATCH"]
+
+  requestAuthentication:
+    enabled: true
+    jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
+
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/api/v1/resales/histories"
+      - "/api/v1/resales/histories/*"
+      - "/actuator"
+      - "/actuator/*"
+      - "/swagger-ui"
+      - "/swagger-ui/*"
+      - "/v3/api-docs"
+      - "/v3/api-docs/*"
+
+  destinationRule:
+    enabled: true
+
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "kafka/*"
+          - "~/*.amazonaws.com"
