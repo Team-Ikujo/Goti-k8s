@@ -1,7 +1,7 @@
 nameOverride: goti-resale
 image:
   repository: "harbor.go-ti.shop/prod/goti-resale"
-  tag: "prod-25-71dcf1b"
+  tag: "prod-35-57bdd30"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
@@ -94,9 +94,7 @@ externalSecret:
   remoteRef:
     path: /prod/server
     overridePath: /prod/resale
-
 # --- Istio 보안/네트워크 정책 ---
-
 istioPolicy:
   # payment → resale (양도 완료/거래 조회)
   authorizationPolicy:
@@ -111,11 +109,9 @@ istioPolicy:
               - operation:
                   paths: ["/api/v1/resales/orders/*"]
                   methods: ["GET", "PATCH"]
-
   requestAuthentication:
     enabled: true
     jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
-
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
@@ -127,10 +123,8 @@ istioPolicy:
       - "/swagger-ui/*"
       - "/v3/api-docs"
       - "/v3/api-docs/*"
-
   destinationRule:
     enabled: true
-
   sidecar:
     enabled: true
     egress:
