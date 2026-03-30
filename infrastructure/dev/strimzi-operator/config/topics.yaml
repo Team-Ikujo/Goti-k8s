@@ -127,9 +127,9 @@ spec:
     min.insync.replicas: 2
 ---
 # =============================================================================
-# === 모니터링 도메인 (트레이스 버퍼) ===
-# Alloy → Kafka → Alloy(consumer) → Tempo
-# Tempo OOMKilled 방지: Kafka가 트레이스를 버퍼링하여 Tempo 유입 속도 제어
+# === 모니터링 도메인 (텔레메트리 버퍼) ===
+# OTel Collector Front → Kafka → OTel Collector Back → Tempo/Loki
+# Kafka가 traces/logs를 버퍼링하여 백엔드 OOM 방지 및 스파이크 흡수
 ---
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
@@ -146,6 +146,25 @@ spec:
     cleanup.policy: delete
     min.insync.replicas: 2
     max.message.bytes: 1048576     # 1MB (트레이스 배치)
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: observability.logs.v1
+  labels:
+    strimzi.io/cluster: goti-kafka
+    domain: observability
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 7200000          # 2시간 (Loki 장애 대비 여유)
+    retention.bytes: 5368709120    # 5GB/partition
+    cleanup.policy: delete
+    compression.type: lz4          # logs는 고처리량 → lz4 압축
+    max.message.bytes: 1048576     # 1MB
+    segment.bytes: 536870912
+    min.insync.replicas: 2
 # =============================================================================
 # DLQ (Dead Letter Queue) 토픽
 # 처리 실패한 메시지를 보관. partitions: 1 (순서 보장), retention: 30일
