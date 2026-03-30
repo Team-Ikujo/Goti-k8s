@@ -10,7 +10,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-stadium"
-  tag: "dev-44-3737148"
+  tag: "dev-45-a05069c"
   pullPolicy: Always
 
 imagePullSecrets:
