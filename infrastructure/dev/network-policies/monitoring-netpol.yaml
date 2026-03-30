@@ -284,6 +284,11 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: kafka
+    # istio-system (istiod metrics)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
     # kube-system (coredns, etcd, scheduler, controller-manager)
     - to:
         - namespaceSelector:
