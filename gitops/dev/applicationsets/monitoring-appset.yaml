@@ -27,11 +27,6 @@ spec:
                   chartName: tempo
                   chartVersion: "1.24.4"
                   valuesFile: values-stacks/dev/tempo-values.yaml
-                - component: alloy
-                  chartRepo: https://grafana.github.io/helm-charts  # NOTE: Alloy는 grafana.github.io 유지 (community 미이관)
-                  chartName: alloy
-                  chartVersion: "1.6.1"
-                  valuesFile: values-stacks/dev/alloy-values.yaml
                 - component: mimir
                   chartRepo: https://grafana.github.io/helm-charts  # NOTE: Mimir는 grafana.github.io 유지
                   chartName: mimir-distributed
