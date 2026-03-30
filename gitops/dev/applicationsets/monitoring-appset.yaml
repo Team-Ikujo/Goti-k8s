@@ -27,11 +27,6 @@ spec:
                   chartName: tempo
                   chartVersion: "1.24.4"
                   valuesFile: values-stacks/dev/tempo-values.yaml
-                - component: alloy
-                  chartRepo: https://grafana.github.io/helm-charts  # NOTE: Alloy는 grafana.github.io 유지 (community 미이관)
-                  chartName: alloy
-                  chartVersion: "1.6.1"
-                  valuesFile: values-stacks/dev/alloy-values.yaml
                 - component: mimir
                   chartRepo: https://grafana.github.io/helm-charts  # NOTE: Mimir는 grafana.github.io 유지
                   chartName: mimir-distributed
@@ -42,6 +37,16 @@ spec:
                   chartName: pyroscope
                   chartVersion: "1.18.1"
                   valuesFile: values-stacks/dev/pyroscope-values.yaml
+                - component: otel-collector-front
+                  chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
+                  chartName: opentelemetry-collector
+                  chartVersion: "0.147.1"
+                  valuesFile: values-stacks/dev/otel-collector-front-values.yaml
+                - component: otel-collector-back
+                  chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
+                  chartName: opentelemetry-collector
+                  chartVersion: "0.147.1"
+                  valuesFile: values-stacks/dev/otel-collector-back-values.yaml
   template:
     metadata:
       name: "{{component}}-{{env}}"
