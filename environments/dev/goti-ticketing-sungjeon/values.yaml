@@ -1,0 +1,192 @@
+# ============================================================================
+# [POC] 성전 대기열 전용 Ticketing 서비스 (ticketing MSA 모듈)
+# ============================================================================
+# 목적: 성전 POC 부하테스트 시 ticketing API를 전용 pod에서 처리
+# 특징: 성전 브랜치의 ticketing 모듈 — QueueAccessReader로 Redis 검증
+#        ReservationSession 제거, Queue Token 기반 검증 체계
+# 라우팅: /sungjeon/api/v1/** → rewrite → /api/v1/** → 이 서비스
+# 삭제 시점: 최종 구현체 결정 후 이 파일 + AppSet element + ECR 이미지 삭제
+# 관련 PR: https://github.com/Team-Ikujo/Goti-server/pull/311
+# ============================================================================
+
+nameOverride: goti-ticketing-sungjeon
+
+replicaCount: 1
+
+autoscaling:
+  enabled: false
+
+image:
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
+  tag: "poc-sungjeon-30-4ae7a51"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: ecr-creds
+
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+  traffic.sidecar.istio.io/excludeOutboundPorts: "5432,6379"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+# [POC] Ticketing 라우팅
+# ticketing 전용 경로 (payment는 payment-sungjeon이 별도 처리)
+# Istio가 같은 host의 여러 VS를 머지할 때 longest prefix 우선이 보장 안 되므로
+# catch-all /sungjeon/api/v1 대신 ticketing 경로만 명시적으로 매칭
+gateway:
+  enabled: true
+  hosts:
+    - "dev.go-ti.shop"
+    - "api.go-ti.shop"
+    - "dev-api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/sungjeon/api/v1/orders"
+      rewrite:
+        uri: "/api/v1/orders"
+      timeout: 10s
+      route:
+        - destination:
+            host: goti-ticketing-sungjeon-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/sungjeon/api/v1/stadium-seats"
+      rewrite:
+        uri: "/api/v1/stadium-seats"
+      timeout: 10s
+      route:
+        - destination:
+            host: goti-ticketing-sungjeon-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/sungjeon/api/v1/seat-reservations"
+      rewrite:
+        uri: "/api/v1/seat-reservations"
+      timeout: 10s
+      route:
+        - destination:
+            host: goti-ticketing-sungjeon-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/sungjeon/api/v1/game-seats"
+      rewrite:
+        uri: "/api/v1/game-seats"
+      timeout: 10s
+      route:
+        - destination:
+            host: goti-ticketing-sungjeon-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/sungjeon/api/v1/seats"
+      rewrite:
+        uri: "/api/v1/seats"
+      timeout: 10s
+      route:
+        - destination:
+            host: goti-ticketing-sungjeon-dev
+            port:
+              number: 8080
+
+probes:
+  liveness:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+  readiness:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 5
+
+serviceMonitor:
+  enabled: false  # ticketing pod 메트릭은 비교 대상 아님
+
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "dev"
+  - name: JAVA_TOOL_OPTIONS
+    value: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport"
+  # --- DB: 호스트 PC PostgreSQL ---
+  - name: DATASOURCE_URL
+    value: "jdbc:postgresql://172.20.0.1:5432/goti"
+  - name: DATASOURCE_USERNAME
+    value: "goti-db-server"
+  # --- Redis: 호스트 PC ---
+  - name: REDIS_HOST
+    value: "172.20.0.1"
+  # [POC] Redis DB 격리 — 성전=DB2 (queue-sungjeon과 동일 DB — QueueAccessReader 검증용)
+  - name: SPRING_DATA_REDIS_DATABASE
+    value: "2"
+  # Istio mesh 인증
+  - name: GOTI_MESH_ENABLED
+    value: "true"
+  # --- 내부 API 통신 ---
+  - name: STADIUM_API_URL
+    value: "http://goti-stadium-dev.goti.svc.cluster.local:8080"
+  # --- Queue 토큰 시크릿 (QueueAccessReader에서 사용) ---
+  - name: QUEUE_TOKEN_SECRET_KEY
+    value: "goti-queue-secret-key-1234567890"
+
+envFrom:
+  - secretRef:
+      name: goti-ticketing-sungjeon-dev-secrets
+
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-parameter-store
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /dev/server
+    overridePath: /dev/kind/server
+
+# Istio: JWT 인증
+istioPolicy:
+  authorizationPolicy:
+    enabled: true
+    allowFrom:
+      - name: from-payment-sungjeon
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-payment-sungjeon-dev"]
+            to:
+              - operation:
+                  paths: ["/api/v1/orders/*"]
+                  methods: ["GET", "POST"]
+  requestAuthentication:
+    enabled: true
+    jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
+  # [POC] JWT 강제 비활성화 — 서비스간 내부 호출(payment→ticketing)에 JWT 없음
+  jwtAuthorizationPolicy:
+    enabled: false
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
