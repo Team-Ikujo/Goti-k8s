@@ -9,7 +9,7 @@ metadata:
   namespace: goti
 spec:
   exporter:
-    endpoint: http://alloy-dev.monitoring.svc:4317
+    endpoint: http://otel-collector-front-dev-opentelemetry-collector.monitoring.svc:4317
   propagators:
     - tracecontext
     - baggage
