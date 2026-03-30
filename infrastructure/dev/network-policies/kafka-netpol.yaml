@@ -126,11 +126,11 @@ spec:
         - port: 53
           protocol: TCP
 ---
-# monitoring에서 Kafka 메트릭 scrape 허용
+# monitoring에서 Kafka 메트릭 scrape + OTel Collector producer/consumer 허용
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-kafka-metrics-scrape
+  name: allow-kafka-from-monitoring
   namespace: kafka
 spec:
   podSelector:
@@ -144,5 +144,7 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: monitoring
       ports:
-        - port: 9404
+        - port: 9092    # Kafka broker (OTel Collector traces/logs 버퍼링)
+          protocol: TCP
+        - port: 9404    # Kafka JMX exporter (메트릭 scrape)
           protocol: TCP
