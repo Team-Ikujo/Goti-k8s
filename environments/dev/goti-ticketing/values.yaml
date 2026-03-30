@@ -1,6 +1,6 @@
 nameOverride: goti-ticketing
 
-replicaCount: 2
+replicaCount: 1
 
 autoscaling:
   enabled: true
