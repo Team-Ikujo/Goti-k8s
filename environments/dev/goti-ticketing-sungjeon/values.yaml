@@ -18,7 +18,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
-  tag: "poc-sungjeon-26-4ae7a51"
+  tag: "poc-sungjeon-27-4ae7a51"
   pullPolicy: Always
 
 imagePullSecrets:
