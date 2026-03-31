@@ -1,0 +1,136 @@
+# nameOverride: goti-payment
+# image:
+#   repository: "harbor.go-ti.shop/prod/goti-payment"
+#   tag: "prod-36-57bdd30"
+#   pullPolicy: IfNotPresent
+# imagePullSecrets:
+#   - name: harbor-creds
+# podAnnotations:
+#   instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+# resources:
+#   requests:
+#     cpu: 250m
+#     memory: 384Mi
+#   limits:
+#     cpu: 1000m
+#     memory: 768Mi
+# gateway:
+#   enabled: true
+#   hosts:
+#     - "go-ti.shop"
+#     - "api.go-ti.shop"
+#   gatewayRef: "istio-system/goti-shared-gateway"
+#   httpRoutes:
+#     - match:
+#         - uri:
+#             prefix: "/api/v1/payments"
+#       route:
+#         - destination:
+#             host: goti-payment-prod
+#             port:
+#               number: 8080
+#     - match:
+#         - uri:
+#             prefix: "/api/docs/payment/swagger-ui/"
+#       rewrite:
+#         uri: "/swagger-ui/"
+#       route:
+#         - destination:
+#             host: goti-payment-prod
+#             port:
+#               number: 8080
+#     - match:
+#         - uri:
+#             prefix: "/api/docs/payment/v3/"
+#       rewrite:
+#         uri: "/v3/"
+#       route:
+#         - destination:
+#             host: goti-payment-prod
+#             port:
+#               number: 8080
+# probes:
+#   liveness:
+#     httpGet:
+#       path: /actuator/health/liveness
+#       port: http
+#     initialDelaySeconds: 60
+#     periodSeconds: 10
+#   readiness:
+#     httpGet:
+#       path: /actuator/health/readiness
+#       port: http
+#     initialDelaySeconds: 30
+#     periodSeconds: 5
+# env:
+#   - name: SPRING_PROFILES_ACTIVE
+#     value: "prod"
+#   - name: JAVA_TOOL_OPTIONS
+#     value: "-XX:MaxRAMPercentage=60.0"
+#   - name: GOTI_MESH_ENABLED
+#     value: "true"
+#   - name: TICKETING_BASE_URL
+#     value: "http://goti-ticketing-prod.goti.svc.cluster.local:8080"
+#   - name: REDIS_PORT
+#     value: "6379"
+#   - name: SPRING_DATA_REDIS_SSL_ENABLED
+#     value: "true"
+#   - name: SPRING_DATA_REDIS_PASSWORD
+#     valueFrom:
+#       secretKeyRef:
+#         name: goti-payment-prod-secrets
+#         key: REDIS_AUTH_TOKEN
+#   - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
+#     value: "/api/docs/payment/v3/api-docs/swagger-config"
+#   - name: SPRINGDOC_SWAGGER_UI_URL
+#     value: "/api/docs/payment/v3/api-docs"
+# envFrom:
+#   - secretRef:
+#       name: goti-payment-prod-secrets
+# externalSecret:
+#   enabled: true
+#   refreshInterval: "1h"
+#   secretStoreRef:
+#     name: aws-ssm
+#     kind: ClusterSecretStore
+#   remoteRef:
+#     path: /prod/server
+#     overridePath: /prod/payment
+# # --- Istio 보안/네트워크 정책 ---
+# istioPolicy:
+#   # resale → payment (양도 결제/환불)
+#   authorizationPolicy:
+#     enabled: true
+#     allowFrom:
+#       - name: from-resale
+#         rules:
+#           - from:
+#               - source:
+#                   principals: ["cluster.local/ns/goti/sa/goti-resale-prod"]
+#             to:
+#               - operation:
+#                   paths: ["/api/v1/resales/payments", "/api/v1/resales/payments/*"]
+#                   methods: ["POST", "PATCH"]
+#   requestAuthentication:
+#     enabled: true
+#     jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
+#   jwtAuthorizationPolicy:
+#     enabled: true
+#     excludePaths:
+#       - "/actuator"
+#       - "/actuator/*"
+#       - "/swagger-ui"
+#       - "/swagger-ui/*"
+#       - "/v3/api-docs"
+#       - "/v3/api-docs/*"
+#   destinationRule:
+#     enabled: true
+#   sidecar:
+#     enabled: true
+#     egress:
+#       - hosts:
+#           - "istio-system/*"
+#           - "./*"
+#           - "monitoring/*"
+#           - "kafka/*"
+#           - "~/*.amazonaws.com"
