@@ -22,6 +22,34 @@ spec:
           - service: resale
             namespace: goti
             valuesFile: environments/prod/goti-resale/values.yaml
+          # --- [POC] Queue 부하테스트용 (수연/준상/성전) ---
+          - service: queue-suyeon
+            namespace: goti
+            valuesFile: environments/prod/goti-queue-suyeon/values.yaml
+          - service: queue-junsang
+            namespace: goti
+            valuesFile: environments/prod/goti-queue-junsang/values.yaml
+          - service: queue-sungjeon
+            namespace: goti
+            valuesFile: environments/prod/goti-queue-sungjeon/values.yaml
+          - service: ticketing-suyeon
+            namespace: goti
+            valuesFile: environments/prod/goti-ticketing-suyeon/values.yaml
+          - service: ticketing-junsang
+            namespace: goti
+            valuesFile: environments/prod/goti-ticketing-junsang/values.yaml
+          - service: ticketing-sungjeon
+            namespace: goti
+            valuesFile: environments/prod/goti-ticketing-sungjeon/values.yaml
+          - service: payment-suyeon
+            namespace: goti
+            valuesFile: environments/prod/goti-payment-suyeon/values.yaml
+          - service: payment-junsang
+            namespace: goti
+            valuesFile: environments/prod/goti-payment-junsang/values.yaml
+          - service: payment-sungjeon
+            namespace: goti
+            valuesFile: environments/prod/goti-payment-sungjeon/values.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod"
