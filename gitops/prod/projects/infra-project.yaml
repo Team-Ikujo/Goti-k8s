@@ -106,6 +106,8 @@ spec:
       kind: PodMonitor
     - group: "monitoring.coreos.com"
       kind: PrometheusRule
+    - group: "monitoring.coreos.com"
+      kind: Probe
     # ArgoCD
     - group: "argoproj.io"
       kind: Application

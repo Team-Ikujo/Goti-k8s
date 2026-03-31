@@ -17,6 +17,11 @@ spec:
                   chartName: kube-prometheus-stack
                   chartVersion: "82.4.3"
                   valuesFile: values-stacks/prod/kube-prometheus-stack-values.yaml
+                - component: prometheus-blackbox-exporter
+                  chartRepo: https://prometheus-community.github.io/helm-charts
+                  chartName: prometheus-blackbox-exporter
+                  chartVersion: "9.5.0"
+                  valuesFile: values-stacks/prod/blackbox-exporter-values.yaml
                 - component: loki
                   chartRepo: https://grafana.github.io/helm-charts
                   chartName: loki
