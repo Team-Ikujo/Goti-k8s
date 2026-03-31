@@ -76,6 +76,8 @@ spec:
     - group: "monitoring.coreos.com"
       kind: AlertmanagerConfig
     - group: "monitoring.coreos.com"
+      kind: Probe
+    - group: "monitoring.coreos.com"
       kind: ScrapeConfig
     - group: "networking.istio.io"
       kind: Gateway
