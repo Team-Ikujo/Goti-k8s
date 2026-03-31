@@ -31,11 +31,29 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write  # AWS OIDC 인증용
 
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: AWS 인증 (SSM 접근용)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Slack Webhook URL 가져오기
+        id: slack
+        run: |
+          WEBHOOK_URL=$(aws ssm get-parameter \
+            --name /prod/monitoring/SLACK_WEBHOOK_URL \
+            --with-decryption \
+            --query 'Parameter.Value' \
+            --output text 2>/dev/null || echo "")
+          echo "::add-mask::$WEBHOOK_URL"
+          echo "webhook_url=$WEBHOOK_URL" >> $GITHUB_OUTPUT
 
       - name: Harbor 헬스체크
         id: health
@@ -140,10 +158,65 @@ $(for s in ${{ env.SERVICES }}; do echo "- $s"; done)
           git commit -m "$TITLE"
           git push origin "$BRANCH"
 
-          gh pr create \
+          PR_URL=$(gh pr create \
             --title "$TITLE" \
             --body "$BODY" \
             --base main \
-            --head "$BRANCH"
+            --head "$BRANCH")
+          
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "pr_title=$TITLE" >> $GITHUB_OUTPUT
+        id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Slack 알림 전송
+        if: steps.decision.outputs.action != 'none' && steps.slack.outputs.webhook_url != ''
+        run: |
+          ACTION="${{ steps.decision.outputs.action }}"
+          HARBOR_STATUS="${{ steps.health.outputs.status }}"
+          PR_URL="${{ steps.pr.outputs.pr_url }}"
+          PR_TITLE="${{ steps.pr.outputs.pr_title }}"
+          
+          if [[ "$ACTION" == "activate" ]]; then
+            COLOR="danger"
+            EMOJI="🚨"
+            MESSAGE="Harbor 장애 감지 - ECR로 전환"
+          else
+            COLOR="good"
+            EMOJI="✅"
+            MESSAGE="Harbor 복구 감지 - Harbor로 원복"
+          fi
+
+          curl -X POST "${{ steps.slack.outputs.webhook_url }}" \
+            -H 'Content-Type: application/json' \
+            -d @- <<EOF
+          {
+            "channel": "C0AHGKSGD5Y",
+            "attachments": [
+              {
+                "color": "$COLOR",
+                "title": "$EMOJI $MESSAGE",
+                "fields": [
+                  {
+                    "title": "Harbor 상태",
+                    "value": "\`$HARBOR_STATUS\`",
+                    "short": true
+                  },
+                  {
+                    "title": "전환 방향",
+                    "value": "$(if [[ "$ACTION" == "activate" ]]; then echo "Harbor → ECR"; else echo "ECR → Harbor"; fi)",
+                    "short": true
+                  },
+                  {
+                    "title": "PR",
+                    "value": "<$PR_URL|$PR_TITLE>",
+                    "short": false
+                  }
+                ],
+                "footer": "Harbor Failover Automation",
+                "ts": $(date +%s)
+              }
+            ]
+          }
+          EOF
