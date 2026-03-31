@@ -70,6 +70,12 @@ gateway:
             port:
               number: 8080
 
+serviceMonitor:
+  enabled: true
+  port: http
+  path: "/actuator/prometheus"
+  interval: "15s"
+
 probes:
   liveness:
     httpGet:
