@@ -8,6 +8,7 @@ metadata:
     app.kubernetes.io/part-of: goti
 spec:
   schedule: {{ .Values.schedule | quote }}
+  suspend: false
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
