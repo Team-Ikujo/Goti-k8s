@@ -16,10 +16,6 @@ spec:
       helm:
         valueFiles:
           - values-prod.yaml
-    # webhook-bridge + PrometheusRule + Probe (harbor failover)
-    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-      targetRevision: main
-      path: "infrastructure/prod/monitoring/harbor-failover"
   destination:
     server: "https://kubernetes.default.svc"
     namespace: monitoring
