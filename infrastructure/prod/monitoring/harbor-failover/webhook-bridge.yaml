@@ -1,0 +1,123 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webhook-bridge-script
+  namespace: monitoring
+data:
+  server.py: |
+    import http.server
+    import json
+    import urllib.request
+    import os
+
+    GITHUB_TOKEN  = os.environ["GITHUB_TOKEN"]
+    GITHUB_REPO   = os.environ["GITHUB_REPO"]   # Team-Ikujo/Goti-k8s
+    WORKFLOW_FILE = "harbor-failover.yml"
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_POST(self):
+            length = int(self.headers.get("Content-Length", 0))
+            body   = json.loads(self.rfile.read(length))
+            status = body.get("status", "firing")
+
+            action = "activate" if status == "firing" else "deactivate"
+
+            # GitHub repository_dispatch 호출
+            payload = json.dumps({
+                "event_type": "harbor-failover",
+                "client_payload": {"action": action}
+            }).encode()
+
+            req = urllib.request.Request(
+                f"https://api.github.com/repos/{GITHUB_REPO}/dispatches",
+                data=payload,
+                headers={
+                    "Authorization": f"Bearer {GITHUB_TOKEN}",
+                    "Accept": "application/vnd.github+json",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+            try:
+                urllib.request.urlopen(req, timeout=10)
+                print(f"GitHub dispatch sent: action={action}")
+                self.send_response(200)
+            except Exception as e:
+                print(f"GitHub dispatch failed: {e}")
+                self.send_response(500)
+            self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    http.server.HTTPServer(("0.0.0.0", 8080), Handler).serve_forever()
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-bridge
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook-bridge
+  template:
+    metadata:
+      labels:
+        app: webhook-bridge
+        version: v1
+    spec:
+      containers:
+        - name: bridge
+          image: python:3.12-alpine
+          command: ["python", "/app/server.py"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-token
+                  key: token
+            - name: GITHUB_REPO
+              value: "Team-Ikujo/Goti-k8s"
+          volumeMounts:
+            - name: script
+              mountPath: /app
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+      volumes:
+        - name: script
+          configMap:
+            name: webhook-bridge-script
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-bridge
+  namespace: monitoring
+spec:
+  selector:
+    app: webhook-bridge
+  ports:
+    - port: 8080
+      targetPort: 8080

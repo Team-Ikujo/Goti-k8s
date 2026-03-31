@@ -1,0 +1,149 @@
+name: Harbor Failover
+
+on:
+  # AlertManager webhook-bridge → GitHub repository_dispatch
+  repository_dispatch:
+    types:
+      - harbor-failover
+
+  # 수동 실행
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '수동 실행: activate(ECR 전환) / deactivate(Harbor 복구)'
+        required: true
+        type: choice
+        options:
+          - activate
+          - deactivate
+
+env:
+  HARBOR_URL: https://harbor.go-ti.shop
+  HARBOR_REGISTRY: harbor.go-ti.shop/prod
+  ECR_REGISTRY: 707925622666.dkr.ecr.ap-northeast-2.amazonaws.com
+  HARBOR_PULL_SECRET: harbor-creds
+  ECR_PULL_SECRET: ecr-creds
+  SERVICES: "goti-user goti-ticketing goti-payment goti-resale goti-stadium"
+
+jobs:
+  check-and-failover:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Harbor 헬스체크
+        id: health
+        run: |
+          STATUS=$(curl -sf --max-time 10 \
+            "${{ env.HARBOR_URL }}/api/v2.0/health" \
+            | jq -r '.status' 2>/dev/null || echo "unhealthy")
+
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "Harbor 상태: $STATUS"
+
+      - name: 현재 레지스트리 모드 확인
+        id: mode
+        run: |
+          CURRENT=$(grep 'repository:' environments/prod/goti-user/values.yaml \
+            | head -1 | grep -o 'harbor\|ecr' || echo "harbor")
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+          echo "현재 모드: $CURRENT"
+
+      - name: ECR 전환 필요 여부 판단
+        id: decision
+        run: |
+          HARBOR_STATUS="${{ steps.health.outputs.status }}"
+          CURRENT_MODE="${{ steps.mode.outputs.current }}"
+          # repository_dispatch > workflow_dispatch > 자동 판단 순서
+          ACTION="${{ github.event.client_payload.action || github.event.inputs.action }}"
+
+          if [[ -n "$ACTION" ]]; then
+            echo "action=$ACTION" >> $GITHUB_OUTPUT
+          elif [[ "$HARBOR_STATUS" != "healthy" && "$CURRENT_MODE" == "harbor" ]]; then
+            echo "action=activate" >> $GITHUB_OUTPUT
+          elif [[ "$HARBOR_STATUS" == "healthy" && "$CURRENT_MODE" == "ecr" ]]; then
+            echo "action=deactivate" >> $GITHUB_OUTPUT
+          else
+            echo "action=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: values.yaml 이미지 레지스트리 변경
+        if: steps.decision.outputs.action != 'none'
+        run: |
+          ACTION="${{ steps.decision.outputs.action }}"
+
+          for SERVICE in ${{ env.SERVICES }}; do
+            FILE="environments/prod/${SERVICE}/values.yaml"
+            SVC_NAME="${SERVICE#goti-}"  # goti-user → user
+
+            if [[ "$ACTION" == "activate" ]]; then
+              # Harbor → ECR
+              sed -i "s|repository: \"${{ env.HARBOR_REGISTRY }}/${SERVICE}\"|repository: \"${{ env.ECR_REGISTRY }}/${SERVICE}\"|g" "$FILE"
+              sed -i "s|name: ${{ env.HARBOR_PULL_SECRET }}|name: ${{ env.ECR_PULL_SECRET }}|g" "$FILE"
+              echo "✓ $SERVICE: Harbor → ECR"
+            else
+              # ECR → Harbor
+              sed -i "s|repository: \"${{ env.ECR_REGISTRY }}/${SERVICE}\"|repository: \"${{ env.HARBOR_REGISTRY }}/${SERVICE}\"|g" "$FILE"
+              sed -i "s|name: ${{ env.ECR_PULL_SECRET }}|name: ${{ env.HARBOR_PULL_SECRET }}|g" "$FILE"
+              echo "✓ $SERVICE: ECR → Harbor"
+            fi
+          done
+
+      - name: PR 생성
+        if: steps.decision.outputs.action != 'none'
+        run: |
+          ACTION="${{ steps.decision.outputs.action }}"
+          HARBOR_STATUS="${{ steps.health.outputs.status }}"
+          DATE=$(date '+%Y-%m-%d %H:%M')
+
+          if [[ "$ACTION" == "activate" ]]; then
+            BRANCH="failover/harbor-to-ecr-$(date +%s)"
+            TITLE="🚨 [Failover] Harbor 장애 감지 — ECR로 전환 ($DATE)"
+            BODY="## Harbor 장애 감지
+
+**Harbor 상태:** \`${HARBOR_STATUS}\`
+**전환 방향:** Harbor → ECR
+
+### 변경 내용
+- 모든 prod 서비스 이미지 레지스트리를 ECR로 변경
+- imagePullSecrets: \`harbor-creds\` → \`ecr-creds\`
+
+### 영향 서비스
+$(for s in ${{ env.SERVICES }}; do echo "- $s"; done)
+
+### 주의
+- Harbor 복구 후 deactivate PR이 자동 생성됩니다
+- 이 PR 머지 시 ArgoCD가 자동으로 ECR에서 이미지를 pull합니다"
+          else
+            BRANCH="failover/ecr-to-harbor-$(date +%s)"
+            TITLE="✅ [Failover] Harbor 복구 감지 — Harbor로 원복 ($DATE)"
+            BODY="## Harbor 복구 감지
+
+**Harbor 상태:** \`${HARBOR_STATUS}\`
+**전환 방향:** ECR → Harbor
+
+### 변경 내용
+- 모든 prod 서비스 이미지 레지스트리를 Harbor로 원복
+- imagePullSecrets: \`ecr-creds\` → \`harbor-creds\`"
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add environments/prod/*/values.yaml
+          git commit -m "$TITLE"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "$TITLE" \
+            --body "$BODY" \
+            --base main \
+            --head "$BRANCH"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
