@@ -1,5 +1,5 @@
 # dev: 합성 트래픽 활성화
-enabled: true
+enabled: false
 
 schedule: "*/5 * * * *"
 
