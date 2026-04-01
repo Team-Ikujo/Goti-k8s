@@ -1,0 +1,31 @@
+{{- if .Values.allowJwksFetch.enabled }}
+# istiod + mesh 내부 서비스가 goti-user의 JWKS 엔드포인트에 접근 허용
+# deny-all 정책 하에서 RequestAuthentication jwksUri 해석에 필수
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-jwks-fetch
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: goti-user
+  rules:
+    - from:
+        - source:
+            principals:
+              - {{ .Values.allowJwksFetch.istiodSA | quote }}
+      to:
+        - operation:
+            paths:
+              - "/.well-known/*"
+    # mesh 내부 서비스 envoy도 JWKS 캐시 갱신 시 접근 필요
+    - from:
+        - source:
+            namespaces:
+              - {{ .Values.allowJwksFetch.namespace | default "goti" | quote }}
+      to:
+        - operation:
+            paths:
+              - "/.well-known/*"
+{{- end }}
