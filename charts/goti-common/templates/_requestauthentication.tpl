@@ -10,7 +10,9 @@ outputClaimToHeaders → sub→X-User-Id, role→X-User-Role 변환
     requestAuthentication:
       enabled: true
       issuer: "goti-user-service"
-      jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
+      # jwksUri 또는 jwks 중 하나만 사용 (jwks 우선)
+      # jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
+      jwks: '{"keys":[...]}'
       outputClaimToHeaders:
         - header: "X-User-Id"
           claim: "sub"
@@ -36,7 +38,11 @@ spec:
       {{- $selectorLabels | nindent 6 }}
   jwtRules:
     - issuer: {{ $ra.issuer | quote }}
+      {{- if $ra.jwks }}
+      jwks: {{ $ra.jwks | quote }}
+      {{- else }}
       jwksUri: {{ $ra.jwksUri | quote }}
+      {{- end }}
       forwardOriginalToken: {{ $ra.forwardOriginalToken | default true }}
       {{- if $ra.outputClaimToHeaders }}
       outputClaimToHeaders:
