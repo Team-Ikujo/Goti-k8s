@@ -15,7 +15,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-payment"
-  tag: "poc-sungjeon-34-4310a17"  # 기존 payment 이미지 재사용
+  tag: "poc-sungjeon-35-4310a17"  # 기존 payment 이미지 재사용
   pullPolicy: Always
 
 imagePullSecrets:
