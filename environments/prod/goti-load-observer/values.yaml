@@ -1,0 +1,112 @@
+nameOverride: goti-load-observer
+
+replicaCount: 1
+
+image:
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-load-observer"
+  tag: "dev-8-136f7dc"  # CD가 자동 업데이트 — prod 태그 전환 시 변경
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: ecr-creds
+
+service:
+  type: ClusterIP
+  port: 9090
+  name: metrics
+
+serviceMonitor:
+  enabled: true
+  port: metrics
+  interval: 30s
+  path: /metrics
+  release: kube-prometheus-stack-prod
+
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: metrics
+    initialDelaySeconds: 5
+    periodSeconds: 15
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /healthz
+      port: metrics
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi
+
+env:
+  - name: DB_DSN
+    valueFrom:
+      secretKeyRef:
+        name: goti-load-observer-prod-secrets
+        key: LOAD_OBSERVER_DB_DSN
+  - name: REDIS_ADDR
+    valueFrom:
+      secretKeyRef:
+        name: goti-load-observer-prod-secrets
+        key: LOAD_OBSERVER_REDIS_ADDR
+  - name: SERVER_PORT
+    value: "9090"
+  - name: POLL_INTERVAL_DB
+    value: "60s"
+  - name: POLL_INTERVAL_REDIS
+    value: "30s"
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # prod: DB(RDS)/Redis(ElastiCache)는 Istio mesh 통과 — excludeOutboundPorts 불필요
+
+gateway:
+  enabled: false
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+configMap:
+  enabled: false
+
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-ssm
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /prod/load-observer
+
+istioPolicy:
+  authorizationPolicy:
+    enabled: false
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          # AWS 서비스 접근 (RDS, ElastiCache)
+          - "~/*.amazonaws.com"
