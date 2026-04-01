@@ -1,7 +1,7 @@
 nameOverride: goti-resale
 image:
   repository: "harbor.go-ti.shop/prod/goti-resale"
-  tag: "prod-35-57bdd30"
+  tag: "prod-40-b67ddba"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
