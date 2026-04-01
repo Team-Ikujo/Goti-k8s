@@ -20,5 +20,10 @@ peerAuth:
 allowKubeletProbes:
   enabled: true
 
+allowJwksFetch:
+  enabled: true
+  istiodSA: "cluster.local/ns/istio-system/sa/istiod"
+  namespace: "goti"
+
 # Phase 2: 외부 서비스 ServiceEntry
 serviceEntries: []
