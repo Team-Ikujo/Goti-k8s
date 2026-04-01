@@ -1,0 +1,126 @@
+# Falco prod values — EKS Bottlerocket 환경
+# Chart 8.0.x / Falco 0.43.0
+#
+# ⚠️ 알려진 이슈: Bottlerocket + modern_ebpf에서 메모리 누수 (falco#3643)
+#   - 수정: libs#2854 머지됨, Falco 0.44.0에서 릴리스 예정
+#   - 대응: memory limit 1Gi로 상향 + OOMKill 시 자동 재시작으로 운영
+#   - 0.44.0 출시 시 chart 업그레이드 필요
+
+driver:
+  kind: modern_ebpf
+
+collectors:
+  kubernetes:
+    enabled: true
+
+# 리소스 — Bottlerocket 메모리 누수 대응으로 limit 상향
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+# tolerations — spot 노드에서도 실행
+tolerations:
+  - key: node-role
+    value: spot
+    effect: NoSchedule
+
+# Falcosidekick — 알림 전송 (Discord webhook)
+falcosidekick:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+  config:
+    discord:
+      webhookurl: ""       # TODO: Discord webhook URL 설정 (ExternalSecret으로 전환 권장)
+      minimumpriority: warning
+
+# 커스텀 룰 — goti 서비스 특화 탐지
+customRules:
+  goti-rules.yaml: |-
+    # Pod 내부 셸 실행 탐지
+    - rule: Shell Spawned in Goti Container
+      desc: goti namespace 컨테이너에서 셸이 실행됨
+      condition: >
+        spawned_process
+        and container
+        and k8s.ns.name = "goti"
+        and proc.name in (bash, sh, zsh, dash, ash)
+      output: >
+        Shell spawned in goti container
+        (user=%user.name ns=%k8s.ns.name pod=%k8s.pod.name
+        container=%container.name shell=%proc.name
+        parent=%proc.pname cmdline=%proc.cmdline)
+      priority: WARNING
+      tags: [container, shell, mitre_execution]
+
+    # 민감 파일 접근 탐지
+    - rule: Sensitive File Read in Goti Container
+      desc: goti namespace 컨테이너에서 민감 파일 읽기 시도
+      condition: >
+        open_read
+        and container
+        and k8s.ns.name = "goti"
+        and (fd.name startswith /etc/shadow
+             or fd.name startswith /etc/passwd
+             or fd.name startswith /proc/1/root)
+      output: >
+        Sensitive file read in goti container
+        (user=%user.name ns=%k8s.ns.name pod=%k8s.pod.name
+        file=%fd.name container=%container.name)
+      priority: CRITICAL
+      tags: [container, filesystem, mitre_credential_access]
+
+    # 예상치 못한 outbound 연결 탐지 (reverse shell 징후)
+    - rule: Unexpected Outbound Connection from Goti
+      desc: goti namespace 컨테이너에서 비정상 외부 연결
+      condition: >
+        outbound
+        and container
+        and k8s.ns.name = "goti"
+        and not (fd.sport in (443, 8080, 9092, 9093, 5432, 6379, 4317, 4318, 15012, 53))
+      output: >
+        Unexpected outbound connection from goti container
+        (ns=%k8s.ns.name pod=%k8s.pod.name
+        container=%container.name connection=%fd.name
+        command=%proc.cmdline)
+      priority: WARNING
+      tags: [container, network, mitre_command_and_control]
+
+    # kubectl exec 탐지
+    - rule: Kubectl Exec to Goti Pod
+      desc: goti namespace Pod에 kubectl exec 실행됨
+      condition: >
+        spawned_process
+        and container
+        and k8s.ns.name = "goti"
+        and proc.pname = "runc:[2:INIT]"
+      output: >
+        Exec into goti pod detected
+        (user=%user.name ns=%k8s.ns.name pod=%k8s.pod.name
+        container=%container.name command=%proc.cmdline)
+      priority: NOTICE
+      tags: [container, mitre_execution]
+
+    # 패키지 매니저 실행 탐지 (공격 도구 설치 시도)
+    - rule: Package Manager in Goti Container
+      desc: goti namespace 컨테이너에서 패키지 매니저 실행
+      condition: >
+        spawned_process
+        and container
+        and k8s.ns.name = "goti"
+        and proc.name in (apt, apt-get, yum, dnf, apk, pip, pip3, npm, curl, wget)
+      output: >
+        Package manager or download tool run in goti container
+        (ns=%k8s.ns.name pod=%k8s.pod.name
+        container=%container.name command=%proc.cmdline)
+      priority: WARNING
+      tags: [container, mitre_execution, software_mgmt]
