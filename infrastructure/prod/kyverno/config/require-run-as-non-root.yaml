@@ -11,7 +11,7 @@ metadata:
       컨테이너를 root(UID 0)로 실행하면 컨테이너 탈출 시 호스트 전체가 위험해집니다.
       runAsNonRoot: true 또는 runAsUser > 0을 설정해야 합니다.
 spec:
-  validationFailureAction: Audit
+  validationFailureAction: Enforce
   background: true
   rules:
     - name: validate-run-as-non-root
