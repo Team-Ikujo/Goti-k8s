@@ -1,7 +1,7 @@
 nameOverride: goti-stadium
 image:
   repository: "harbor.go-ti.shop/prod/goti-stadium"
-  tag: "prod-34-57bdd30"
+  tag: "prod-40-b67ddba"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
