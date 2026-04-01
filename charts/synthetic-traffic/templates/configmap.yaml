@@ -36,6 +36,7 @@ data:
       user:      __ENV.SVC_USER,
       stadium:   __ENV.SVC_STADIUM,
       payment:   __ENV.SVC_PAYMENT,
+      resale:    __ENV.SVC_RESALE,
     };
 
     function apiGet(baseUrl, path, authToken) {
@@ -114,8 +115,21 @@ data:
         if (teamIds.length >= 5) break;
       }
 
-      console.log('setup: gameId=' + gameId + ', stadiumId=' + stadiumId + ', sections=' + sectionIds.length + ', teams=' + teamIds.length);
-      return { token: token, gameId: gameId, stadiumId: stadiumId, homeTeamId: homeTeamId, sectionIds: sectionIds, teamIds: teamIds };
+      // 주문/티켓 ID 수집 (마이페이지 시나리오용)
+      var orderId = null;
+      var ticketId = null;
+      var ordersRes = apiGet(SVC.ticketing, '/api/v1/orders', token);
+      var orders = extractData(ordersRes);
+      if (Array.isArray(orders) && orders.length > 0) {
+        orderId = String(orders[0].orderId);
+        if (orders[0].ticketId) { ticketId = String(orders[0].ticketId); }
+      }
+
+      console.log('setup: gameId=' + gameId + ', stadiumId=' + stadiumId + ', sections=' + sectionIds.length + ', teams=' + teamIds.length + ', orderId=' + orderId + ', ticketId=' + ticketId);
+      return {
+        token: token, gameId: gameId, stadiumId: stadiumId, homeTeamId: homeTeamId,
+        sectionIds: sectionIds, teamIds: teamIds, orderId: orderId, ticketId: ticketId,
+      };
     }
 
     // 쓰기: 좌석 HOLD (자연 만료로 데이터 소모 없음)
@@ -136,7 +150,6 @@ data:
         gameId: testData.gameId,
         queueTokenJti: queueJti,
       }, token);
-      // HOLD는 자연 만료 (TTL) — 별도 해제 불필요
     }
 
     // 쓰기: 유저 생성 (로그인 시뮬레이션)
@@ -156,47 +169,73 @@ data:
       var t = testData.token;
       var roll = Math.random() * 100;
 
-      if (roll < 22) {
-        // 홈: 경기 일정 (22%)
+      if (roll < 18) {
+        // 홈: 경기 일정 (18%) — ticketing
         apiGet(SVC.ticketing, '/api/v1/games/schedules?today=false', t);
-      } else if (roll < 30) {
-        // 홈: 팀 상세 (8%)
+      } else if (roll < 25) {
+        // 홈: 팀 상세 (7%) — stadium
         if (testData.teamIds.length > 0) {
           var tid = testData.teamIds[Math.floor(Math.random() * testData.teamIds.length)];
           apiGet(SVC.stadium, '/api/v1/baseball-teams/' + tid, t);
         }
-      } else if (roll < 43) {
-        // 구역 선택: 좌석 등급 (13%)
+      } else if (roll < 35) {
+        // 예매: 좌석 등급 (10%) — ticketing
         apiGet(SVC.ticketing, '/api/v1/stadium-seats/stadiums/' + testData.stadiumId + '/games/' + testData.gameId + '/seat-grades', t);
-      } else if (roll < 52) {
-        // 구역 선택: 구역 목록 (9%)
+      } else if (roll < 43) {
+        // 예매: 구역 목록 (8%) — ticketing
         apiGet(SVC.ticketing, '/api/v1/stadium-seats/stadiums/' + testData.stadiumId + '/seat-sections', t);
-      } else if (roll < 57) {
-        // 구역 선택: 가격 정책 (5%)
+      } else if (roll < 48) {
+        // 예매: 가격 정책 (5%) — ticketing
         apiGet(SVC.ticketing, '/api/v1/teams/' + testData.homeTeamId + '/ticket-pricing-policies', t);
-      } else if (roll < 66) {
-        // 좌석맵: 좌석 목록 (9%)
+      } else if (roll < 56) {
+        // 좌석맵: 좌석 목록 (8%) — ticketing
         if (testData.sectionIds.length > 0) {
           var sid1 = testData.sectionIds[Math.floor(Math.random() * testData.sectionIds.length)];
           apiGet(SVC.ticketing, '/api/v1/seats/seat-sections/' + sid1 + '/seats', t);
         }
-      } else if (roll < 80) {
-        // 좌석 상태: 실시간 (14%)
+      } else if (roll < 68) {
+        // 좌석 상태: 실시간 (12%) — ticketing
         if (testData.sectionIds.length > 0) {
           var sid2 = testData.sectionIds[Math.floor(Math.random() * testData.sectionIds.length)];
           apiGet(SVC.ticketing, '/api/v1/game-seats/' + testData.gameId + '/sections/' + sid2 + '/seat-statuses', t);
         }
-      } else if (roll < 85) {
-        // 마이페이지: 주문 목록 (5%)
+      } else if (roll < 72) {
+        // 마이페이지: 주문 목록 (4%) — ticketing
         apiGet(SVC.ticketing, '/api/v1/orders', t);
-      } else if (roll < 90) {
-        // 오늘 경기 (5%)
+      } else if (roll < 76) {
+        // 오늘 경기 (4%) — ticketing
         apiGet(SVC.ticketing, '/api/v1/games/schedules?today=true', t);
-      } else if (roll < 97) {
-        // [쓰기] 좌석 HOLD (7%) — 자연 만료
+      } else if (roll < 80) {
+        // 리셀: 경기별 리셀 좌석 수 (4%) — resale
+        apiGet(SVC.resale, '/api/v1/resales/listings/games/' + testData.gameId + '/count', t);
+      } else if (roll < 83) {
+        // 리셀: 구역별 리셀 좌석 수 (3%) — resale
+        if (testData.sectionIds.length > 0) {
+          var sid3 = testData.sectionIds[Math.floor(Math.random() * testData.sectionIds.length)];
+          apiGet(SVC.resale, '/api/v1/resales/listings/games/' + testData.gameId + '/section/' + sid3 + '/count', t);
+        }
+      } else if (roll < 86) {
+        // 마이티켓: 티켓 상세 (3%) — ticketing
+        if (testData.ticketId) {
+          apiGet(SVC.ticketing, '/api/v1/tickets/' + testData.ticketId, t);
+        } else {
+          apiGet(SVC.ticketing, '/api/v1/orders', t);
+        }
+      } else if (roll < 88) {
+        // 결제 정보 조회 (2%) — payment
+        if (testData.orderId) {
+          apiGet(SVC.payment, '/api/v1/payments/orders/' + testData.orderId, t);
+        } else {
+          apiGet(SVC.ticketing, '/api/v1/orders', t);
+        }
+      } else if (roll < 90) {
+        // 구장 상세 (2%) — stadium
+        apiGet(SVC.stadium, '/api/v1/stadiums/' + testData.stadiumId, t);
+      } else if (roll < 95) {
+        // [쓰기] 좌석 HOLD (5%) — 자연 만료
         trySeatHold(testData, t);
       } else {
-        // [쓰기] 유저 생성 (3%) — 로그인 시뮬레이션
+        // [쓰기] 유저 생성 (5%) — 로그인 시뮬레이션
         trySignup();
       }
 

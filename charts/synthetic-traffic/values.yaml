@@ -16,6 +16,7 @@ services:
   user: "http://goti-user-dev.goti.svc:8080"
   stadium: "http://goti-stadium-dev.goti.svc:8080"
   payment: "http://goti-payment-dev.goti.svc:8080"
+  resale: "http://goti-resale-dev.goti.svc:8080"
 
 resources:
   requests:

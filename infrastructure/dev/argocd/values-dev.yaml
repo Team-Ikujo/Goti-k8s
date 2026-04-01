@@ -18,6 +18,16 @@ argo-cd:
   # 서버: 단일 레플리카 + NodePort + 메트릭
   server:
     replicas: 1
+    # Istio sidecar race condition 방지 — sidecar ready 전 K8s API 호출 불가 (Issue #10391)
+    podAnnotations:
+      proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true}'
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
     service:
       type: NodePort
       nodePortHttp: 30080
@@ -66,6 +76,7 @@ argo-cd:
       server.insecure: true
       # chart 9.x에서 기본값 제거됨 — ApplicationSet 자동 sync 필요 시 명시
       applicationsetcontroller.policy: sync
-      # ArgoCD 트레이싱 → OTel Collector → Kafka → Tempo
-      otlp.address: "otel-collector-front-dev-opentelemetry-collector.monitoring.svc:4317"
-      otlp.insecure: "true"
+      # ArgoCD 트레이싱 — 일시 비활성화 (서버 startup blocking 디버깅)
+      # TODO: 안정화 후 재활성화
+      # otlp.address: "otel-collector-front-dev-opentelemetry-collector.monitoring.svc:4317"
+      # otlp.insecure: "true"

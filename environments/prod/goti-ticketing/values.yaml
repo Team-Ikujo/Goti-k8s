@@ -9,7 +9,7 @@ podAnnotations:
   instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
 resources:
   requests:
-    cpu: 500m
+    cpu: 200m
     memory: 512Mi
   limits:
     cpu: 2000m

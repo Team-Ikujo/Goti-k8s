@@ -8,6 +8,7 @@ metadata:
     app.kubernetes.io/part-of: goti
 spec:
   schedule: {{ .Values.schedule | quote }}
+  suspend: false
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
@@ -49,6 +50,8 @@ spec:
                   value: {{ .Values.services.stadium | quote }}
                 - name: SVC_PAYMENT
                   value: {{ .Values.services.payment | quote }}
+                - name: SVC_RESALE
+                  value: {{ .Values.services.resale | quote }}
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
               volumeMounts:

@@ -1,0 +1,142 @@
+# ============================================================================
+# [POC] 대기열 구현 — 준상 (PR #312: poc/queue-waiting-junsang)
+# ============================================================================
+# 목적: EKS prod 환경에서 대기열 구현체 비교 부하테스트
+# 특징: ticketing_service 스키마 공유, JWT 인증, QueueInterceptor 방식
+# 삭제 시점: 최종 구현체 결정 후 정리
+# ============================================================================
+
+nameOverride: goti-queue-junsang
+
+replicaCount: 1
+
+autoscaling:
+  enabled: false
+
+image:
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
+  tag: "poc-junsang-31-4310a17"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: ecr-creds
+
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 1Gi
+
+gateway:
+  enabled: true
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/queue/junsang"
+      rewrite:
+        uri: "/api/v1/queue"
+      timeout: 10s
+      retries:
+        attempts: 2
+        perTryTimeout: 5s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-queue-junsang-prod
+            port:
+              number: 8080
+
+probes:
+  liveness:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+  readiness:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 5
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: "/actuator/prometheus"
+  interval: "15s"
+
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "prod"
+  - name: JAVA_TOOL_OPTIONS
+    value: "-XX:MaxRAMPercentage=60.0"
+  - name: GOTI_MESH_ENABLED
+    value: "true"
+  # [POC] Redis DB 격리 — 준상=DB1
+  - name: SPRING_DATA_REDIS_DATABASE
+    value: "1"
+  - name: REDIS_PORT
+    value: "6379"
+  - name: SPRING_DATA_REDIS_SSL_ENABLED
+    value: "true"
+  - name: SPRING_DATA_REDIS_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: goti-queue-junsang-prod-secrets
+        key: REDIS_AUTH_TOKEN
+  # [POC] 부하테스트용 — 대기열 최대 수용인원
+  - name: QUEUE_MAX_CAPACITY
+    value: "100"
+  # --- JWT: user 서비스와 동일한 시크릿 필요 ---
+  - name: JWT_ACCESS_TIME
+    value: "3600000"
+  - name: JWT_REFRESH_TIME
+    value: "604800000"
+  # --- 내부 API 통신 ---
+  - name: STADIUM_API_URL
+    value: "http://goti-stadium-prod.goti.svc.cluster.local:8080"
+
+envFrom:
+  - secretRef:
+      name: goti-queue-junsang-prod-secrets
+
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-ssm
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /prod/server
+
+istioPolicy:
+  authorizationPolicy:
+    enabled: false
+  requestAuthentication:
+    enabled: true
+    jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/actuator/*"
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "kafka/*"
+          - "~/*.amazonaws.com"
