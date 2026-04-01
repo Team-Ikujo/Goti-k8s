@@ -1,0 +1,18 @@
+{{- if .Values.allowJwksFetch.enabled }}
+# istiod는 sidecar 없이 plain HTTP로 JWKS를 가져옴
+# STRICT mTLS 환경에서 JWKS 포트만 PERMISSIVE로 설정
+# (8080 전체가 아닌 portLevelMtls로 제한 불가 — path 기반 분리는 AuthorizationPolicy가 담당)
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: goti-user-jwks-permissive
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: goti-user
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    8080:
+      mode: PERMISSIVE
+{{- end }}
