@@ -16,7 +16,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-ticketing"
-  tag: "TODO-SUYEON-TICKETING"  # TODO: cd-poc-queue.yml로 빌드 후 태그 교체
+  tag: "poc-suyeon-33-4310a17"  # TODO: cd-poc-queue.yml로 빌드 후 태그 교체
   pullPolicy: Always
 
 imagePullSecrets:
