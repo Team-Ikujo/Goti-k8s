@@ -1,7 +1,7 @@
 nameOverride: goti-user
 image:
   repository: "harbor.go-ti.shop/prod/goti-user"
-  tag: "prod-33-57bdd30"
+  tag: "prod-38-190dc9d"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
