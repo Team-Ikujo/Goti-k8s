@@ -10,7 +10,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-stadium"
-  tag: "dev-49-f3cb64f"
+  tag: "dev-52-456afa5"
   pullPolicy: Always
 
 imagePullSecrets:
@@ -71,6 +71,12 @@ gateway:
             host: goti-stadium-dev
             port:
               number: 8080
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: "/actuator/prometheus"
+  interval: "15s"
 
 probes:
   liveness:

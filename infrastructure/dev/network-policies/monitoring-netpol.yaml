@@ -227,6 +227,7 @@ spec:
         values:
           - kube-state-metrics
           - kube-prometheus-stack-prometheus-operator
+          - prometheus
   policyTypes:
     - Egress
   egress:
@@ -252,3 +253,53 @@ spec:
     # monitoring 내부 통신 (operator → alertmanager 등)
     - to:
         - podSelector: {}
+---
+# Prometheus: cross-namespace scrape egress
+# K8s service discovery로 찾은 타겟을 실제 scrape하려면
+# goti, argocd, kafka, kube-system 네임스페이스 pod에 접근 필요
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scrape-egress
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  policyTypes:
+    - Egress
+  egress:
+    # goti namespace (app metrics, envoy sidecar)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: goti
+    # argocd namespace (ArgoCD metrics)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: argocd
+    # kafka namespace (Kafka exporter, broker metrics)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kafka
+    # istio-system (istiod metrics)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+    # kube-system (coredns, etcd, scheduler, controller-manager)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+    # Node IPs (kubelet:10250, node-exporter:9100 on hostNetwork)
+    - to:
+        - ipBlock:
+            cidr: 172.20.0.0/16
+      ports:
+        - port: 10250
+          protocol: TCP
+        - port: 9100
+          protocol: TCP

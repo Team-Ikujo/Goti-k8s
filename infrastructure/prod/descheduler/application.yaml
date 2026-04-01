@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: descheduler
+  namespace: argocd
+spec:
+  project: infra
+  source:
+    repoURL: https://kubernetes-sigs.github.io/descheduler
+    chart: descheduler
+    targetRevision: "0.*.*"
+    helm:
+      valuesObject:
+        kind: CronJob
+        schedule: "*/5 * * * *"
+        podAnnotations:
+          sidecar.istio.io/inject: "false"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        deschedulerPolicy:
+          strategies:
+            RemoveDuplicates:
+              enabled: true
+            LowNodeUtilization:
+              enabled: true
+              params:
+                nodeResourceUtilizationThresholds:
+                  thresholds:
+                    cpu: 20
+                    memory: 20
+                  targetThresholds:
+                    cpu: 70
+                    memory: 70
+            RemovePodsViolatingTopologySpreadConstraint:
+              enabled: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
