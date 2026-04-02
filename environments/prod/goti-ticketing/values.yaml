@@ -1,4 +1,5 @@
 nameOverride: goti-ticketing
+replicaCount: 2
 image:
   repository: "harbor.go-ti.shop/prod/goti-ticketing"
   tag: "prod-43-6f4c644"
