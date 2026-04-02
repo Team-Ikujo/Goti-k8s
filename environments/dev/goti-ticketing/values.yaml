@@ -10,7 +10,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-ticketing"
-  tag: "dev-54-4a29455"
+  tag: "dev-55-7e21dbd"
   pullPolicy: Always
 
 imagePullSecrets:
