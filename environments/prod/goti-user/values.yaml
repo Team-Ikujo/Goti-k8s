@@ -1,4 +1,5 @@
 nameOverride: goti-user
+replicaCount: 2
 image:
   repository: "harbor.go-ti.shop/prod/goti-user"
   tag: "prod-43-6f4c644"
