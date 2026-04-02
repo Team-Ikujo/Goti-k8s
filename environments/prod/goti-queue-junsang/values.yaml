@@ -8,7 +8,7 @@
 
 nameOverride: goti-queue-junsang
 
-replicaCount: 1
+replicaCount: 0
 
 autoscaling:
   enabled: false
