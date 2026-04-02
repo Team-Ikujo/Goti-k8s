@@ -9,7 +9,7 @@
 
 nameOverride: goti-ticketing-suyeon
 
-replicaCount: 0
+replicaCount: 1
 
 autoscaling:
   enabled: false
