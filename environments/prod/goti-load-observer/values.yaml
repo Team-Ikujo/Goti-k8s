@@ -4,7 +4,7 @@ replicaCount: 1
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-load-observer"
-  tag: "dev-8-136f7dc"  # CD가 자동 업데이트 — prod 태그 전환 시 변경
+  tag: "dev-9-ee6198a"  # fix: DB poll active 경기 필터 추가
   pullPolicy: Always
 
 imagePullSecrets:
@@ -98,7 +98,22 @@ externalSecret:
 
 istioPolicy:
   authorizationPolicy:
-    enabled: false
+    enabled: true
+    allowFrom:
+      - name: allow-monitoring-scrape
+        rules:
+          - from:
+              - source:
+                  namespaces: ["monitoring"]
+            to:
+              - operation:
+                  paths: ["/metrics", "/healthz"]
+                  methods: ["GET"]
+      - name: allow-istio-gateway
+        rules:
+          - from:
+              - source:
+                  namespaces: ["istio-system"]
   destinationRule:
     enabled: true
   sidecar:
