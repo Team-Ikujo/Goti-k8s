@@ -19,13 +19,13 @@ argo-cd:
 
   # ApplicationSet 컨트롤러
   applicationSet:
-    replicas: 2
+    replicas: 1
 
-  # Redis HA (sentinel 모드)
+  # Redis — 단독 모드 (HA 비활성화, 리소스 절약)
   redis:
-    enabled: false  # redis-ha 사용
-  redis-ha:
     enabled: true
+  redis-ha:
+    enabled: false
 
   # Dex: Google OAuth SSO
   dex:
