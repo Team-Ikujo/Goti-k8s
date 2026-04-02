@@ -40,7 +40,7 @@ falcosidekick:
       memory: 128Mi
   config:
     discord:
-      webhookurl: ""       # TODO: Discord webhook URL 설정 (ExternalSecret으로 전환 권장)
+      webhookurl: "https://discord.com/api/webhooks/1488417914057920523/_XmTCA35DaTVOhLe4Ak4DT9Z56-MPrsczth6dd-ThQ4DMtgdMEat2JG9hTRNgZt3N9M4"
       minimumpriority: warning
 
 # 커스텀 룰 — goti 서비스 특화 탐지
