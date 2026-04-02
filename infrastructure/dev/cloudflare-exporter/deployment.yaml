@@ -1,0 +1,60 @@
+# Cloudflare Exporter: go-ti.shop zone의 CDN 메트릭을 Prometheus로 노출
+# lablabs/cloudflare_exporter — 캐시 히트율, 요청, 대역폭 메트릭
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflare-exporter
+  namespace: monitoring
+  labels:
+    app: cloudflare-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflare-exporter
+  template:
+    metadata:
+      labels:
+        app: cloudflare-exporter
+    spec:
+      containers:
+        - name: cloudflare-exporter
+          image: ghcr.io/lablabs/cloudflare_exporter:0.0.16
+          ports:
+            - containerPort: 8080
+              name: metrics
+          env:
+            - name: CF_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-exporter-secret
+                  key: CF_API_TOKEN
+            # go-ti.shop zone ID — Cloudflare 대시보드 Overview 페이지 하단에서 확인
+            - name: CF_ZONES
+              value: "ZONE_ID_HERE"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 59000
+            capabilities:
+              drop: [ALL]
