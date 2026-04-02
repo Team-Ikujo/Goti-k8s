@@ -57,6 +57,11 @@ spec:
                   chartName: opentelemetry-collector
                   chartVersion: "0.147.1"
                   valuesFile: values-stacks/prod/otel-collector-s3-values.yaml
+                - component: opencost
+                  chartRepo: https://opencost.github.io/opencost-helm-chart
+                  chartName: opencost
+                  chartVersion: "2.5.12"
+                  valuesFile: values-stacks/prod/opencost-values.yaml
   template:
     metadata:
       name: "{{component}}-{{env}}"
