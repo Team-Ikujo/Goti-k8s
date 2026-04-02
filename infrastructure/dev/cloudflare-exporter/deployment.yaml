@@ -31,7 +31,7 @@ spec:
                   key: CF_API_TOKEN
             # go-ti.shop zone ID — Cloudflare 대시보드 Overview 페이지 하단에서 확인
             - name: CF_ZONES
-              value: "ZONE_ID_HERE"
+              value: "1100737078f605a4f85e05f1f5589aad"
           resources:
             requests:
               cpu: 50m
