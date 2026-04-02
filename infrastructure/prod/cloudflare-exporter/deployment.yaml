@@ -32,6 +32,8 @@ spec:
             # go-ti.shop zone ID — Cloudflare 대시보드 Overview 페이지 하단에서 확인
             - name: CF_ZONES
               value: "1100737078f605a4f85e05f1f5589aad"
+            - name: CF_ACCOUNTS
+              value: "dfbe307a61ca90acf4c8d55a9ae7b060"
           resources:
             requests:
               cpu: 50m
