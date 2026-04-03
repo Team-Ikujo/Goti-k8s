@@ -1,0 +1,98 @@
+# GCP 클러스터 ArgoCD 부트스트랩 — App of Apps
+# AWS clusters/prod/bootstrap/root-appsets.yaml과 분리
+# Terraform prod-gcp의 gitops_app_of_apps_path가 이 경로를 가리킴
+---
+# 1. GCP 전용 인프라 (ClusterSecretStore, StorageClass, NetworkPolicy 등)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: goti-gcp-infra
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: infra
+  source:
+    repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+    targetRevision: main
+    path: "infrastructure/prod/gcp"
+    directory:
+      recurse: true
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+# 2. ArgoCD Projects
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: goti-gcp-projects
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+    targetRevision: main
+    path: "gitops/prod-gcp/projects"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+# 3. ApplicationSets (MSA 서비스 + 모니터링)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: goti-gcp-applicationsets
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: infra
+  source:
+    repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+    targetRevision: main
+    path: "gitops/prod-gcp/applicationsets"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
