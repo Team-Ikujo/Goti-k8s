@@ -1,0 +1,13 @@
+# GCE Persistent Disk — CSI 드라이버 기반 기본 스토리지 클래스
+# AWS gp3 대신 GCP의 pd-balanced(균형 있는 성능) 사용
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gcp-pd-balanced
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: pd.csi.storage.gke.io
+parameters:
+  type: pd-balanced
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
