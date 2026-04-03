@@ -48,7 +48,7 @@ gateway:
       retries:
         attempts: 2
         perTryTimeout: 5s
-        retryOn: 5xx,reset,connect-failure
+        retryOn: reset,connect-failure
       route:
         - destination:
             host: goti-payment-sungjeon-prod
