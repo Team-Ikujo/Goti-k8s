@@ -9,7 +9,7 @@
 
 nameOverride: goti-ticketing-junsang
 
-replicaCount: 1
+replicaCount: 0
 
 autoscaling:
   enabled: false
