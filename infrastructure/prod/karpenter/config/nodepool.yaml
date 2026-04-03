@@ -12,7 +12,7 @@ spec:
       requirements:
         - key: karpenter.sh/capacity-type
           operator: In
-          values: ["spot", "on-demand"]
+          values: ["on-demand"]  # Red Team 대비: spot 회수로 인한 서비스 중단 방지 (이후 spot 복원)
         - key: node.kubernetes.io/instance-type
           operator: In
           values:

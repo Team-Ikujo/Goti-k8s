@@ -10,7 +10,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-user"
-  tag: "dev-52-456afa5"
+  tag: "dev-54-4a29455"
   pullPolicy: Always
 
 imagePullSecrets:
@@ -133,6 +133,15 @@ istioPolicy:
   requestAuthentication:
     enabled: true
     jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
+
+  # 테스트 API IP 제한: 허용된 IP 외 /api/v1/test/* 차단
+  testIpAllowlist:
+    enabled: true
+    allowedIps:
+      - "221.152.162.218/32"
+      # - "팀원B_IP/32"
+      # - "팀원C_IP/32"
+      # - "팀원D_IP/32"
 
   # JWT 필수 강제: 공개 API 외 경로에 JWT 없으면 403
   jwtAuthorizationPolicy:

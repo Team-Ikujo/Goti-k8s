@@ -1,0 +1,30 @@
+# Falco — Runtime Security Monitoring
+# 의존성: 없음 (독립적으로 배포 가능)
+# DaemonSet으로 각 노드에 배포되어 syscall 기반 이상 행위 탐지
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: falco
+  namespace: argocd
+spec:
+  project: infra
+  sources:
+    - repoURL: https://falcosecurity.github.io/charts
+      chart: falco
+      targetRevision: 8.0.*
+      helm:
+        valueFiles:
+          - $values/infrastructure/prod/falco/values.yaml
+    - repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: falco
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

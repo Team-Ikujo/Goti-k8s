@@ -1,7 +1,7 @@
-# Kyverno prod values — HA configuration (3 replicas for admission controller)
+# Kyverno prod values — 부하테스트 대비 리소스 절약 (replicas 축소)
 
 admissionController:
-  replicas: 3
+  replicas: 1
   resources:
     requests:
       cpu: 100m
@@ -9,12 +9,9 @@ admissionController:
     limits:
       cpu: 500m
       memory: 512Mi
-  podDisruptionBudget:
-    enabled: true
-    minAvailable: 1
 
 backgroundController:
-  replicas: 2
+  replicas: 1
   resources:
     requests:
       cpu: 100m
@@ -24,7 +21,7 @@ backgroundController:
       memory: 256Mi
 
 cleanupController:
-  replicas: 2
+  replicas: 1
   resources:
     requests:
       cpu: 100m
@@ -34,7 +31,7 @@ cleanupController:
       memory: 256Mi
 
 reportsController:
-  replicas: 2
+  replicas: 1
   resources:
     requests:
       cpu: 100m
