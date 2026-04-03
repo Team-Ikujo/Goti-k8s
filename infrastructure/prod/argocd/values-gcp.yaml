@@ -1,0 +1,9 @@
+# ArgoCD GKE 프로덕션 오버라이드
+# GCP Secret Manager + Workload Identity 기반
+# GCP Secret Manager에 저장 필요:
+#   goti-prod-argocd-google-client-id
+#   goti-prod-argocd-google-client-secret
+googleOAuth:
+  secretStore: gcp-store
+  clientIdKey: goti-prod-argocd-google-client-id
+  clientSecretKey: goti-prod-argocd-google-client-secret
