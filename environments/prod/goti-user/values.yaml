@@ -2,7 +2,7 @@ nameOverride: goti-user
 replicaCount: 2
 image:
   repository: "harbor.go-ti.shop/prod/goti-user"
-  tag: "prod-43-6f4c644"
+  tag: "prod-46-e652be4"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
@@ -115,7 +115,6 @@ istioPolicy:
       # - "팀원B_IP/32"
       # - "팀원C_IP/32"
       # - "팀원D_IP/32"
-
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
