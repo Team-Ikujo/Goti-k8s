@@ -33,7 +33,7 @@ resources:
     memory: 1Gi
 
 gateway:
-  enabled: false
+  enabled: true
   hosts:
     - "go-ti.shop"
     - "api.go-ti.shop"
