@@ -1,11 +1,11 @@
 nameOverride: goti-user
 replicaCount: 4
 image:
-  repository: "harbor.go-ti.shop/prod/goti-user"
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/prod/goti-user"
   tag: "prod-46-e652be4"
   pullPolicy: IfNotPresent
 imagePullSecrets:
-  - name: harbor-creds
+  - name: ecr-creds
 podAnnotations:
   instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
 resources:
