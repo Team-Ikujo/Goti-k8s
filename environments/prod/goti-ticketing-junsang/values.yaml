@@ -16,7 +16,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-ticketing"
-  tag: "poc-junsang-31-4310a17"
+  tag: "poc-junsang-38-8856b54"
   pullPolicy: Always
 
 imagePullSecrets:
