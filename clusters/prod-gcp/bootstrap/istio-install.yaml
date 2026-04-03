@@ -1,0 +1,142 @@
+# Istio GKE 프로덕션 설치
+# istio-base / istiod / mesh-policy: AWS values-prod.yaml 재사용 (설정 동일)
+# istio-gateway: values-gcp.yaml 사용 (LoadBalancer type, GCP LB annotation)
+---
+# Istio Base (CRDs)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-base
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  project: infra
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "infrastructure/prod/istio/base"
+      helm:
+        valueFiles:
+          - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+# Istiod (Control Plane)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istiod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-4"
+spec:
+  project: infra
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "infrastructure/prod/istio/istiod"
+      helm:
+        valueFiles:
+          - values.yaml
+          - values-prod.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+# Istio Ingress Gateway — GCP LoadBalancer (AWS ALB 방식과 다름)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+spec:
+  project: infra
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "infrastructure/prod/istio/gateway"
+      helm:
+        valueFiles:
+          - values.yaml
+          - ../../gcp/istio/gateway/values-gcp.yaml  # LoadBalancer + GCP annotation
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-ingress
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+# Istio Mesh Policy (STRICT mTLS)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-mesh-policy
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: infra
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "infrastructure/prod/istio/mesh-policy"
+      helm:
+        valueFiles:
+          - values.yaml
+          - values-prod.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -1,0 +1,45 @@
+# ArgoCD GKE 프로덕션 설치
+# AWS argocd-install.yaml과 동일한 chart/values 재사용
+# 주의: infrastructure/prod/argocd/templates/dex-google-externalsecret.yaml은
+#       aws-ssm ClusterSecretStore를 참조하므로 GCP에서 실패함.
+#       → infrastructure/prod/gcp/external-secrets/argocd-google-oauth-externalsecret.yaml 로 대체 관리
+#         (해당 파일에서 gcp-store 참조하여 argocd-google-oauth 시크릿 생성)
+#
+# 적용 순서:
+#   1. helm install argocd (최초 1회 수동)
+#   2. kubectl create secret generic gitops-repo ... (최초 1회 수동 — PAT)
+#   3. kubectl apply -f clusters/prod-gcp/bootstrap/
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  project: default
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "infrastructure/prod/argocd"
+      helm:
+        valueFiles:
+          - values.yaml
+          - values-prod.yaml
+          - values-gcp.yaml  # googleOAuth.secretStore → gcp-store 오버라이드
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

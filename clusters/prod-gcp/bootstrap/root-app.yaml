@@ -1,8 +1,14 @@
-# GCP 클러스터 ArgoCD 부트스트랩 — App of Apps
-# AWS clusters/prod/bootstrap/root-appsets.yaml과 분리
-# Terraform prod-gcp의 gitops_app_of_apps_path가 이 경로를 가리킴
+# GCP 클러스터 App of Apps — bootstrap 진입점
+# kubectl apply -f clusters/prod-gcp/bootstrap/ 로 일괄 적용
+#
+# sync-wave 순서:
+#   -2: goti-gcp-infra       (ClusterSecretStore, StorageClass, NetworkPolicy, ESO ExternalSecrets)
+#   -1: goti-gcp-projects    (AppProject)
+#   -1: goti-gcp-infra-ops   (공통 operator: ESO, Kyverno, KEDA, Falco, OTel, Strimzi, Descheduler, ...)
+#    0: goti-gcp-appsets      (MSA 서비스 + 모니터링)
 ---
-# 1. GCP 전용 인프라 (ClusterSecretStore, StorageClass, NetworkPolicy 등)
+# 1. GCP 전용 인프라 리소스 (ClusterSecretStore, StorageClass, NetworkPolicy, ExternalSecrets config)
+#    ESO CRD가 없으면 retry가 처리함 (goti-gcp-infra-ops의 ESO 설치 후 eventually 적용됨)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -18,6 +24,7 @@ spec:
     path: "infrastructure/prod/gcp"
     directory:
       recurse: true
+      exclude: "application.yaml"  # 순환 참조 방지
   destination:
     server: "https://kubernetes.default.svc"
     namespace: argocd
@@ -26,16 +33,16 @@ spec:
       prune: true
       selfHeal: true
     retry:
-      limit: 5
+      limit: 10
       backoff:
-        duration: 10s
+        duration: 15s
         factor: 2
-        maxDuration: 3m
+        maxDuration: 5m
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
 ---
-# 2. ArgoCD Projects
+# 2. AppProjects (infra, goti, monitoring)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -66,11 +73,53 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
 ---
-# 3. ApplicationSets (MSA 서비스 + 모니터링)
+# 3. 공통 인프라 Operators (AWS-specific 제외)
+#    제외 목록:
+#      karpenter/**                          → EKS 전용 노드 프로비저너
+#      metrics-server/**                     → GKE 내장 (설치 시 충돌)
+#      storage/**                            → gp3(EBS) — GCP는 goti-gcp-infra에서 처리
+#      network-policies/**                   → GCP 버전은 goti-gcp-infra에서 처리
+#      external-secrets/config-application.yaml → AWS SSM 기반 config
+#      gcp/**                                → raw manifest, goti-gcp-infra에서 처리
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: goti-gcp-applicationsets
+  name: goti-gcp-infra-ops
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: infra
+  source:
+    repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+    targetRevision: main
+    path: "infrastructure/prod"
+    directory:
+      recurse: true
+      include: "*application.yaml"
+      exclude: "{karpenter/**,metrics-server/**,storage/**,network-policies/**,external-secrets/config-application.yaml,gcp/**}"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+# 4. ApplicationSets (MSA 서비스 + 모니터링)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: goti-gcp-appsets
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "0"

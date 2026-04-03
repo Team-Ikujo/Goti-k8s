@@ -1,4 +1,13 @@
 # ArgoCD 공통 설정
+
+# Google OAuth 시크릿 소스 — 클라우드 환경별 오버라이드
+# AWS: values-prod.yaml에서 aws-ssm + SSM 경로 사용
+# GCP: values-gcp.yaml에서 gcp-store + Secret Manager 키 이름 사용
+googleOAuth:
+  secretStore: aws-ssm
+  clientIdKey: /prod/argocd/GOOGLE_CLIENT_ID
+  clientSecretKey: /prod/argocd/GOOGLE_CLIENT_SECRET
+
 argo-cd:
   # 리소스 이름을 argocd로 통일 (subchart 접두사 방지)
   fullnameOverride: argocd
