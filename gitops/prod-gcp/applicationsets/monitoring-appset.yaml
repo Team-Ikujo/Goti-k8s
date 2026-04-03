@@ -1,0 +1,101 @@
+# AWS prod monitoring-appset.yaml과 동일한 구조
+# 차이점: mimir-values.yaml → mimir-values-gcp.yaml (GCS 백엔드)
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: monitoring-stack-gcp
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - env: prod-gcp
+          - list:
+              elements:
+                - component: kube-prometheus-stack
+                  chartRepo: https://prometheus-community.github.io/helm-charts
+                  chartName: kube-prometheus-stack
+                  chartVersion: "82.4.3"
+                  valuesFile: values-stacks/prod/kube-prometheus-stack-values.yaml
+                - component: prometheus-blackbox-exporter
+                  chartRepo: https://prometheus-community.github.io/helm-charts
+                  chartName: prometheus-blackbox-exporter
+                  chartVersion: "9.5.0"
+                  valuesFile: values-stacks/prod/blackbox-exporter-values.yaml
+                - component: loki
+                  chartRepo: https://grafana.github.io/helm-charts
+                  chartName: loki
+                  chartVersion: "6.53.0"
+                  valuesFile: values-stacks/prod/loki-values.yaml
+                - component: tempo
+                  chartRepo: https://grafana-community.github.io/helm-charts
+                  chartName: tempo
+                  chartVersion: "1.24.4"
+                  valuesFile: values-stacks/prod/tempo-values.yaml
+                - component: mimir
+                  chartRepo: https://grafana.github.io/helm-charts
+                  chartName: mimir-distributed
+                  chartVersion: "6.0.5"
+                  valuesFile: values-stacks/prod-gcp/mimir-values.yaml   # GCS 백엔드
+                - component: pyroscope
+                  chartRepo: https://grafana.github.io/helm-charts
+                  chartName: pyroscope
+                  chartVersion: "1.18.1"
+                  valuesFile: values-stacks/prod/pyroscope-values.yaml
+                - component: otel-collector-front
+                  chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
+                  chartName: opentelemetry-collector
+                  chartVersion: "0.147.1"
+                  valuesFile: values-stacks/prod/otel-collector-front-values.yaml
+                - component: otel-collector-back
+                  chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
+                  chartName: opentelemetry-collector
+                  chartVersion: "0.147.1"
+                  valuesFile: values-stacks/prod/otel-collector-back-values.yaml
+  template:
+    metadata:
+      name: "{{component}}-{{env}}"
+      annotations:
+        argocd.argoproj.io/compare-options: ServerSideDiff=true
+    spec:
+      project: monitoring
+      sources:
+        - repoURL: "{{chartRepo}}"
+          chart: "{{chartName}}"
+          targetRevision: "{{chartVersion}}"
+          helm:
+            valueFiles:
+              - "$values/{{valuesFile}}"
+        - repoURL: "https://github.com/Team-Ikujo/Goti-monitoring.git"
+          targetRevision: main
+          ref: values
+      destination:
+        server: "https://kubernetes.default.svc"
+        namespace: monitoring
+      syncPolicy:
+        managedNamespaceMetadata:
+          labels:
+            istio-injection: enabled
+        automated:
+          prune: true
+          selfHeal: true
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+      ignoreDifferences:
+        - group: admissionregistration.k8s.io
+          kind: MutatingWebhookConfiguration
+          jsonPointers:
+            - /webhooks/0/clientConfig/caBundle
+        - group: admissionregistration.k8s.io
+          kind: ValidatingWebhookConfiguration
+          jsonPointers:
+            - /webhooks/0/clientConfig/caBundle

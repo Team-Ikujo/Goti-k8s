@@ -1,0 +1,142 @@
+nameOverride: goti-user
+replicaCount: 2
+image:
+  repository: "asia-northeast3-docker.pkg.dev/797033253958/goti-prod-registry/goti-user"
+  tag: "prod-46-e652be4"
+  pullPolicy: IfNotPresent
+imagePullSecrets: []  # GKE 노드 SA에 cloud-platform scope → Artifact Registry 자동 인증
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+gateway:
+  enabled: true
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/auth"
+        - uri:
+            prefix: "/api/v1/test"
+      route:
+        - destination:
+            host: goti-user-prod
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/docs/user/swagger-ui/"
+      rewrite:
+        uri: "/swagger-ui/"
+      route:
+        - destination:
+            host: goti-user-prod
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/docs/user/v3/"
+      rewrite:
+        uri: "/v3/"
+      route:
+        - destination:
+            host: goti-user-prod
+            port:
+              number: 8080
+probes:
+  liveness:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+  readiness:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 5
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "prod"
+  - name: JAVA_TOOL_OPTIONS
+    value: "-XX:MaxRAMPercentage=60.0"
+  - name: REDIS_PORT
+    value: "6379"
+  - name: SPRING_DATA_REDIS_SSL_ENABLED
+    value: "true"
+  - name: SPRING_DATA_REDIS_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: REDIS_AUTH_TOKEN
+  - name: GOTI_TEST_USER_ENABLED
+    value: "true"
+  - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
+    value: "/api/docs/user/v3/api-docs/swagger-config"
+  - name: SPRINGDOC_SWAGGER_UI_URL
+    value: "/api/docs/user/v3/api-docs"
+envFrom:
+  - secretRef:
+      name: goti-user-prod-secrets
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: gcp-store
+    kind: ClusterSecretStore
+  remoteRef:
+    # GCP Secret Manager 모드 — secret ID prefix regexp
+    # goti-prod-server-DATASOURCE_URL → DATASOURCE_URL (공통 서버 설정)
+    nameRegexp: "^goti-prod-server-"
+    nameRewriteSource: "^goti-prod-server-(.*)$"
+    # goti-prod-user-DATASOURCE_URL → DATASOURCE_URL (user 서비스 RO 계정으로 override)
+    overrideNameRegexp: "^goti-prod-user-"
+    overrideNameRewriteSource: "^goti-prod-user-(.*)$"
+istioPolicy:
+  authorizationPolicy:
+    enabled: true
+    allowFrom: []
+  requestAuthentication:
+    enabled: true
+    jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"vFL8-RL8O2K_ZTTsCD0kY52DWJNB6KHZY2iN_33vDOrsCyyy6aPBlo-hiF-bWvEyLSuCX09UV1voU0MhI-b6Tfg1GNMXjBzl1YoXEw1sBLYt2jxRl9KBZXuoQtWLGl4xE85FOBJAJ0t7Bk8KBJ5KvVEkGZsQ0zghnYx4UujaSIGFwwYD5N4Vq_RPj-07HScyoNMLzOsB6z_T1u0-ncXVcayjxlg_AJrP8swJoa1bXxZszvV6jIjVjRGDsaLhYpnmStGFZoH2glL3EmTZNZOOXpuxz5JRh9P1gkRfEiZf9ednA1HQdWUjRPqBYLsoZ3ZXKdS3XvKqAjiTSzXfRRs5uw"}]}'
+  testIpAllowlist:
+    enabled: false
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/api/v1/auth"
+      - "/api/v1/auth/*"
+      - "/api/v1/test"
+      - "/api/v1/test/*"
+      - "/actuator"
+      - "/actuator/*"
+      - "/swagger-ui"
+      - "/swagger-ui/*"
+      - "/v3/api-docs"
+      - "/v3/api-docs/*"
+      - "/.well-known"
+      - "/.well-known/*"
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "kafka/*"
+          - "~/*.googleapis.com"   # OAuth (Google)
+          - "~/*.naver.com"        # OAuth (Naver)
+          - "~/*.kakao.com"        # OAuth (Kakao)
+          - "~/*.nurigo.com"       # SMS (CoolSMS)
+          # AWS ~/*.amazonaws.com 제외 — GCP는 Secret Manager를 ESO가 처리
