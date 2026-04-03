@@ -79,6 +79,8 @@ env:
       secretKeyRef:
         name: goti-user-prod-secrets
         key: REDIS_AUTH_TOKEN
+  - name: GOTI_TEST_USER_ENABLED
+    value: "true"
   - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
     value: "/api/docs/user/v3/api-docs/swagger-config"
   - name: SPRINGDOC_SWAGGER_UI_URL
