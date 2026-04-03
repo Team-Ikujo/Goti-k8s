@@ -1,7 +1,8 @@
 nameOverride: goti-payment
+replicaCount: 2
 image:
   repository: "harbor.go-ti.shop/prod/goti-payment"
-  tag: "prod-36-57bdd30"
+  tag: "prod-43-6f4c644"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
@@ -113,7 +114,7 @@ istioPolicy:
                   methods: ["POST", "PATCH"]
   requestAuthentication:
     enabled: true
-    jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
+    jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"vFL8-RL8O2K_ZTTsCD0kY52DWJNB6KHZY2iN_33vDOrsCyyy6aPBlo-hiF-bWvEyLSuCX09UV1voU0MhI-b6Tfg1GNMXjBzl1YoXEw1sBLYt2jxRl9KBZXuoQtWLGl4xE85FOBJAJ0t7Bk8KBJ5KvVEkGZsQ0zghnYx4UujaSIGFwwYD5N4Vq_RPj-07HScyoNMLzOsB6z_T1u0-ncXVcayjxlg_AJrP8swJoa1bXxZszvV6jIjVjRGDsaLhYpnmStGFZoH2glL3EmTZNZOOXpuxz5JRh9P1gkRfEiZf9ednA1HQdWUjRPqBYLsoZ3ZXKdS3XvKqAjiTSzXfRRs5uw"}]}'
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
