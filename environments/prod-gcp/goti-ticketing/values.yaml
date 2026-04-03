@@ -1,0 +1,79 @@
+nameOverride: goti-ticketing
+replicaCount: 2
+image:
+  repository: "asia-northeast3-docker.pkg.dev/797033253958/goti-prod-registry/goti-ticketing"
+  tag: "prod-43-6f4c644"
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+probes:
+  liveness:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+  readiness:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 5
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "prod"
+  - name: JAVA_TOOL_OPTIONS
+    value: "-XX:MaxRAMPercentage=60.0"
+  - name: REDIS_PORT
+    value: "6379"
+  - name: SPRING_DATA_REDIS_SSL_ENABLED
+    value: "true"
+  - name: SPRING_DATA_REDIS_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: goti-ticketing-prod-secrets
+        key: REDIS_AUTH_TOKEN
+envFrom:
+  - secretRef:
+      name: goti-ticketing-prod-secrets
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: gcp-store
+    kind: ClusterSecretStore
+  remoteRef:
+    nameRegexp: "^goti-prod-server-"
+    nameRewriteSource: "^goti-prod-server-(.*)$"
+    overrideNameRegexp: "^goti-prod-ticketing-"
+    overrideNameRewriteSource: "^goti-prod-ticketing-(.*)$"
+istioPolicy:
+  authorizationPolicy:
+    enabled: true
+    allowFrom: []
+  requestAuthentication:
+    enabled: true
+    jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"vFL8-RL8O2K_ZTTsCD0kY52DWJNB6KHZY2iN_33vDOrsCyyy6aPBlo-hiF-bWvEyLSuCX09UV1voU0MhI-b6Tfg1GNMXjBzl1YoXEw1sBLYt2jxRl9KBZXuoQtWLGl4xE85FOBJAJ0t7Bk8KBJ5KvVEkGZsQ0zghnYx4UujaSIGFwwYD5N4Vq_RPj-07HScyoNMLzOsB6z_T1u0-ncXVcayjxlg_AJrP8swJoa1bXxZszvV6jIjVjRGDsaLhYpnmStGFZoH2glL3EmTZNZOOXpuxz5JRh9P1gkRfEiZf9ednA1HQdWUjRPqBYLsoZ3ZXKdS3XvKqAjiTSzXfRRs5uw"}]}'
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/actuator"
+      - "/actuator/*"
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "kafka/*"

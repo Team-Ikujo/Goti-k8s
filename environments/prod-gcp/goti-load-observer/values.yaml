@@ -1,0 +1,123 @@
+nameOverride: goti-load-observer
+
+replicaCount: 1
+
+image:
+  repository: "asia-northeast3-docker.pkg.dev/797033253958/goti-prod-registry/goti-load-observer"
+  tag: "dev-9-ee6198a"
+  pullPolicy: Always
+
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 9090
+  name: metrics
+
+serviceMonitor:
+  enabled: true
+  port: metrics
+  interval: 30s
+  path: /metrics
+  release: kube-prometheus-stack-prod-gcp
+
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: metrics
+    initialDelaySeconds: 5
+    periodSeconds: 15
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /healthz
+      port: metrics
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi
+
+env:
+  - name: DB_DSN
+    valueFrom:
+      secretKeyRef:
+        name: goti-load-observer-prod-secrets
+        key: LOAD_OBSERVER_DB_DSN
+  - name: REDIS_ADDR
+    valueFrom:
+      secretKeyRef:
+        name: goti-load-observer-prod-secrets
+        key: LOAD_OBSERVER_REDIS_ADDR
+  - name: SERVER_PORT
+    value: "9090"
+  - name: POLL_INTERVAL_DB
+    value: "60s"
+  - name: POLL_INTERVAL_REDIS
+    value: "30s"
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # Memorystore Redis TLS+AUTH — Istio mTLS와 충돌하므로 sidecar 우회
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+
+gateway:
+  enabled: false
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: gcp-store
+    kind: ClusterSecretStore
+  remoteRef:
+    nameRegexp: "^goti-prod-load-observer-"
+    nameRewriteSource: "^goti-prod-load-observer-(.*)$"
+
+istioPolicy:
+  authorizationPolicy:
+    enabled: true
+    allowFrom:
+      - name: allow-monitoring-scrape
+        rules:
+          - from:
+              - source:
+                  namespaces: ["monitoring"]
+            to:
+              - operation:
+                  paths: ["/metrics", "/healthz"]
+                  methods: ["GET"]
+      - name: allow-istio-gateway
+        rules:
+          - from:
+              - source:
+                  namespaces: ["istio-system"]
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"

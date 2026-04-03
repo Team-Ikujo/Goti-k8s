@@ -1,0 +1,21 @@
+# Istio Ingress Gateway GKE 프로덕션 설정
+# AWS(ALB)와 달리 GCP LoadBalancer(L4)를 직접 활용
+gateway:
+  replicaCount: 2
+  service:
+    type: LoadBalancer
+    annotations:
+      # GCP 외부 부하 분산기(External Passthrough Network LB) 생성
+      cloud.google.com/load-balancer-type: "External"
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+sharedGateway:
+  hosts:
+    - "go-ti.shop"
+    - "*.go-ti.shop"
