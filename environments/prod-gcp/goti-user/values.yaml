@@ -1,7 +1,7 @@
 nameOverride: goti-user
 replicaCount: 2
 image:
-  repository: "asia-northeast3-docker.pkg.dev/797033253958/goti-prod-registry/goti-user"
+  repository: "asia-northeast3-docker.pkg.dev/goti-gcp/goti-prod-registry/goti-user"
   tag: "prod-46-e652be4"
   pullPolicy: IfNotPresent
 imagePullSecrets: []  # GKE 노드 SA에 cloud-platform scope → Artifact Registry 자동 인증
