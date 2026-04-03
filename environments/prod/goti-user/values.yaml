@@ -104,9 +104,10 @@ istioPolicy:
   requestAuthentication:
     enabled: true
     jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"vFL8-RL8O2K_ZTTsCD0kY52DWJNB6KHZY2iN_33vDOrsCyyy6aPBlo-hiF-bWvEyLSuCX09UV1voU0MhI-b6Tfg1GNMXjBzl1YoXEw1sBLYt2jxRl9KBZXuoQtWLGl4xE85FOBJAJ0t7Bk8KBJ5KvVEkGZsQ0zghnYx4UujaSIGFwwYD5N4Vq_RPj-07HScyoNMLzOsB6z_T1u0-ncXVcayjxlg_AJrP8swJoa1bXxZszvV6jIjVjRGDsaLhYpnmStGFZoH2glL3EmTZNZOOXpuxz5JRh9P1gkRfEiZf9ednA1HQdWUjRPqBYLsoZ3ZXKdS3XvKqAjiTSzXfRRs5uw"}]}'
-  # 테스트 API IP 제한: 허용된 IP 외 /api/v1/test/* 차단
+  # 테스트 API IP 제한: Cloudflare WAF에서 이미 IP 제한 중
+  # Istio remoteIpBlocks는 Cloudflare→ALB 경로에서 X-Forwarded-For 전달 이슈로 비활성화
   testIpAllowlist:
-    enabled: true
+    enabled: false
     allowedIps:
       - "221.152.162.218/32"
       # - "팀원B_IP/32"
