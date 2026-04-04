@@ -10,6 +10,8 @@ spec:
     - "public.ecr.aws/karpenter"
     - "https://kedacore.github.io/charts"
     - "https://helm.goharbor.io"
+    - "https://kubernetes-sigs.github.io/descheduler"
+    - "https://falcosecurity.github.io/charts"
   destinations:
     - namespace: argocd
       server: "https://kubernetes.default.svc"
@@ -30,6 +32,8 @@ spec:
     - namespace: keda
       server: "https://kubernetes.default.svc"
     - namespace: harbor
+      server: "https://kubernetes.default.svc"
+    - namespace: falco
       server: "https://kubernetes.default.svc"
   clusterResourceWhitelist:
     - group: ""
