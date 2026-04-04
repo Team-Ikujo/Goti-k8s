@@ -43,8 +43,20 @@ falcosidekick:
       webhookurl: "https://discord.com/api/webhooks/1488417914057920523/_XmTCA35DaTVOhLe4Ak4DT9Z56-MPrsczth6dd-ThQ4DMtgdMEat2JG9hTRNgZt3N9M4"
       minimumpriority: warning
 
+# ============================================================================
 # 커스텀 룰 — goti 서비스 특화 탐지
+#
+# 구조:
+#   goti-rules.yaml       — 룰 정의 (condition + exception 슬롯)
+#   goti-exceptions.yaml  — 예외 값 (append: true, 룰과 분리 관리)
+#
+# 예외 추가 시: goti-exceptions.yaml에 values만 추가.
+# 룰 condition은 수정하지 않는다 (Falco 0.28+ exceptions 패턴).
+# ============================================================================
 customRules:
+  # --------------------------------------------------------------------------
+  # 룰 정의 — condition과 exception 슬롯
+  # --------------------------------------------------------------------------
   goti-rules.yaml: |-
     # Pod 내부 셸 실행 탐지
     - rule: Shell Spawned in Goti Container
@@ -54,11 +66,16 @@ customRules:
         and container
         and k8s.ns.name = "goti"
         and proc.name in (bash, sh, zsh, dash, ash)
+      exceptions:
+        - name: known_shell_containers
+          fields: [container.image.repository]
+          comps: [startswith]
       output: >
         Shell spawned in goti container
         (user=%user.name ns=%k8s.ns.name pod=%k8s.pod.name
         container=%container.name shell=%proc.name
-        parent=%proc.pname cmdline=%proc.cmdline)
+        parent=%proc.pname cmdline=%proc.cmdline
+        image=%container.image.repository)
       priority: WARNING
       tags: [container, shell, mitre_execution]
 
@@ -72,10 +89,15 @@ customRules:
         and (fd.name startswith /etc/shadow
              or fd.name startswith /etc/passwd
              or fd.name startswith /proc/1/root)
+      exceptions:
+        - name: known_sensitive_file_readers
+          fields: [proc.name, container.image.repository, fd.name]
+          comps: [=, startswith, =]
       output: >
         Sensitive file read in goti container
         (user=%user.name ns=%k8s.ns.name pod=%k8s.pod.name
-        file=%fd.name container=%container.name)
+        file=%fd.name container=%container.name
+        image=%container.image.repository)
       priority: CRITICAL
       tags: [container, filesystem, mitre_credential_access]
 
@@ -87,11 +109,15 @@ customRules:
         and container
         and k8s.ns.name = "goti"
         and not (fd.sport in (443, 8080, 9092, 9093, 5432, 6379, 4317, 4318, 15012, 53))
+      exceptions:
+        - name: known_outbound_connections
+          fields: [container.image.repository, fd.sport]
+          comps: [startswith, =]
       output: >
         Unexpected outbound connection from goti container
         (ns=%k8s.ns.name pod=%k8s.pod.name
         container=%container.name connection=%fd.name
-        command=%proc.cmdline)
+        command=%proc.cmdline image=%container.image.repository)
       priority: WARNING
       tags: [container, network, mitre_command_and_control]
 
@@ -103,10 +129,15 @@ customRules:
         and container
         and k8s.ns.name = "goti"
         and proc.pname = "runc:[2:INIT]"
+      exceptions:
+        - name: known_exec_containers
+          fields: [container.image.repository]
+          comps: [startswith]
       output: >
         Exec into goti pod detected
         (user=%user.name ns=%k8s.ns.name pod=%k8s.pod.name
-        container=%container.name command=%proc.cmdline)
+        container=%container.name command=%proc.cmdline
+        image=%container.image.repository)
       priority: NOTICE
       tags: [container, mitre_execution]
 
@@ -118,9 +149,53 @@ customRules:
         and container
         and k8s.ns.name = "goti"
         and proc.name in (apt, apt-get, yum, dnf, apk, pip, pip3, npm, curl, wget)
+      exceptions:
+        - name: known_package_manager_containers
+          fields: [container.image.repository, proc.name]
+          comps: [startswith, =]
       output: >
         Package manager or download tool run in goti container
         (ns=%k8s.ns.name pod=%k8s.pod.name
-        container=%container.name command=%proc.cmdline)
+        container=%container.name command=%proc.cmdline
+        image=%container.image.repository)
       priority: WARNING
       tags: [container, mitre_execution, software_mgmt]
+
+  # --------------------------------------------------------------------------
+  # 예외 정의 — 룰 condition 수정 없이 exceptions values만 관리
+  #
+  # 예외 추가 시 이 파일만 수정. 사유/날짜/검토주기 주석 필수.
+  # --------------------------------------------------------------------------
+  goti-exceptions.yaml: |-
+    # ── Istio sidecar (proxyv2) ──────────────────────────────────
+    # 사유: Envoy가 glibc getpwuid()로 /etc/passwd 정상 접근 (user resolution)
+    # 추가일: 2026-04-04
+    # 검토 주기: Istio 업그레이드 시
+    - rule: Sensitive File Read in Goti Container
+      exceptions:
+        - name: known_sensitive_file_readers
+          values:
+            - [envoy, istio/proxyv2, /etc/passwd]
+            - [pilot-agent, istio/proxyv2, /etc/passwd]
+      append: true
+
+    # 사유: Istio sidecar 내부에서 셸 스크립트로 pilot-agent 기동
+    # 추가일: 2026-04-04
+    # 검토 주기: Istio 업그레이드 시
+    - rule: Shell Spawned in Goti Container
+      exceptions:
+        - name: known_shell_containers
+          values:
+            - [istio/proxyv2]
+      append: true
+
+    # 사유: Istio init container가 iptables 설정 시 wget/curl 사용 가능
+    # 추가일: 2026-04-04
+    # 검토 주기: Istio 업그레이드 시
+    - rule: Package Manager in Goti Container
+      exceptions:
+        - name: known_package_manager_containers
+          values:
+            - [istio/proxyv2, wget]
+            - [istio/proxyv2, curl]
+      append: true
