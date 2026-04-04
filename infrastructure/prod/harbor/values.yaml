@@ -15,7 +15,7 @@ existingSecretAdminPasswordKey: password
 
 persistence:
   enabled: true
-  resourcePolicy: keep
+  resourcePolicy: ""
   persistentVolumeClaim:
     registry:
       storageClass: gp3
