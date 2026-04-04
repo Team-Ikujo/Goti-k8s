@@ -7,49 +7,64 @@ spec:
   generators:
     - list:
         elements:
+          # --- MSA 핵심 서비스 (values 계층화: values.yaml + values-aws.yaml) ---
           - service: user
             namespace: goti
             valuesFile: environments/prod/goti-user/values.yaml
+            cloudValuesFile: environments/prod/goti-user/values-aws.yaml
           - service: stadium
             namespace: goti
             valuesFile: environments/prod/goti-stadium/values.yaml
+            cloudValuesFile: environments/prod/goti-stadium/values-aws.yaml
           - service: ticketing
             namespace: goti
             valuesFile: environments/prod/goti-ticketing/values.yaml
+            cloudValuesFile: environments/prod/goti-ticketing/values-aws.yaml
           - service: payment
             namespace: goti
             valuesFile: environments/prod/goti-payment/values.yaml
+            cloudValuesFile: environments/prod/goti-payment/values-aws.yaml
           - service: resale
             namespace: goti
             valuesFile: environments/prod/goti-resale/values.yaml
-          # --- [POC] Queue 부하테스트용 (수연/준상/성전) ---
+            cloudValuesFile: environments/prod/goti-resale/values-aws.yaml
+          # --- [POC] Queue 부하테스트용 (수연/준상/성전) — 단일 values (AWS only) ---
           - service: queue-suyeon
             namespace: goti
             valuesFile: environments/prod/goti-queue-suyeon/values.yaml
+            cloudValuesFile: environments/prod/goti-queue-suyeon/values.yaml
           - service: queue-junsang
             namespace: goti
             valuesFile: environments/prod/goti-queue-junsang/values.yaml
+            cloudValuesFile: environments/prod/goti-queue-junsang/values.yaml
           - service: queue-sungjeon
             namespace: goti
             valuesFile: environments/prod/goti-queue-sungjeon/values.yaml
+            cloudValuesFile: environments/prod/goti-queue-sungjeon/values.yaml
           - service: ticketing-suyeon
             namespace: goti
             valuesFile: environments/prod/goti-ticketing-suyeon/values.yaml
+            cloudValuesFile: environments/prod/goti-ticketing-suyeon/values.yaml
           - service: ticketing-junsang
             namespace: goti
             valuesFile: environments/prod/goti-ticketing-junsang/values.yaml
+            cloudValuesFile: environments/prod/goti-ticketing-junsang/values.yaml
           - service: ticketing-sungjeon
             namespace: goti
             valuesFile: environments/prod/goti-ticketing-sungjeon/values.yaml
+            cloudValuesFile: environments/prod/goti-ticketing-sungjeon/values.yaml
           - service: payment-suyeon
             namespace: goti
             valuesFile: environments/prod/goti-payment-suyeon/values.yaml
+            cloudValuesFile: environments/prod/goti-payment-suyeon/values.yaml
           - service: payment-junsang
             namespace: goti
             valuesFile: environments/prod/goti-payment-junsang/values.yaml
+            cloudValuesFile: environments/prod/goti-payment-junsang/values.yaml
           - service: payment-sungjeon
             namespace: goti
             valuesFile: environments/prod/goti-payment-sungjeon/values.yaml
+            cloudValuesFile: environments/prod/goti-payment-sungjeon/values.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod"
@@ -66,6 +81,7 @@ spec:
         helm:
           valueFiles:
             - "../../{{valuesFile}}"
+            - "../../{{cloudValuesFile}}"
       destination:
         server: "https://kubernetes.default.svc"
         namespace: "{{namespace}}"
