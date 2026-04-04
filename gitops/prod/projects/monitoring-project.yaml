@@ -12,6 +12,7 @@ spec:
     - "https://grafana.github.io/helm-charts"
     - "https://grafana-community.github.io/helm-charts"  # Tempo community chart 이관 (Loki는 미이관, 2026-03 확인)
     - "https://open-telemetry.github.io/opentelemetry-helm-charts"  # OTel Collector (Alloy 대체)
+    - "https://opencost.github.io/opencost-helm-chart"
   destinations:
     - namespace: monitoring
       server: "https://kubernetes.default.svc"
