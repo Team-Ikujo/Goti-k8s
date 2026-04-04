@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: harbor-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"  # harbor(wave 5) 설치 전에 ExternalSecret 생성
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
+    targetRevision: main
+    path: infrastructure/prod/harbor
+    directory:
+      exclude: "*application.yaml"  # application.yaml, config-application.yaml 제외
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: harbor
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
