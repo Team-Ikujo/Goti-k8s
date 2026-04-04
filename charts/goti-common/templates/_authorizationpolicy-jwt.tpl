@@ -40,13 +40,13 @@ spec:
     - from:
         - source:
             notRequestPrincipals: ["*"]
+      {{- if $policy.excludePaths }}
       to:
         - operation:
-            {{- if $policy.excludePaths }}
             notPaths:
               {{- range $policy.excludePaths }}
               - {{ . | quote }}
               {{- end }}
-            {{- end }}
+      {{- end }}
 {{- end }}
 {{- end }}
