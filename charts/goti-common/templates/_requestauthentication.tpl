@@ -27,9 +27,9 @@ JWKS 소스 우선순위:
 {{- $ra := .Values.istioPolicy.requestAuthentication }}
 {{- /* JWKS 값 결정: jwksFromSecret > jwks > jwksUri */}}
 {{- $jwksValue := "" }}
-{{- if $ra.jwksFromSecret }}
+{{- if and $ra.jwksFromSecret $ra.jwksFromSecret.key }}
   {{- $secretName := $ra.jwksFromSecret.name | default (printf "%s-secrets" $fullname) }}
-  {{- $secretKey := $ra.jwksFromSecret.key | default "ISTIO_JWKS" }}
+  {{- $secretKey := $ra.jwksFromSecret.key }}
   {{- $secret := (lookup "v1" "Secret" .Release.Namespace $secretName) }}
   {{- if and $secret $secret.data (index $secret.data $secretKey) }}
     {{- $jwksValue = index $secret.data $secretKey | b64dec }}
