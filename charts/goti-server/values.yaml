@@ -124,6 +124,11 @@ istioPolicy:
   requestAuthentication:
     enabled: false
     issuer: "goti-user-service"
+    # JWKS 소스 우선순위: jwksFromSecret > jwks > jwksUri
+    # jwksFromSecret — ExternalSecret Secret에서 자동 조회 (권장, STRICT mTLS 호환)
+    jwksFromSecret:
+      name: ""         # 비워두면 {fullname}-secrets 자동 사용
+      key: "ISTIO_JWKS"
     jwksUri: ""
     forwardOriginalToken: true
     outputClaimToHeaders:
