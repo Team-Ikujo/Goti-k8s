@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: https://helm.goharbor.io
       chart: harbor
-      targetRevision: "1.*.*"
+      targetRevision: "1.18.3"
       helm:
         valueFiles:
           - $values/infrastructure/prod/harbor/values.yaml
