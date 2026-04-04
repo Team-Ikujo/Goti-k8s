@@ -1,11 +1,11 @@
 nameOverride: goti-payment
 replicaCount: 2
 image:
-  repository: "harbor.go-ti.shop/prod/goti-payment"
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/prod/goti-payment"
   tag: "prod-43-6f4c644"
   pullPolicy: IfNotPresent
 imagePullSecrets:
-  - name: harbor-creds
+  - name: ecr-creds
 podAnnotations:
   instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
 resources:
