@@ -107,7 +107,8 @@ istioPolicy:
     allowFrom: []
   requestAuthentication:
     enabled: true
-    jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
+    jwksFromSecret:
+      key: "ISTIO_JWKS"
   testIpAllowlist:
     enabled: false
   jwtAuthorizationPolicy:

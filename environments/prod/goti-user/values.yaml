@@ -105,7 +105,8 @@ istioPolicy:
     allowFrom: []
   requestAuthentication:
     enabled: true
-    jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
+    jwksFromSecret:
+      key: "ISTIO_JWKS"
   # 테스트 API IP 제한: Cloudflare WAF에서 이미 IP 제한 중
   # Istio remoteIpBlocks는 Cloudflare→ALB 경로에서 X-Forwarded-For 전달 이슈로 비활성화
   testIpAllowlist:

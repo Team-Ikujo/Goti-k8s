@@ -114,7 +114,8 @@ istioPolicy:
                   methods: ["GET"]
   requestAuthentication:
     enabled: true
-    jwksUri: "http://goti-user-prod.goti.svc.cluster.local:8080/.well-known/jwks.json"
+    jwksFromSecret:
+      key: "ISTIO_JWKS"
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
