@@ -9,6 +9,7 @@ spec:
     - "https://github.com/Team-Ikujo/Goti-k8s.git"
     - "public.ecr.aws/karpenter"
     - "https://kedacore.github.io/charts"
+    - "https://helm.goharbor.io"
   destinations:
     - namespace: argocd
       server: "https://kubernetes.default.svc"
@@ -27,6 +28,8 @@ spec:
     - namespace: kube-system
       server: "https://kubernetes.default.svc"
     - namespace: keda
+      server: "https://kubernetes.default.svc"
+    - namespace: harbor
       server: "https://kubernetes.default.svc"
   clusterResourceWhitelist:
     - group: ""
