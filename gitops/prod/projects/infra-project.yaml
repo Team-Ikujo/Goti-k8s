@@ -145,6 +145,9 @@ spec:
       kind: CronJob
     - group: "batch"
       kind: Job
+    # Storage
+    - group: ""
+      kind: PersistentVolumeClaim
     # Policy
     - group: "policy"
       kind: PodDisruptionBudget
