@@ -18,6 +18,10 @@ spec:
   http:
     - route:
         - destination:
-            host: harbor-portal
+            host: harbor
             port:
               number: 80
+      headers:
+        request:
+          set:
+            X-Forwarded-Proto: "https"
