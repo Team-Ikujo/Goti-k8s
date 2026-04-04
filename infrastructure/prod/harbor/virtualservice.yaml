@@ -1,7 +1,10 @@
 # Harbor Istio VirtualService
-# harbor.go-ti.shop → harbor-core:80 (portal/API)
-# harbor.go-ti.shop/v2/ → harbor-registry:5000 (Docker Registry v2 API)
----
+# 모든 트래픽을 harbor-portal:80으로 라우팅
+# harbor-portal(nginx)이 내부적으로 처리:
+#   /        → portal UI
+#   /api/    → harbor-core:8080
+#   /v2/     → harbor-core → harbor-registry (인증 포함)
+#   /service/→ harbor-core
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
@@ -13,16 +16,6 @@ spec:
   gateways:
     - istio-system/goti-shared-gateway
   http:
-    - match:
-        - uri:
-            prefix: /v2/
-        - uri:
-            prefix: /service/
-      route:
-        - destination:
-            host: harbor-registry
-            port:
-              number: 5000
     - route:
         - destination:
             host: harbor-portal
