@@ -1,0 +1,65 @@
+nameOverride: goti-mouse-macro
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8000
+  name: http
+
+autoscaling:
+  enabled: false
+
+probes:
+  liveness:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 15
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 10
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# 외부 노출 없음 — 내부 서비스(ticketing에서 POST /predict 호출)
+gateway:
+  enabled: false
+
+env:
+  - name: AWS_REGION
+    value: "ap-northeast-2"
+  - name: S3_MODEL_PREFIX
+    value: "models/mouse-macro"
+  - name: DASHBOARD_SERVER_URL
+    value: "http://goti-guardrail-prod.goti.svc.cluster.local:8000"
+
+envFrom:
+  - secretRef:
+      name: goti-mouse-macro-prod-secrets
+
+istioPolicy:
+  authorizationPolicy:
+    enabled: false  # ticketing → mouse-macro 호출 허용 (내부망)
+  requestAuthentication:
+    enabled: false   # JWT 검증 불필요 (내부 서비스 간 호출)
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "~/*.amazonaws.com"  # S3 모델 파일 접근

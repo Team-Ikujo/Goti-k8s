@@ -8,6 +8,10 @@ spec:
     - list:
         elements:
           # --- MSA 핵심 서비스 (values 계층화: values.yaml + values-aws.yaml) ---
+          - service: mouse-macro
+            namespace: goti
+            valuesFile: environments/prod/goti-mouse-macro/values.yaml
+            cloudValuesFile: environments/prod/goti-mouse-macro/values-aws.yaml
           - service: user
             namespace: goti
             valuesFile: environments/prod/goti-user/values.yaml
