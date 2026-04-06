@@ -28,6 +28,10 @@ spec:
             namespace: goti
             valuesFile: environments/prod/goti-resale/values.yaml
             cloudValuesFile: environments/prod/goti-resale/values-gcp.yaml
+          - service: queue
+            namespace: goti
+            valuesFile: environments/prod/goti-queue/values.yaml
+            cloudValuesFile: environments/prod/goti-queue/values-gcp.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod-gcp"
