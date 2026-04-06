@@ -102,7 +102,9 @@ env:
 envFrom:
   - secretRef:
       name: goti-user-prod-secrets
+# --- Istio 보안/네트워크 정책 ---
 istioPolicy:
+  # user 서비스는 다른 서비스로부터 호출받지 않음 (Gateway 통해서만 접근)
   authorizationPolicy:
     enabled: true
     allowFrom: []

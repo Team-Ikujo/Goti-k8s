@@ -117,39 +117,6 @@ spec:
         - port: 4318
           protocol: TCP
 ---
-# OTel Collector: Kafka broker egress
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-otel-collector-kafka-egress
-  namespace: monitoring
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: opentelemetry-collector
-  policyTypes:
-    - Egress
-  egress:
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kafka
-      ports:
-        - port: 9092
-          protocol: TCP
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-          podSelector:
-            matchLabels:
-              k8s-app: kube-dns
-      ports:
-        - port: 53
-          protocol: UDP
-        - port: 53
-          protocol: TCP
----
 # kube-state-metrics + prometheus-operator + prometheus: K8s API server egress
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -209,10 +176,6 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: argocd
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kafka
     - to:
         - namespaceSelector:
             matchLabels:

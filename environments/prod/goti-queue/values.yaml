@@ -1,22 +1,14 @@
-# ============================================================================
-# [POC] 성전 대기열 전용 Payment 서비스
-# ============================================================================
-# 목적: payment → ticketing 내부 통신을 ticketing-sungjeon으로 연결
-# 라우팅: /sungjeon/api/v1/payments/** → rewrite → /api/v1/payments/**
-# 삭제 시점: 최종 구현체 결정 후 정리
-# ============================================================================
+nameOverride: goti-queue
 
-nameOverride: goti-payment-sungjeon
-
-replicaCount: 0
+replicaCount: 1
 
 autoscaling:
   enabled: false
 
 image:
-  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-payment"
-  tag: "poc-sungjeon-40-8856b54"  # 기존 payment 이미지 재사용
-  pullPolicy: Always
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
+  tag: "poc-suyeon-37-8856b54"
+  pullPolicy: IfNotPresent
 
 imagePullSecrets:
   - name: ecr-creds
@@ -26,11 +18,11 @@ podAnnotations:
 
 resources:
   requests:
-    cpu: 250m
-    memory: 384Mi
+    cpu: 200m
+    memory: 512Mi
   limits:
-    cpu: 1000m
-    memory: 768Mi
+    cpu: 2000m
+    memory: 1Gi
 
 gateway:
   enabled: true
@@ -41,17 +33,15 @@ gateway:
   httpRoutes:
     - match:
         - uri:
-            prefix: "/sungjeon/api/v1/payments"
-      rewrite:
-        uri: "/api/v1/payments"
-      timeout: 15s
+            prefix: "/api/v1/queue"
+      timeout: 10s
       retries:
         attempts: 2
         perTryTimeout: 5s
-        retryOn: reset,connect-failure
+        retryOn: 5xx,reset,connect-failure
       route:
         - destination:
-            host: goti-payment-sungjeon-prod
+            host: goti-queue-prod
             port:
               number: 8080
 
@@ -70,7 +60,10 @@ probes:
     periodSeconds: 5
 
 serviceMonitor:
-  enabled: false
+  enabled: true
+  port: http
+  path: "/actuator/prometheus"
+  interval: "15s"
 
 env:
   - name: SPRING_PROFILES_ACTIVE
@@ -79,9 +72,6 @@ env:
     value: "-XX:MaxRAMPercentage=60.0"
   - name: GOTI_MESH_ENABLED
     value: "true"
-  # [POC] 핵심: ticketing-sungjeon pod으로 내부 통신
-  - name: TICKETING_BASE_URL
-    value: "http://goti-ticketing-sungjeon-prod.goti.svc.cluster.local:8080"
   - name: REDIS_PORT
     value: "6379"
   - name: SPRING_DATA_REDIS_SSL_ENABLED
@@ -89,12 +79,14 @@ env:
   - name: SPRING_DATA_REDIS_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: goti-payment-sungjeon-prod-secrets
+        name: goti-queue-prod-secrets
         key: REDIS_AUTH_TOKEN
+  - name: QUEUE_MAX_CAPACITY
+    value: "100"
 
 envFrom:
   - secretRef:
-      name: goti-payment-sungjeon-prod-secrets
+      name: goti-queue-prod-secrets
 
 externalSecret:
   enabled: true
@@ -104,7 +96,7 @@ externalSecret:
     kind: ClusterSecretStore
   remoteRef:
     path: /prod/server
-    overridePath: /prod/payment
+    overridePath: /prod/queue
 
 istioPolicy:
   authorizationPolicy:

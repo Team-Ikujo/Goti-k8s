@@ -1,0 +1,100 @@
+nameOverride: goti-queue-gate
+
+# queue-gate는 현재 AWS only 배포 — GCP 배포 시 values-gcp.yaml 생성 필요
+
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+  interval: 15s
+  release: kube-prometheus-stack-prod
+
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+env:
+  - name: QUEUEGATE_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-queue-gate-prod-secrets
+        key: QUEUEGATE_REDIS_URL
+  - name: QUEUEGATE_GATE_QUEUE_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-queue-gate-prod-secrets
+        key: QUEUEGATE_GATE_QUEUE_URL
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # ElastiCache Redis는 TLS+AUTH 사용 — Istio mTLS와 충돌하므로 sidecar 우회
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+
+gateway:
+  enabled: true
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/gate"
+      route:
+        - destination:
+            host: goti-queue-gate-prod
+            port:
+              number: 8080
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+configMap:
+  enabled: false
+
+autoscaling:
+  enabled: false
+
+# --- Istio 보안/네트워크 정책 ---
+istioPolicy:
+  # Phase 1: gateway-only 접근, mesh 내부 서비스 간 호출 없음
+  # Phase 2에서 ExtAuthz 연동 시 authorizationPolicy 활성화 예정
+  authorizationPolicy:
+    enabled: false
+  destinationRule:
+    enabled: true

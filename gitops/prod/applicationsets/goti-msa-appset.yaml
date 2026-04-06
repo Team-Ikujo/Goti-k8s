@@ -28,6 +28,10 @@ spec:
             namespace: goti
             valuesFile: environments/prod/goti-resale/values.yaml
             cloudValuesFile: environments/prod/goti-resale/values-aws.yaml
+          - service: queue-gate
+            namespace: goti
+            valuesFile: environments/prod/goti-queue-gate/values.yaml
+            cloudValuesFile: environments/prod/goti-queue-gate/values-aws.yaml
           # --- [POC] Queue 부하테스트용 (수연/준상/성전) — 단일 values (AWS only) ---
           - service: queue-suyeon
             namespace: goti

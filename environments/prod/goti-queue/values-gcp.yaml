@@ -1,0 +1,27 @@
+replicaCount: 1
+image:
+  repository: "asia-northeast3-docker.pkg.dev/goti-gcp/goti-prod-registry/goti-queue"
+  tag: "poc-suyeon-37-8856b54"
+  pullPolicy: IfNotPresent
+# GCP: Workload Identity handles Artifact Registry auth
+imagePullSecrets: []
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: gcp-store
+    kind: ClusterSecretStore
+  remoteRef:
+    nameRegexp: "^goti-prod-server-"
+    nameRewriteSource: "^goti-prod-server-(.*)$"
+    overrideNameRegexp: "^goti-prod-queue-"
+    overrideNameRewriteSource: "^goti-prod-queue-(.*)$"
+istioPolicy:
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "~/*.googleapis.com"

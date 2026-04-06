@@ -102,7 +102,9 @@ env:
 envFrom:
   - secretRef:
       name: goti-payment-prod-secrets
+# --- Istio 보안/네트워크 정책 ---
 istioPolicy:
+  # resale → payment (양도 결제/환불)
   authorizationPolicy:
     enabled: true
     allowFrom:
