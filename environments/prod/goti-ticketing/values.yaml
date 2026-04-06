@@ -1,11 +1,4 @@
 nameOverride: goti-ticketing
-replicaCount: 2
-image:
-  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/prod/goti-ticketing"
-  tag: "prod-43-6f4c644"
-  pullPolicy: IfNotPresent
-imagePullSecrets:
-  - name: ecr-creds
 podAnnotations:
   instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
 resources:
@@ -116,18 +109,7 @@ env:
 envFrom:
   - secretRef:
       name: goti-ticketing-prod-secrets
-externalSecret:
-  enabled: true
-  refreshInterval: "1h"
-  secretStoreRef:
-    name: aws-ssm
-    kind: ClusterSecretStore
-  remoteRef:
-    path: /prod/server
-    overridePath: /prod/ticketing
-# --- Istio 보안/네트워크 정책 ---
 istioPolicy:
-  # payment → ticketing (결제 확인 콜백)
   authorizationPolicy:
     enabled: true
     allowFrom:
@@ -160,12 +142,3 @@ istioPolicy:
       - "/v3/api-docs/*"
   destinationRule:
     enabled: true
-  sidecar:
-    enabled: true
-    egress:
-      - hosts:
-          - "istio-system/*"
-          - "./*"
-          - "monitoring/*"
-          - "kafka/*"
-          - "~/*.amazonaws.com"
