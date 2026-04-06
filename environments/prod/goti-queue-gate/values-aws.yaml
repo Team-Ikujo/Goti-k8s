@@ -1,11 +1,11 @@
-# AWS EKS — Harbor→ECR replication 경유 pull
+# AWS EKS — Harbor에서 직접 pull (ECR replication 미설정)
 replicaCount: 2
 image:
-  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/prod/goti-queue-gate"
+  repository: "harbor.go-ti.shop/goti/goti-queue-gate"
   tag: "prod-3-8add224"
   pullPolicy: IfNotPresent
 imagePullSecrets:
-  - name: ecr-creds
+  - name: harbor-creds
 externalSecret:
   enabled: true
   refreshInterval: "1h"

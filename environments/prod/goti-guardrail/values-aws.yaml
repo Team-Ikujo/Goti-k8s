@@ -1,11 +1,11 @@
-# AWS EKS — Harbor→ECR replication 경유 pull
+# AWS EKS — Harbor에서 직접 pull (ECR replication 미설정)
 replicaCount: 1
 image:
-  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/prod/goti-guardrail"
+  repository: "harbor.go-ti.shop/goti/goti-guardrail"
   tag: "init-0000000"
   pullPolicy: IfNotPresent
 imagePullSecrets:
-  - name: ecr-creds
+  - name: harbor-creds
 externalSecret:
   enabled: true
   refreshInterval: "1h"
