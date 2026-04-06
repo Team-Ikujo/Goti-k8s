@@ -10,7 +10,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-user"
-  tag: "dev-54-4a29455"
+  tag: "dev-56-4fc8ff3"
   pullPolicy: Always
 
 imagePullSecrets:
