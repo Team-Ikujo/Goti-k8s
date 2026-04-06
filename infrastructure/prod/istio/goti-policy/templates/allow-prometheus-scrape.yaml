@@ -1,9 +1,6 @@
 {{- if .Values.allowPrometheus.enabled }}
-# Prometheus/Alloy → goti 서비스 메트릭 스크랩 허용
-# prod: monitoring namespace에 sidecar 주입 완료 → source.namespaces로 소스 제한
-# - 15020: Istio merged prometheus metrics
-# - 15090: Envoy admin stats
-# - 8080: /actuator/prometheus (Spring Boot)
+# Prometheus → goti 서비스 메트릭 스크랩 허용
+# monitoring namespace 소스로 제한
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
@@ -15,12 +12,24 @@ spec:
         - source:
             namespaces: ["monitoring"]
       to:
+        # Istio sidecar 메트릭
         - operation:
             ports: ["15020", "15090"]
             paths: ["/stats/prometheus"]
             methods: ["GET"]
+        # Spring Boot actuator (user, ticketing, payment, resale, stadium, queue)
         - operation:
             ports: ["8080"]
             paths: ["/actuator/prometheus"]
+            methods: ["GET"]
+        # load-observer (Go metrics collector)
+        - operation:
+            ports: ["9090"]
+            paths: ["/metrics"]
+            methods: ["GET"]
+        # guardrail (Python FastAPI)
+        - operation:
+            ports: ["8000"]
+            paths: ["/metrics"]
             methods: ["GET"]
 {{- end }}
