@@ -1,0 +1,111 @@
+nameOverride: goti-queue-gate
+
+replicaCount: 1
+
+image:
+  repository: "goti-queue-gate"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: harbor-creds
+
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+env:
+  - name: QUEUEGATE_GATE_QUEUE_URL
+    value: "https://go-ti.shop/queue"
+  - name: QUEUEGATE_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-queue-gate-secrets
+        key: redis-url
+
+gateway:
+  enabled: true
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/gate"
+      route:
+        - destination:
+            host: goti-queue-gate-prod
+            port:
+              number: 8080
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: "/metrics"
+  interval: "15s"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+configMap:
+  enabled: false
+
+externalSecret:
+  enabled: true
+  secretName: goti-queue-gate-secrets
+  refreshInterval: 1h
+  remoteRefs:
+    - key: /goti/prod/queue-gate/redis-url
+      property: redis-url
+
+autoscaling:
+  enabled: false
+
+istioPolicy:
+  authorizationPolicy:
+    enabled: false
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
