@@ -1,0 +1,31 @@
+# AWS(EKS) 전용 설정 — harbor 이미지, IRSA, ESO
+image:
+  repository: "harbor.go-ti.shop/goti/mouse-macro-server"
+  tag: "latest"
+  pullPolicy: Always
+
+# harbor-creds: infrastructure/prod/external-secrets/config/harbor-creds-externalsecret.yaml 에서 생성
+imagePullSecrets:
+  - name: harbor-creds
+
+# ESO: /prod/mouse-macro/* → goti-mouse-macro-prod-secrets
+# SSM 경로: S3_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+# IAM user: arn:aws:iam::707925622666:user/mouser-ml-iam (기존 생성)
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-ssm
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /prod/mouse-macro
+
+istioPolicy:
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "~/*.amazonaws.com"
