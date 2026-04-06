@@ -1,14 +1,6 @@
 nameOverride: goti-queue-gate
 
-replicaCount: 1
-
-image:
-  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue-gate"
-  tag: "latest"
-  pullPolicy: IfNotPresent
-
-imagePullSecrets:
-  - name: ecr-creds
+# queue-gate는 현재 AWS only 배포 — GCP 배포 시 values-gcp.yaml 생성 필요
 
 service:
   type: ClusterIP
@@ -95,28 +87,14 @@ securityContext:
 configMap:
   enabled: false
 
-externalSecret:
-  enabled: true
-  refreshInterval: "1h"
-  secretStoreRef:
-    name: aws-ssm
-    kind: ClusterSecretStore
-  remoteRef:
-    path: /prod/queue-gate
-
 autoscaling:
   enabled: false
 
+# --- Istio 보안/네트워크 정책 ---
 istioPolicy:
+  # Phase 1: gateway-only 접근, mesh 내부 서비스 간 호출 없음
+  # Phase 2에서 ExtAuthz 연동 시 authorizationPolicy 활성화 예정
   authorizationPolicy:
     enabled: false
   destinationRule:
     enabled: true
-  sidecar:
-    enabled: true
-    egress:
-      - hosts:
-          - "istio-system/*"
-          - "./*"
-          - "monitoring/*"
-          - "~/*.amazonaws.com"

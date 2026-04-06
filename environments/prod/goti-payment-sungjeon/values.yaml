@@ -123,5 +123,4 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/*"
-          - "kafka/*"
           - "~/*.amazonaws.com"

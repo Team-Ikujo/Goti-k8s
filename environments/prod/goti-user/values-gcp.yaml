@@ -24,7 +24,6 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/*"
-          - "kafka/*"
           - "~/*.googleapis.com"
           - "~/*.naver.com"
           - "~/*.kakao.com"

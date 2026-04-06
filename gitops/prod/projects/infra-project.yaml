@@ -21,8 +21,6 @@ spec:
       server: "https://kubernetes.default.svc"
     - namespace: goti
       server: "https://kubernetes.default.svc"
-    - namespace: kafka
-      server: "https://kubernetes.default.svc"
     - namespace: kyverno
       server: "https://kubernetes.default.svc"
     - namespace: karpenter
@@ -130,13 +128,6 @@ spec:
       kind: Instrumentation
     - group: "opentelemetry.io"
       kind: OpenTelemetryCollector
-    # Strimzi Kafka
-    - group: "kafka.strimzi.io"
-      kind: Kafka
-    - group: "kafka.strimzi.io"
-      kind: KafkaTopic
-    - group: "kafka.strimzi.io"
-      kind: KafkaUser
     # External Secrets
     - group: "external-secrets.io"
       kind: ExternalSecret

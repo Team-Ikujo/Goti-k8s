@@ -109,7 +109,9 @@ env:
 envFrom:
   - secretRef:
       name: goti-ticketing-prod-secrets
+# --- Istio 보안/네트워크 정책 ---
 istioPolicy:
+  # payment → ticketing (결제 확인 콜백)
   authorizationPolicy:
     enabled: true
     allowFrom:
