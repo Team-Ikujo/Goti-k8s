@@ -6,6 +6,9 @@
 #   - 대응: memory limit 1Gi로 상향 + OOMKill 시 자동 재시작으로 운영
 #   - 0.44.0 출시 시 chart 업그레이드 필요
 
+# nodeSelector 초기화 — kubectl 직접 수정으로 falco-disabled=true가 설정되어 있었음
+nodeSelector: {}
+
 driver:
   kind: modern_ebpf
 

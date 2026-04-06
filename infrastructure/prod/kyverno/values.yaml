@@ -45,6 +45,7 @@ reportsController:
 features:
   policyExceptions:
     enabled: true
+    namespace: "*"
 
 config:
   excludeGroups:
