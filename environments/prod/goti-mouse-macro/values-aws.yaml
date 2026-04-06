@@ -1,7 +1,7 @@
 # AWS(EKS) 전용 설정 — harbor 이미지, IRSA, ESO
 image:
   repository: "harbor.go-ti.shop/prod/goti-mouse"
-  tag: "prod-10-fba6711"
+  tag: "prod-11-0a05bd"
   pullPolicy: IfNotPresent
 
 # harbor-creds: infrastructure/prod/external-secrets/config/harbor-creds-externalsecret.yaml 에서 생성
