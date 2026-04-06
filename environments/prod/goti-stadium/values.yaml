@@ -81,7 +81,9 @@ env:
 envFrom:
   - secretRef:
       name: goti-stadium-prod-secrets
+# --- Istio 보안/네트워크 정책 ---
 istioPolicy:
+  # ticketing → stadium (경기장/팀 조회)
   authorizationPolicy:
     enabled: true
     allowFrom:

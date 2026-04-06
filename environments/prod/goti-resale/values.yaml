@@ -79,7 +79,9 @@ env:
 envFrom:
   - secretRef:
       name: goti-resale-prod-secrets
+# --- Istio 보안/네트워크 정책 ---
 istioPolicy:
+  # payment → resale (양도 완료/거래 조회)
   authorizationPolicy:
     enabled: true
     allowFrom:
