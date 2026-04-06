@@ -1,8 +1,8 @@
 # AWS(EKS) 전용 설정 — harbor 이미지, IRSA, ESO
 image:
   repository: "harbor.go-ti.shop/goti/mouse-macro-server"
-  tag: "latest"
-  pullPolicy: Always
+  tag: "prod-9-3fc23ff"
+  pullPolicy: IfNotPresent
 
 # harbor-creds: infrastructure/prod/external-secrets/config/harbor-creds-externalsecret.yaml 에서 생성
 imagePullSecrets:
