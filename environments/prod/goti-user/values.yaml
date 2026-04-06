@@ -1,11 +1,4 @@
 nameOverride: goti-user
-replicaCount: 4
-image:
-  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/prod/goti-user"
-  tag: "prod-46-e652be4"
-  pullPolicy: IfNotPresent
-imagePullSecrets:
-  - name: ecr-creds
 podAnnotations:
   instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
 resources:
@@ -88,33 +81,17 @@ env:
 envFrom:
   - secretRef:
       name: goti-user-prod-secrets
-externalSecret:
-  enabled: true
-  refreshInterval: "1h"
-  secretStoreRef:
-    name: aws-ssm
-    kind: ClusterSecretStore
-  remoteRef:
-    path: /prod/server
-    overridePath: /prod/user
-# --- Istio 보안/네트워크 정책 ---
 istioPolicy:
-  # user 서비스는 다른 서비스로부터 호출받지 않음 (Gateway 통해서만 접근)
   authorizationPolicy:
     enabled: true
     allowFrom: []
   requestAuthentication:
     enabled: true
     jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"tXlfiSkDgSujDP6wUyQc57RrUGkTK6x3Fe-W5VhZhBumzDDoRNglcZ3C9AY_iF9GdlZOgcUdKLEVplLuEZGQpHUdA5CwgzQkwNXs242Mgo6QyHGdbDXZXEhe42vl1gcdgnahY7UQLcWGUr6--Fuc5G2LMW6rlTGwagT05SKzGRbTRef3gt8D8_hdsp654vnrdW2ReRQltnffHR9XL8buuKIduGW5vfiCVtNRFsaiT_o0SA86a5gK9qmXUGJIDPLc9onZ3v6G8gtFOES4MmR0elT2VTf22tM0GeIhnDOrjVRBa5I-M6c4OTMDrmeHKhUJygj-rjfNT5effpQzUz0_Xw"}]}'
-  # 테스트 API IP 제한: Cloudflare WAF에서 이미 IP 제한 중
-  # Istio remoteIpBlocks는 Cloudflare→ALB 경로에서 X-Forwarded-For 전달 이슈로 비활성화
   testIpAllowlist:
     enabled: false
     allowedIps:
       - "221.152.162.218/32"
-      # - "팀원B_IP/32"
-      # - "팀원C_IP/32"
-      # - "팀원D_IP/32"
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
@@ -132,19 +109,3 @@ istioPolicy:
       - "/.well-known/*"
   destinationRule:
     enabled: true
-  sidecar:
-    enabled: true
-    egress:
-      - hosts:
-          - "istio-system/*"
-          - "./*"
-          - "monitoring/*"
-          - "kafka/*"
-          # OAuth 소셜 로그인 (Google, Naver, Kakao)
-          - "~/*.googleapis.com"
-          - "~/*.naver.com"
-          - "~/*.kakao.com"
-          # SMS 발송 (Nurigo/CoolSMS)
-          - "~/*.nurigo.com"
-          # AWS (SSM Parameter Store, STS)
-          - "~/*.amazonaws.com"

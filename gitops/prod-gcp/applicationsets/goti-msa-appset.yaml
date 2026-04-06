@@ -7,21 +7,27 @@ spec:
   generators:
     - list:
         elements:
+          # values 계층화: 공통 values.yaml + GCP 오버라이드 values-gcp.yaml
           - service: user
             namespace: goti
-            valuesFile: environments/prod-gcp/goti-user/values.yaml
+            valuesFile: environments/prod/goti-user/values.yaml
+            cloudValuesFile: environments/prod/goti-user/values-gcp.yaml
           - service: stadium
             namespace: goti
-            valuesFile: environments/prod-gcp/goti-stadium/values.yaml
+            valuesFile: environments/prod/goti-stadium/values.yaml
+            cloudValuesFile: environments/prod/goti-stadium/values-gcp.yaml
           - service: ticketing
             namespace: goti
-            valuesFile: environments/prod-gcp/goti-ticketing/values.yaml
+            valuesFile: environments/prod/goti-ticketing/values.yaml
+            cloudValuesFile: environments/prod/goti-ticketing/values-gcp.yaml
           - service: payment
             namespace: goti
-            valuesFile: environments/prod-gcp/goti-payment/values.yaml
+            valuesFile: environments/prod/goti-payment/values.yaml
+            cloudValuesFile: environments/prod/goti-payment/values-gcp.yaml
           - service: resale
             namespace: goti
-            valuesFile: environments/prod-gcp/goti-resale/values.yaml
+            valuesFile: environments/prod/goti-resale/values.yaml
+            cloudValuesFile: environments/prod/goti-resale/values-gcp.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod-gcp"
@@ -36,6 +42,7 @@ spec:
         helm:
           valueFiles:
             - "../../{{valuesFile}}"
+            - "../../{{cloudValuesFile}}"
       destination:
         server: "https://kubernetes.default.svc"
         namespace: "{{namespace}}"
