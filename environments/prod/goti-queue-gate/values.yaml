@@ -3,17 +3,24 @@ nameOverride: goti-queue-gate
 replicaCount: 1
 
 image:
-  repository: "goti-queue-gate"
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue-gate"
   tag: "latest"
   pullPolicy: IfNotPresent
 
 imagePullSecrets:
-  - name: harbor-creds
+  - name: ecr-creds
 
 service:
   type: ClusterIP
   port: 8080
   name: http
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+  interval: 15s
+  release: kube-prometheus-stack-prod
 
 probes:
   liveness:
@@ -40,13 +47,21 @@ resources:
     memory: 128Mi
 
 env:
-  - name: QUEUEGATE_GATE_QUEUE_URL
-    value: "https://go-ti.shop/queue"
   - name: QUEUEGATE_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-queue-gate-secrets
-        key: redis-url
+        name: goti-queue-gate-prod-secrets
+        key: QUEUEGATE_REDIS_URL
+  - name: QUEUEGATE_GATE_QUEUE_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-queue-gate-prod-secrets
+        key: QUEUEGATE_GATE_QUEUE_URL
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # ElastiCache Redis는 TLS+AUTH 사용 — Istio mTLS와 충돌하므로 sidecar 우회
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
 
 gateway:
   enabled: true
@@ -63,12 +78,6 @@ gateway:
             host: goti-queue-gate-prod
             port:
               number: 8080
-
-serviceMonitor:
-  enabled: true
-  port: http
-  path: "/metrics"
-  interval: "15s"
 
 podSecurityContext:
   runAsNonRoot: true
@@ -88,11 +97,12 @@ configMap:
 
 externalSecret:
   enabled: true
-  secretName: goti-queue-gate-secrets
-  refreshInterval: 1h
-  remoteRefs:
-    - key: /goti/prod/queue-gate/redis-url
-      property: redis-url
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-ssm
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /prod/queue-gate
 
 autoscaling:
   enabled: false
@@ -109,3 +119,4 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/*"
+          - "~/*.amazonaws.com"
