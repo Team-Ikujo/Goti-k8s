@@ -2,7 +2,7 @@
 replicaCount: 2
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/prod/goti-queue-gate"
-  tag: "init-0000000"
+  tag: "prod-3-8add224"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: ecr-creds
