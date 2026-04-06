@@ -1,0 +1,106 @@
+nameOverride: goti-queue-gate
+
+replicaCount: 1
+
+image:
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue-gate"
+  tag: "dev-1-0000000"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: ecr-creds
+
+podAnnotations:
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 30m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+env:
+  - name: QUEUEGATE_REDIS_URL
+    value: "redis://172.20.0.1:6379/3"
+  - name: QUEUEGATE_GATE_QUEUE_URL
+    value: "https://dev.go-ti.shop/queue"
+
+gateway:
+  enabled: true
+  hosts:
+    - "dev.go-ti.shop"
+    - "dev-api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/gate"
+      route:
+        - destination:
+            host: goti-queue-gate-dev
+            port:
+              number: 8080
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: "/metrics"
+  interval: "15s"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+configMap:
+  enabled: false
+
+externalSecret:
+  enabled: false
+
+autoscaling:
+  enabled: false
+
+istioPolicy:
+  authorizationPolicy:
+    enabled: false
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
