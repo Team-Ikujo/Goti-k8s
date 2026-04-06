@@ -1,0 +1,25 @@
+# AWS EKS — Harbor→ECR replication 경유 pull
+replicaCount: 1
+image:
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/prod/goti-guardrail"
+  tag: "init-0000000"
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: ecr-creds
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-ssm
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /prod/guardrail
+istioPolicy:
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "~/*.amazonaws.com"
