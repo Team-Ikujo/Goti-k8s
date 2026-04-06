@@ -40,5 +40,5 @@
 #     memory: 400Gi
 #   disruption:
 #     consolidationPolicy: WhenEmptyOrUnderutilized
-#     # 티켓팅 특성상 트래픽 급증 대비 — 너무 빠른 consolidation 방지
-#     consolidateAfter: 5m
+#     # Java JVM 워밍업 + 티켓팅 트래픽 안정화 시까지 성급한 노드 반납 방지 (5m → 15m)
+#     consolidateAfter: 15m
