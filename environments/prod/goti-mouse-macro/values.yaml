@@ -6,6 +6,17 @@ service:
   port: 8000
   name: http
 
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000   # Dockerfile: useradd -u 1000 appuser
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true  # /tmp은 emptyDir로 마운트됨
+  capabilities:
+    drop: ["ALL"]
+
 autoscaling:
   enabled: false
 
