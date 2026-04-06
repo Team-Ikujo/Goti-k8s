@@ -51,7 +51,7 @@ env:
   - name: AWS_REGION
     value: "ap-northeast-2"
   - name: S3_MODEL_PREFIX
-    value: "models/mouse-macro"
+    value: ""
   - name: DASHBOARD_SERVER_URL
     value: "http://goti-guardrail-prod.goti.svc.cluster.local:8000"
 
