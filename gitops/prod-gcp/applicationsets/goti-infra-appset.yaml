@@ -10,6 +10,9 @@ spec:
           - service: load-observer
             namespace: goti
             valuesFile: environments/prod-gcp/goti-load-observer/values.yaml
+          - service: queue-gate
+            namespace: goti
+            valuesFile: environments/prod-gcp/goti-queue-gate/values.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod-gcp"
