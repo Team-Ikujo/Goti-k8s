@@ -2,7 +2,7 @@
 replicaCount: 1
 image:
   repository: "harbor.go-ti.shop/prod/goti-guardrail"
-  tag: "init-0000000"
+  tag: "prod-1-faa65ea"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
