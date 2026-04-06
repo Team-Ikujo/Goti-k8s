@@ -55,8 +55,8 @@ autoscaling:
       - type: cron
         metadata:
           timezone: "Asia/Seoul"
-          start: "30 10 * * *"  # 10:30 KST — 티켓 오픈 30분 전 사전 준비
-          end: "0 13 * * *"     # 13:00 KST
+          start: "30 10 * * *" # 10:30 KST — 티켓 오픈 30분 전 사전 준비
+          end: "0 13 * * *" # 13:00 KST
           desiredReplicas: "4"
       - type: prometheus
         metadata:
@@ -131,3 +131,8 @@ istioPolicy:
       - "/v3/api-docs/*"
   destinationRule:
     enabled: true
+image:
+  repository: harbor.go-ti.shop/prod/goti-payment
+  tag: prod-49-4bbdc87
+imagePullSecrets:
+  - name: harbor-creds
