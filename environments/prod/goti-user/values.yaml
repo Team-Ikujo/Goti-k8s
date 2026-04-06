@@ -47,7 +47,7 @@ gateway:
               number: 8080
 autoscaling:
   enabled: true
-  minReplicas: 3        # 야간 비용 절감 (현재 static 4개 → KEDA 관리로 전환)
+  minReplicas: 3 # 야간 비용 절감 (현재 static 4개 → KEDA 관리로 전환)
   maxReplicas: 10
   keda:
     enabled: true
@@ -57,8 +57,8 @@ autoscaling:
       - type: cron
         metadata:
           timezone: "Asia/Seoul"
-          start: "50 10 * * *"  # 10:50 KST — 티켓 오픈 10분 전 사전 준비 (로그인 트래픽 선행)
-          end: "0 13 * * *"     # 13:00 KST
+          start: "50 10 * * *" # 10:50 KST — 티켓 오픈 10분 전 사전 준비 (로그인 트래픽 선행)
+          end: "0 13 * * *" # 13:00 KST
           desiredReplicas: "5"
       - type: prometheus
         metadata:
@@ -130,3 +130,8 @@ istioPolicy:
       - "/.well-known/*"
   destinationRule:
     enabled: true
+image:
+  repository: harbor.go-ti.shop/prod/goti-user
+  tag: prod-47-e652be4
+imagePullSecrets:
+  - name: harbor-creds
