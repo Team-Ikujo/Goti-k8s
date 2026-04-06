@@ -1,7 +1,7 @@
-# AWS-specific overrides — CD workflow가 자동 업데이트
-# Harbor 배포 시: image.repository + tag + imagePullSecrets 변경
+# AWS EKS — Harbor→ECR replication 경유 pull
 image:
-  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue-gate"
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/prod/goti-queue-gate"
   tag: "latest"
+  pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: ecr-creds
