@@ -1,6 +1,6 @@
 # AWS(EKS) 전용 설정 — harbor 이미지, IRSA, ESO
 image:
-  repository: "harbor.go-ti.shop/goti/mouse-macro-server"
+  repository: "harbor.go-ti.shop/prod/goti-mouse"
   tag: "prod-9-3fc23ff"
   pullPolicy: IfNotPresent
 
