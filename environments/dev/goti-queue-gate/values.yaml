@@ -44,7 +44,7 @@ resources:
 
 env:
   - name: QUEUEGATE_REDIS_URL
-    value: "redis://172.20.0.1:6379/3"
+    value: "redis://172.20.0.1:6379/3"  # dev only: Kind 호스트 PC Redis, DB 3
   - name: QUEUEGATE_GATE_QUEUE_URL
     value: "https://dev.go-ti.shop/queue"
 
@@ -69,6 +69,7 @@ serviceMonitor:
   port: http
   path: "/metrics"
   interval: "15s"
+  release: kube-prometheus-stack
 
 podSecurityContext:
   runAsNonRoot: true
