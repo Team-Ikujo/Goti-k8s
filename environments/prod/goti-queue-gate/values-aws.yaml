@@ -1,8 +1,7 @@
-# AWS-specific overrides for queue-gate prod
-# CD workflow가 image.repository와 image.tag를 자동 업데이트함
+# AWS-specific overrides — CD workflow가 자동 업데이트
+# Harbor 배포 시: image.repository + tag + imagePullSecrets 변경
 image:
-  repository: "goti-queue-gate"
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue-gate"
   tag: "latest"
-
 imagePullSecrets:
-  - name: harbor-creds
+  - name: ecr-creds
