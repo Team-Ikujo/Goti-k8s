@@ -8,9 +8,12 @@ image:
 imagePullSecrets:
   - name: harbor-creds
 
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::707925622666:role/goti-prod-mouse-macro-role"
+
 # ESO: /prod/mouse-macro/* → goti-mouse-macro-prod-secrets
-# SSM 경로: S3_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
-# IAM user: arn:aws:iam::707925622666:user/mouser-ml-iam (기존 생성)
+# SSM 경로: S3_BUCKET (IRSA로 AWS 자격증명 주입, Access Key 불필요)
 externalSecret:
   enabled: true
   refreshInterval: "1h"
