@@ -12,10 +12,10 @@ allowGateway:
 allowPrometheus:
   enabled: true
 
-# prod: monitoring namespace에 sidecar 주입 완료 → PERMISSIVE 불필요
+# prod: Pod IP 직접 scrape 시 envoy mTLS 미적용 → 포트별 PERMISSIVE 필요
 peerAuth:
   permissiveForScrape:
-    enabled: false
+    enabled: true
 
 allowKubeletProbes:
   enabled: true
