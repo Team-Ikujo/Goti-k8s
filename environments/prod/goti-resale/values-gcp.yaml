@@ -24,3 +24,4 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/*"
+          - "kafka/*"
