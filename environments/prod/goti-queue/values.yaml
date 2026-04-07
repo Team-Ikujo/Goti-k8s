@@ -1,21 +1,15 @@
 nameOverride: goti-queue
-
 replicaCount: 1
-
 autoscaling:
   enabled: false
-
 image:
-  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
-  tag: "poc-suyeon-37-8856b54"
+  repository: "harbor.go-ti.shop/prod/goti-queue"
+  tag: "prod-50-3e1d97d"
   pullPolicy: IfNotPresent
-
 imagePullSecrets:
-  - name: ecr-creds
-
+  - name: harbor-creds
 podAnnotations:
   instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
-
 resources:
   requests:
     cpu: 200m
@@ -23,7 +17,6 @@ resources:
   limits:
     cpu: 2000m
     memory: 1Gi
-
 gateway:
   enabled: true
   hosts:
@@ -44,7 +37,6 @@ gateway:
             host: goti-queue-prod
             port:
               number: 8080
-
 probes:
   liveness:
     httpGet:
@@ -58,13 +50,11 @@ probes:
       port: http
     initialDelaySeconds: 30
     periodSeconds: 5
-
 serviceMonitor:
   enabled: true
   port: http
   path: "/actuator/prometheus"
   interval: "15s"
-
 env:
   - name: SPRING_PROFILES_ACTIVE
     value: "prod"
@@ -83,11 +73,9 @@ env:
         key: REDIS_AUTH_TOKEN
   - name: QUEUE_MAX_CAPACITY
     value: "100"
-
 envFrom:
   - secretRef:
       name: goti-queue-prod-secrets
-
 externalSecret:
   enabled: true
   refreshInterval: "1h"
@@ -97,7 +85,6 @@ externalSecret:
   remoteRef:
     path: /prod/server
     overridePath: /prod/queue
-
 istioPolicy:
   authorizationPolicy:
     enabled: false
