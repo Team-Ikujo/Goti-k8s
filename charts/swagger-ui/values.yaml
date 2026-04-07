@@ -33,3 +33,5 @@ services:
     path: "payment"
   - name: "Resale Service"
     path: "resale"
+  - name: "Queue Service"
+    path: "queue"
