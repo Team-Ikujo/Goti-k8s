@@ -37,6 +37,8 @@ resources:
     memory: 256Mi
 
 env:
+  - name: GUARDRAIL_ENABLED
+    value: "false"                # 부하테스트 시 봇 탐지 비활성화 — 테스트 후 제거
   - name: GUARDRAIL_REDIS_URL
     valueFrom:
       secretKeyRef:
