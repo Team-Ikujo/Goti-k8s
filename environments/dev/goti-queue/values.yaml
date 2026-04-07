@@ -1,28 +1,16 @@
-# ============================================================================
-# [POC] 대기열 구현 방식2 최적화 — 수연 (PR #329: poc/queue-waiting-suyeon-cdn-optimized)
-# ============================================================================
-# 목적: 대기열 구현체 비교 부하테스트용 배포 (현재 기본 queue 슬롯 사용)
-# 특징: queue_service 전용 스키마, JWE 토큰 (AES-256-GCM), 자체 SecurityConfig
-# 삭제 시점: 최종 구현체 결정 후 POC 주석 제거하고 정식 values로 전환
-#   - gateway.httpRoutes: /api/v1/queue/suyeon → /api/v1/queue 로 복원
-#   - Istio JWT/AuthorizationPolicy 재활성화
-#   - SPRING_DATA_REDIS_DATABASE 제거 (기본 DB 0 사용)
-#   - Swagger 경로에서 /suyeon prefix 제거
-# 관련 PR: https://github.com/Team-Ikujo/Goti-server/pull/329
-# 비교 대상: goti-queue-junsang (PR #312), goti-queue-sungjeon (PR #311)
-# ============================================================================
-
 nameOverride: goti-queue
 
 replicaCount: 1
 
-# POC이므로 오토스케일링 비활성화 — 고정 리소스로 공정한 비교
 autoscaling:
-  enabled: false
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
-  tag: "dev-45-a05069c"  # TODO: 수연 브랜치 빌드 후 실제 태그로 교체
+  tag: "dev-61-b43dadd"
   pullPolicy: Always
 
 imagePullSecrets:
@@ -48,13 +36,9 @@ gateway:
     - "dev-api.go-ti.shop"
   gatewayRef: "istio-system/goti-shared-gateway"
   httpRoutes:
-    # [POC] /api/v1/queue/suyeon/** → rewrite → /api/v1/queue/**
-    # 최종 결정 후 prefix를 /api/v1/queue로 복원할 것
     - match:
         - uri:
-            prefix: "/api/v1/queue/suyeon"
-      rewrite:
-        uri: "/api/v1/queue"
+            prefix: "/api/v1/queue"
       timeout: 10s
       retries:
         attempts: 2
@@ -65,10 +49,9 @@ gateway:
             host: goti-queue-dev
             port:
               number: 8080
-    # [POC] Swagger UI — suyeon prefix 추가
     - match:
         - uri:
-            prefix: "/api/docs/queue/suyeon/swagger-ui/"
+            prefix: "/api/docs/queue/swagger-ui/"
       rewrite:
         uri: "/swagger-ui/"
       route:
@@ -78,7 +61,7 @@ gateway:
               number: 8080
     - match:
         - uri:
-            prefix: "/api/docs/queue/suyeon/v3/"
+            prefix: "/api/docs/queue/v3/"
       rewrite:
         uri: "/v3/"
       route:
@@ -112,20 +95,12 @@ env:
     value: "dev"
   - name: JAVA_TOOL_OPTIONS
     value: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport"
-  - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
-    value: "/api/docs/queue/suyeon/v3/api-docs/swagger-config"
-  - name: SPRINGDOC_SWAGGER_UI_URL
-    value: "/api/docs/queue/suyeon/v3/api-docs"
-  # [POC] Redis DB 격리 — 수연=DB0, 준상=DB1, 성전=DB2
-  # 최종 결정 후 제거 (기본값 DB 0)
-  - name: SPRING_DATA_REDIS_DATABASE
-    value: "0"
-  # Istio mesh 인증: X-User-Id/X-User-Role 헤더 → Spring SecurityContext 변환
   - name: GOTI_MESH_ENABLED
     value: "true"
-  # [POC] 부하테스트용 — 대기열 최대 수용인원 (기본 5000 → 100)
-  - name: QUEUE_MAX_CAPACITY
-    value: "100"
+  - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
+    value: "/api/docs/queue/v3/api-docs/swagger-config"
+  - name: SPRINGDOC_SWAGGER_UI_URL
+    value: "/api/docs/queue/v3/api-docs"
 
 envFrom:
   - secretRef:
@@ -145,22 +120,25 @@ externalSecret:
     - path: /dev/kind/queue
 
 # --- Istio 보안/네트워크 정책 ---
-# [POC] JWT/AuthorizationPolicy 비활성화 — 3개 구현체 공정 비교
-# 최종 결정 후 재활성화할 것 (아래 주석 참조)
 
 istioPolicy:
   authorizationPolicy:
-    enabled: false  # POC: 서비스간 통신 제한 불필요 (외부 직접 접근)
+    enabled: true
+    allowFrom: []
 
-  # JWT 검증: Istio가 JWT → X-User-Id/X-User-Role 헤더 주입
   requestAuthentication:
     enabled: true
     jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
 
-  # JWT 필수 강제: 모든 queue API는 인증 필수
   jwtAuthorizationPolicy:
     enabled: true
-    excludePaths: []
+    excludePaths:
+      - "/actuator"
+      - "/actuator/*"
+      - "/swagger-ui"
+      - "/swagger-ui/*"
+      - "/v3/api-docs"
+      - "/v3/api-docs/*"
 
   destinationRule:
     enabled: true
@@ -172,5 +150,4 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/*"
-          - "kafka/*"
           - "~/*.amazonaws.com"
