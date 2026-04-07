@@ -27,7 +27,7 @@ spec:
             ports: ["9090"]
             paths: ["/metrics"]
             methods: ["GET"]
-        # guardrail (Python FastAPI)
+        # guardrail (Go/Gin)
         - operation:
             ports: ["8000"]
             paths: ["/metrics"]
