@@ -134,6 +134,6 @@ istioPolicy:
     enabled: true
 image:
   repository: harbor.go-ti.shop/prod/goti-user
-  tag: prod-49-4bbdc87
+  tag: prod-50-3e1d97d
 imagePullSecrets:
   - name: harbor-creds
