@@ -135,8 +135,9 @@ istioPolicy:
     jwksUri: "http://goti-user-dev.goti.svc.cluster.local:8080/.well-known/jwks.json"
 
   # 테스트 API IP 제한: 허용된 IP 외 /api/v1/test/* 차단
+  # 부하테스트 기간 임시 비활성화 (port-forward/SSH 터널 경유 시 IP 불일치)
   testIpAllowlist:
-    enabled: true
+    enabled: false
     allowedIps:
       - "221.152.162.218/32"
       # - "팀원B_IP/32"
