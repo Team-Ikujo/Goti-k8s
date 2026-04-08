@@ -161,6 +161,10 @@ istioPolicy:
       - "/api/v1/games/*"
       - "/api/v1/stadiums"
       - "/api/v1/stadiums/*"
+      - "/api/v1/stadium-seats"
+      - "/api/v1/stadium-seats/*"
+      - "/api/v1/teams"
+      - "/api/v1/teams/*"
       - "*/payment-order"          # 내부용: payment → ticketing (mTLS principal로 보호, suffix match)
       - "*/payment-confirmations"  # 내부용: payment → ticketing (결제 확인 콜백, suffix match)
       - "/actuator"
