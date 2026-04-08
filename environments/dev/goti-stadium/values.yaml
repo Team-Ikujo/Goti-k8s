@@ -3,10 +3,7 @@ nameOverride: goti-stadium
 replicaCount: 1
 
 autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 4
-  targetCPUUtilizationPercentage: 70
+  enabled: false
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-stadium"
