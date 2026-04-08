@@ -133,6 +133,7 @@ istioPolicy:
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
+      - "/api/v1/queue/*/global-status"
       - "/actuator"
       - "/actuator/*"
       - "/swagger-ui"
