@@ -1,23 +1,48 @@
 {{- if .Values.peerAuth.permissiveForScrape.enabled }}
 # Prometheus scrape용 포트별 PERMISSIVE mTLS
 # mesh-wide STRICT에서 Prometheus가 Pod IP 직접 scrape 시 mTLS 미적용 → 503
-# sidecar 주입만으로는 해결 불가 — Pod IP scrape은 envoy outbound mTLS를 우회
+# portLevelMtls는 selector 필수 → 서비스별 PeerAuthentication으로 분리
 # 메트릭 포트만 PERMISSIVE로 열어 scrape 허용, 나머지는 STRICT 유지
+---
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
-  name: goti-permissive-for-scrape
+  name: goti-load-observer-permissive-scrape
 spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: goti-load-observer
   mtls:
     mode: STRICT
   portLevelMtls:
-    # observer metrics
     9090:
       mode: PERMISSIVE
-    # guardrail metrics (FastAPI)
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: goti-guardrail-permissive-scrape
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: goti-guardrail
+  mtls:
+    mode: STRICT
+  portLevelMtls:
     8000:
       mode: PERMISSIVE
-    # queue-gate metrics (Go/Gin)
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: goti-queue-gate-permissive-scrape
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: goti-queue-gate
+  mtls:
+    mode: STRICT
+  portLevelMtls:
     8080:
       mode: PERMISSIVE
 {{- end }}
