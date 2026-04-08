@@ -24,3 +24,4 @@ istiod:
         opentelemetry:
           service: otel-collector-front-dev-opentelemetry-collector.monitoring.svc.cluster.local
           port: 4317
+    accessLogFormat: "[%START_TIME%] \"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%\" %RESPONSE_CODE% %DURATION%ms turnstile=\"%REQ(X-TURNSTILE-TOKEN)%\" ua=\"%REQ(USER-AGENT)%\"\n"
