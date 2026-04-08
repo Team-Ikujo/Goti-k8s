@@ -1,0 +1,19 @@
+replicaCount: 2
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-ssm
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /prod/server
+    overridePath: /prod/queue
+istioPolicy:
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "~/*.amazonaws.com"

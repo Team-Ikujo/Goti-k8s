@@ -76,15 +76,6 @@ env:
 envFrom:
   - secretRef:
       name: goti-queue-prod-secrets
-externalSecret:
-  enabled: true
-  refreshInterval: "1h"
-  secretStoreRef:
-    name: aws-ssm
-    kind: ClusterSecretStore
-  remoteRef:
-    path: /prod/server
-    overridePath: /prod/queue
 istioPolicy:
   authorizationPolicy:
     enabled: false
@@ -95,11 +86,3 @@ istioPolicy:
     enabled: false
   destinationRule:
     enabled: true
-  sidecar:
-    enabled: true
-    egress:
-      - hosts:
-          - "istio-system/*"
-          - "./*"
-          - "monitoring/*"
-          - "~/*.amazonaws.com"

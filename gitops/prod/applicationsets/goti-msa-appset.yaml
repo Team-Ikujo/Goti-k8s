@@ -36,6 +36,10 @@ spec:
             namespace: goti
             valuesFile: environments/prod/goti-guardrail/values.yaml
             cloudValuesFile: environments/prod/goti-guardrail/values-aws.yaml
+          - service: queue
+            namespace: goti
+            valuesFile: environments/prod/goti-queue/values.yaml
+            cloudValuesFile: environments/prod/goti-queue/values-aws.yaml
           - service: queue-gate
             namespace: goti
             valuesFile: environments/prod/goti-queue-gate/values.yaml
