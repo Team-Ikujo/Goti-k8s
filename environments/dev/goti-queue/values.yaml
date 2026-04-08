@@ -101,6 +101,8 @@ env:
     value: "/api/docs/queue/v3/api-docs/swagger-config"
   - name: SPRINGDOC_SWAGGER_UI_URL
     value: "/api/docs/queue/v3/api-docs"
+  - name: QUEUE_CLEANUP_API_ENABLED
+    value: "true"
 
 envFrom:
   - secretRef:
