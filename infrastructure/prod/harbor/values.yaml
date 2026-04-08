@@ -63,6 +63,10 @@ jobservice:
     kyverno.io/exclude-resource-limits: "true"
 
 registry:
+  # 노드 교체 시 EBS 볼륨 퍼미션 재적용 보장 (2026-04-08 permission denied 장애 대응)
+  podSecurityContext:
+    fsGroup: 10000
+    fsGroupChangePolicy: Always
   podAnnotations:
     sidecar.istio.io/inject: "false"
     kyverno.io/exclude-image-tag-policy: "true"
