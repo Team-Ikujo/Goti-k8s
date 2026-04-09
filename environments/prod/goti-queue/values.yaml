@@ -4,7 +4,7 @@ autoscaling:
   enabled: false
 image:
   repository: "harbor.go-ti.shop/prod/goti-queue"
-  tag: "prod-50-3e1d97d"
+  tag: "prod-51-b39eebc"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
