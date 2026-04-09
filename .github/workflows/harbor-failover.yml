@@ -1,12 +1,9 @@
 name: Harbor Failover
 
 on:
-  # AlertManager webhook-bridge → GitHub repository_dispatch
   repository_dispatch:
     types:
       - harbor-failover
-
-  # 수동 실행
   workflow_dispatch:
     inputs:
       action:
@@ -23,7 +20,7 @@ env:
   ECR_REGISTRY: 707925622666.dkr.ecr.ap-northeast-2.amazonaws.com
   HARBOR_PULL_SECRET: harbor-creds
   ECR_PULL_SECRET: ecr-creds
-  SERVICES: "goti-user goti-ticketing goti-payment goti-resale goti-stadium"
+  SERVICES: "goti-queue goti-user goti-stadium goti-resale goti-ticketing goti-guardrail goti-mouse-macro goti-payment"
 
 jobs:
   check-and-failover:
@@ -31,7 +28,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      id-token: write  # AWS OIDC 인증용
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -44,11 +41,11 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ap-northeast-2
 
-      - name: Slack Webhook URL 가져오기
-        id: slack
+      - name: Discord Webhook URL 가져오기
+        id: discord
         run: |
           WEBHOOK_URL=$(aws ssm get-parameter \
-            --name /prod/monitoring/SLACK_WEBHOOK_URL \
+            --name /prod/monitoring/DISCORD_WEBHOOK_URL \
             --with-decryption \
             --query 'Parameter.Value' \
             --output text 2>/dev/null || echo "")
@@ -61,14 +58,13 @@ jobs:
           STATUS=$(curl -sf --max-time 10 \
             "${{ env.HARBOR_URL }}/api/v2.0/health" \
             | jq -r '.status' 2>/dev/null || echo "unhealthy")
-
           echo "status=$STATUS" >> $GITHUB_OUTPUT
           echo "Harbor 상태: $STATUS"
 
       - name: 현재 레지스트리 모드 확인
         id: mode
         run: |
-          CURRENT=$(grep 'repository:' environments/prod/goti-user/values.yaml \
+          CURRENT=$(grep 'repository:' environments/prod/goti-user/values-aws.yaml \
             | head -1 | grep -o 'harbor\|ecr' || echo "harbor")
           echo "current=$CURRENT" >> $GITHUB_OUTPUT
           echo "현재 모드: $CURRENT"
@@ -78,7 +74,6 @@ jobs:
         run: |
           HARBOR_STATUS="${{ steps.health.outputs.status }}"
           CURRENT_MODE="${{ steps.mode.outputs.current }}"
-          # repository_dispatch > workflow_dispatch > 자동 판단 순서
           ACTION="${{ github.event.client_payload.action || github.event.inputs.action }}"
 
           if [[ -n "$ACTION" ]]; then
@@ -97,16 +92,13 @@ jobs:
           ACTION="${{ steps.decision.outputs.action }}"
 
           for SERVICE in ${{ env.SERVICES }}; do
-            FILE="environments/prod/${SERVICE}/values.yaml"
-            SVC_NAME="${SERVICE#goti-}"  # goti-user → user
+            FILE="environments/prod/${SERVICE}/values-aws.yaml"
 
             if [[ "$ACTION" == "activate" ]]; then
-              # Harbor → ECR
               sed -i "s|repository: \"${{ env.HARBOR_REGISTRY }}/${SERVICE}\"|repository: \"${{ env.ECR_REGISTRY }}/${SERVICE}\"|g" "$FILE"
               sed -i "s|name: ${{ env.HARBOR_PULL_SECRET }}|name: ${{ env.ECR_PULL_SECRET }}|g" "$FILE"
               echo "✓ $SERVICE: Harbor → ECR"
             else
-              # ECR → Harbor
               sed -i "s|repository: \"${{ env.ECR_REGISTRY }}/${SERVICE}\"|repository: \"${{ env.HARBOR_REGISTRY }}/${SERVICE}\"|g" "$FILE"
               sed -i "s|name: ${{ env.ECR_PULL_SECRET }}|name: ${{ env.HARBOR_PULL_SECRET }}|g" "$FILE"
               echo "✓ $SERVICE: ECR → Harbor"
@@ -115,6 +107,9 @@ jobs:
 
       - name: PR 생성
         if: steps.decision.outputs.action != 'none'
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GIT_PAT }}
         run: |
           ACTION="${{ steps.decision.outputs.action }}"
           HARBOR_STATUS="${{ steps.health.outputs.status }}"
@@ -123,100 +118,61 @@ jobs:
           if [[ "$ACTION" == "activate" ]]; then
             BRANCH="failover/harbor-to-ecr-$(date +%s)"
             TITLE="🚨 [Failover] Harbor 장애 감지 — ECR로 전환 ($DATE)"
-            BODY="## Harbor 장애 감지
+            BODY="## Harbor 장애 감지\n\n**Harbor 상태:** \`${HARBOR_STATUS}\`\n**전환 방향:** Harbor → ECR\n\n### 변경 내용\n- 모든 prod 서비스 이미지 레지스트리를 ECR로 변경\n- imagePullSecrets: \`harbor-creds\` → \`ecr-creds\`\n\n### 주의\n- Harbor 복구 후 deactivate PR이 자동 생성됩니다\n- 이 PR 머지 시 ArgoCD가 자동으로 ECR에서 이미지를 pull합니다"
+          else
+            BRANCH="failover/ecr-to-harbor-$(date +%s)"
+            TITLE="✅ [Failover] Harbor 복구 감지 — Harbor로 원복 ($DATE)"
+            BODY="## Harbor 복구 감지\n\n**Harbor 상태:** \`${HARBOR_STATUS}\`\n**전환 방향:** ECR → Harbor\n\n### 변경 내용\n- 모든 prod 서비스 이미지 레지스트리를 Harbor로 원복\n- imagePullSecrets: \`ecr-creds\` → \`harbor-creds\`"
+          fi
 
-          **Harbor 상태:** \`${HARBOR_STATUS}\`
-          **전환 방향:** Harbor → ECR
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add environments/prod/*/values-aws.yaml
+          git commit -m "$TITLE"
+          git push origin "$BRANCH"
 
-          ### 변경 내용
-          - 모든 prod 서비스 이미지 레지스트리를 ECR로 변경
-          - imagePullSecrets: \`harbor-creds\` → \`ecr-creds\`
+          PR_URL=$(gh pr create \
+            --title "$TITLE" \
+            --body "$BODY" \
+            --base main \
+            --head "$BRANCH")
 
-          ### 영향 서비스
-          $(for s in ${{ env.SERVICES }}; do echo "- $s"; done)
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "pr_title=$TITLE" >> $GITHUB_OUTPUT
 
-          ### 주의
-          - Harbor 복구 후 deactivate PR이 자동 생성됩니다
-          - 이 PR 머지 시 ArgoCD가 자동으로 ECR에서 이미지를 pull합니다"
-                    else
-                      BRANCH="failover/ecr-to-harbor-$(date +%s)"
-                      TITLE="✅ [Failover] Harbor 복구 감지 — Harbor로 원복 ($DATE)"
-                      BODY="## Harbor 복구 감지
+      - name: Discord 알림 전송
+        if: steps.decision.outputs.action != 'none' && steps.discord.outputs.webhook_url != ''
+        run: |
+          ACTION="${{ steps.decision.outputs.action }}"
+          HARBOR_STATUS="${{ steps.health.outputs.status }}"
+          PR_URL="${{ steps.pr.outputs.pr_url }}"
+          PR_TITLE="${{ steps.pr.outputs.pr_title }}"
 
-          **Harbor 상태:** \`${HARBOR_STATUS}\`
-          **전환 방향:** ECR → Harbor
+          if [[ "$ACTION" == "activate" ]]; then
+            COLOR=15158332  # 빨강 #E74C3C
+            EMOJI="🚨"
+            MESSAGE="Harbor 장애 감지 - ECR로 전환"
+            DIRECTION="Harbor → ECR"
+          else
+            COLOR=3066993   # 초록 #2ECC71
+            EMOJI="✅"
+            MESSAGE="Harbor 복구 감지 - Harbor로 원복"
+            DIRECTION="ECR → Harbor"
+          fi
 
-          ### 변경 내용
-          - 모든 prod 서비스 이미지 레지스트리를 Harbor로 원복
-          - imagePullSecrets: \`ecr-creds\` → \`harbor-creds\`"
-                    fi
-
-                    git config user.name "github-actions[bot]"
-                    git config user.email "github-actions[bot]@users.noreply.github.com"
-                    git checkout -b "$BRANCH"
-                    git add environments/prod/*/values.yaml
-                    git commit -m "$TITLE"
-                    git push origin "$BRANCH"
-
-                    PR_URL=$(gh pr create \
-                      --title "$TITLE" \
-                      --body "$BODY" \
-                      --base main \
-                      --head "$BRANCH")
-                    
-                    echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
-                    echo "pr_title=$TITLE" >> $GITHUB_OUTPUT
-                  id: pr
-                  env:
-                    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-                - name: Slack 알림 전송
-                  if: steps.decision.outputs.action != 'none' && steps.slack.outputs.webhook_url != ''
-                  run: |
-                    ACTION="${{ steps.decision.outputs.action }}"
-                    HARBOR_STATUS="${{ steps.health.outputs.status }}"
-                    PR_URL="${{ steps.pr.outputs.pr_url }}"
-                    PR_TITLE="${{ steps.pr.outputs.pr_title }}"
-                    
-                    if [[ "$ACTION" == "activate" ]]; then
-                      COLOR="danger"
-                      EMOJI="🚨"
-                      MESSAGE="Harbor 장애 감지 - ECR로 전환"
-                    else
-                      COLOR="good"
-                      EMOJI="✅"
-                      MESSAGE="Harbor 복구 감지 - Harbor로 원복"
-                    fi
-
-                    curl -X POST "${{ steps.slack.outputs.webhook_url }}" \
-                      -H 'Content-Type: application/json' \
-                      -d @- <<EOF
-                    {
-                      "channel": "C0AHGKSGD5Y",
-                      "attachments": [
-                        {
-                          "color": "$COLOR",
-                          "title": "$EMOJI $MESSAGE",
-                          "fields": [
-                            {
-                              "title": "Harbor 상태",
-                              "value": "\`$HARBOR_STATUS\`",
-                              "short": true
-                            },
-                            {
-                              "title": "전환 방향",
-                              "value": "$(if [[ "$ACTION" == "activate" ]]; then echo "Harbor → ECR"; else echo "ECR → Harbor"; fi)",
-                              "short": true
-                            },
-                            {
-                              "title": "PR",
-                              "value": "<$PR_URL|$PR_TITLE>",
-                              "short": false
-                            }
-                          ],
-                          "footer": "Harbor Failover Automation",
-                          "ts": $(date +%s)
-                        }
-                      ]
-                    }
-                    EOF
+          curl -X POST "${{ steps.discord.outputs.webhook_url }}" \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"${EMOJI} ${MESSAGE}\",
+                \"color\": ${COLOR},
+                \"fields\": [
+                  {\"name\": \"Harbor 상태\", \"value\": \"\`${HARBOR_STATUS}\`\", \"inline\": true},
+                  {\"name\": \"전환 방향\", \"value\": \"${DIRECTION}\", \"inline\": true},
+                  {\"name\": \"PR\", \"value\": \"[${PR_TITLE}](${PR_URL})\", \"inline\": false}
+                ],
+                \"footer\": {\"text\": \"Harbor Failover Automation\"},
+                \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+              }]
+            }"
