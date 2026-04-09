@@ -161,4 +161,4 @@ image:
   repository: harbor.go-ti.shop/prod/goti-ticketing
   tag: prod-51-b39eebc
 imagePullSecrets:
-  - name: harbor-creds
+  - name: ecr-creds

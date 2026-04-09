@@ -137,4 +137,4 @@ image:
   repository: harbor.go-ti.shop/prod/goti-payment
   tag: prod-51-b39eebc
 imagePullSecrets:
-  - name: harbor-creds
+  - name: ecr-creds
