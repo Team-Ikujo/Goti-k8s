@@ -118,37 +118,15 @@ jobs:
           if [[ "$ACTION" == "activate" ]]; then
             BRANCH="failover/harbor-to-ecr-$(date +%s)"
             TITLE="🚨 [Failover] Harbor 장애 감지 — ECR로 전환 ($DATE)"
-            BODY=$(cat <<'BODYEOF'
-## Harbor 장애 감지
-
-**Harbor 상태:** `HARBOR_STATUS_PLACEHOLDER`
-**전환 방향:** Harbor → ECR
-
-### 변경 내용
-- 모든 prod 서비스 이미지 레지스트리를 ECR로 변경
-- imagePullSecrets: `harbor-creds` → `ecr-creds`
-
-### 주의
-- Harbor 복구 후 deactivate PR이 자동 생성됩니다
-- 이 PR 머지 시 ArgoCD가 자동으로 ECR에서 이미지를 pull합니다
-BODYEOF
-)
-            BODY="${BODY/HARBOR_STATUS_PLACEHOLDER/$HARBOR_STATUS}"
+            BODY_FILE=$(mktemp)
+            printf '## Harbor 장애 감지\n\n**Harbor 상태:** `%s`\n**전환 방향:** Harbor → ECR\n\n### 변경 내용\n- 모든 prod 서비스 이미지 레지스트리를 ECR로 변경\n- imagePullSecrets: `harbor-creds` → `ecr-creds`\n\n### 주의\n- Harbor 복구 후 deactivate PR이 자동 생성됩니다\n- 이 PR 머지 시 ArgoCD가 자동으로 ECR에서 이미지를 pull합니다\n' \
+              "$HARBOR_STATUS" > "$BODY_FILE"
           else
             BRANCH="failover/ecr-to-harbor-$(date +%s)"
             TITLE="✅ [Failover] Harbor 복구 감지 — Harbor로 원복 ($DATE)"
-            BODY=$(cat <<'BODYEOF'
-## Harbor 복구 감지
-
-**Harbor 상태:** `HARBOR_STATUS_PLACEHOLDER`
-**전환 방향:** ECR → Harbor
-
-### 변경 내용
-- 모든 prod 서비스 이미지 레지스트리를 Harbor로 원복
-- imagePullSecrets: `ecr-creds` → `harbor-creds`
-BODYEOF
-)
-            BODY="${BODY/HARBOR_STATUS_PLACEHOLDER/$HARBOR_STATUS}"
+            BODY_FILE=$(mktemp)
+            printf '## Harbor 복구 감지\n\n**Harbor 상태:** `%s`\n**전환 방향:** ECR → Harbor\n\n### 변경 내용\n- 모든 prod 서비스 이미지 레지스트리를 Harbor로 원복\n- imagePullSecrets: `ecr-creds` → `harbor-creds`\n' \
+              "$HARBOR_STATUS" > "$BODY_FILE"
           fi
 
           git config user.name "github-actions[bot]"
@@ -160,7 +138,7 @@ BODYEOF
 
           PR_URL=$(gh pr create \
             --title "$TITLE" \
-            --body "$BODY" \
+            --body-file "$BODY_FILE" \
             --base main \
             --head "$BRANCH")
 
