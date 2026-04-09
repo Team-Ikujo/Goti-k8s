@@ -41,7 +41,7 @@ jobs:
       - name: AWS 인증 (SSM 접근용)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ap-northeast-2
 
       - name: Slack Webhook URL 가져오기
