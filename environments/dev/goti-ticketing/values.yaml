@@ -169,8 +169,11 @@ istioPolicy:
       - "/api/v1/stadium-seats/*"
       - "/api/v1/teams"
       - "/api/v1/teams/*"
+      - "/api/v1/orders/internal"    # 내부용: payment → ticketing (주문 조회)
       - "*/payment-order"          # 내부용: payment → ticketing (mTLS principal로 보호, suffix match)
       - "*/payment-confirmations"  # 내부용: payment → ticketing (결제 확인 콜백, suffix match)
+      - "/api/v1/tickets/purchase-infos"  # 내부용: resale → ticketing
+      - "/api/v1/tickets/resales/*"       # 내부용: resale → ticketing
       - "/actuator"
       - "/actuator/*"
       - "/swagger-ui"
