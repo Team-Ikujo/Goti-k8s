@@ -24,6 +24,12 @@ spec:
           # terraform output → SSM /prod/karpenter/QUEUE_NAME
           # 패턴: <cluster_name>-karpenter
           interruptionQueue: "goti-prod-karpenter"
+        serviceMonitor:
+          enabled: true
+          additionalLabels:
+            release: kube-prometheus-stack-prod
+          endpointConfig:
+            interval: 30s
         podAnnotations:
           sidecar.istio.io/inject: "false"
           kyverno.io/exclude-image-tag-policy: "true"
