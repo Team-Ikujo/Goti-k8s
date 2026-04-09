@@ -156,6 +156,7 @@ istioPolicy:
     excludePaths:
       - "/api/v1/resales/histories"
       - "/api/v1/resales/histories/*"
+      - "/api/v1/resales/listings/count"
       - "/actuator"
       - "/actuator/*"
       - "/swagger-ui"
