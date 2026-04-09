@@ -25,7 +25,7 @@ RequestAuthentication은 JWT가 있으면 검증하지만, 없는 요청은 통�
 {{- $selectorLabels := include "goti-common.selectorLabels" . }}
 {{- $policy := .Values.istioPolicy.jwtAuthorizationPolicy }}
 {{- /* /internal/* 경로는 서비스 간 내부 호출 전용 — JWT 불필요 (mTLS SA 인증) */}}
-{{- $excludePaths := concat (list "/internal/*") ($policy.excludePaths | default list) }}
+{{- $excludePaths := concat (list "/internal/*" "/internal/*/*" "/internal/*/*/*" "/internal/*/*/*/*") ($policy.excludePaths | default list) }}
 ---
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
