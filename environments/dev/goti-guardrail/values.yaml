@@ -1,6 +1,6 @@
 nameOverride: goti-guardrail
 
-replicaCount: 1
+replicaCount: 0
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-guardrail"
