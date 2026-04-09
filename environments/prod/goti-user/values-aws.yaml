@@ -1,4 +1,10 @@
 replicaCount: 4
+image:
+  repository: "harbor.go-ti.shop/prod/goti-user"
+  tag: "prod-51-b39eebc"
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: harbor-creds
 externalSecret:
   enabled: true
   refreshInterval: "1h"

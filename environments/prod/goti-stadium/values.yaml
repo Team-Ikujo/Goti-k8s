@@ -114,8 +114,3 @@ istioPolicy:
       - "/v3/api-docs/*"
   destinationRule:
     enabled: true
-image:
-  repository: harbor.go-ti.shop/prod/goti-stadium
-  tag: prod-51-b39eebc
-imagePullSecrets:
-  - name: harbor-creds

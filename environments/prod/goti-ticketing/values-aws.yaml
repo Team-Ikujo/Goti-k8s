@@ -1,4 +1,10 @@
 replicaCount: 2
+image:
+  repository: "harbor.go-ti.shop/prod/goti-ticketing"
+  tag: "prod-51-b39eebc"
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: harbor-creds
 externalSecret:
   enabled: true
   refreshInterval: "1h"

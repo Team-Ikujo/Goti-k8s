@@ -134,8 +134,3 @@ istioPolicy:
       - "/.well-known/*"
   destinationRule:
     enabled: true
-image:
-  repository: harbor.go-ti.shop/prod/goti-user
-  tag: prod-51-b39eebc
-imagePullSecrets:
-  - name: harbor-creds

@@ -2,12 +2,6 @@ nameOverride: goti-queue
 replicaCount: 1
 autoscaling:
   enabled: false
-image:
-  repository: "harbor.go-ti.shop/prod/goti-queue"
-  tag: "prod-51-b39eebc"
-  pullPolicy: IfNotPresent
-imagePullSecrets:
-  - name: harbor-creds
 podAnnotations:
   instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
 resources:
