@@ -97,6 +97,9 @@ env:
     value: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport"
   - name: GOTI_MESH_ENABLED
     value: "true"
+  # dev 전용: 대기열 데이터 정리 내부 API 활성화 (prod 활성화 금지)
+  - name: QUEUE_CLEANUP_API_ENABLED
+    value: "true"
   - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
     value: "/api/docs/queue/v3/api-docs/swagger-config"
   - name: SPRINGDOC_SWAGGER_UI_URL
