@@ -78,6 +78,12 @@ env:
     value: "-XX:MaxRAMPercentage=60.0"
   - name: GOTI_MESH_ENABLED
     value: "true"
+  - name: TICKETING_BASE_URL
+    value: "http://goti-ticketing-prod.goti.svc.cluster.local:8080"
+  - name: INTERNAL_TICKETING_BASE_URL
+    value: "http://goti-ticketing-prod.goti.svc.cluster.local:8080"
+  - name: PAYMENT_BASE_URL
+    value: "http://goti-payment-prod.goti.svc.cluster.local:8080"
   - name: REDIS_PORT
     value: "6379"
   - name: SPRING_DATA_REDIS_SSL_ENABLED
