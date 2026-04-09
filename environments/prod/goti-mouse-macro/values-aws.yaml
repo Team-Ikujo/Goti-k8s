@@ -6,7 +6,7 @@ image:
 
 # harbor-creds: infrastructure/prod/external-secrets/config/harbor-creds-externalsecret.yaml 에서 생성
 imagePullSecrets:
-  - name: harbor-creds
+  - name: ecr-creds
 
 serviceAccount:
   annotations:
