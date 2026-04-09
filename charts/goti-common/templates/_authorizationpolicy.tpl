@@ -41,7 +41,7 @@ spec:
             namespaces: ["goti"]
       to:
         - operation:
-            paths: ["/internal/*"]
+            paths: ["/internal/*", "/internal/*/*", "/internal/*/*/*", "/internal/*/*/*/*"]
 {{- range .Values.istioPolicy.authorizationPolicy.allowFrom }}
 ---
 apiVersion: security.istio.io/v1
