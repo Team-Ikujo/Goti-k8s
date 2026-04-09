@@ -102,7 +102,7 @@ envFrom:
       name: goti-resale-prod-secrets
 # --- Istio 보안/네트워크 정책 ---
 istioPolicy:
-  # payment → resale (양도 완료/거래 조회)
+  # payment → resale (양도 완료/거래 조회), ticketing → resale (마이페이지 양도 조회)
   authorizationPolicy:
     enabled: true
     allowFrom:
@@ -115,6 +115,15 @@ istioPolicy:
               - operation:
                   paths: ["/api/v1/resales/orders/*"]
                   methods: ["GET", "PATCH"]
+      - name: from-ticketing
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-ticketing-prod"]
+            to:
+              - operation:
+                  paths: ["/api/v1/resales/listings/count"]
+                  methods: ["GET"]
   requestAuthentication:
     enabled: true
     jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"tXlfiSkDgSujDP6wUyQc57RrUGkTK6x3Fe-W5VhZhBumzDDoRNglcZ3C9AY_iF9GdlZOgcUdKLEVplLuEZGQpHUdA5CwgzQkwNXs242Mgo6QyHGdbDXZXEhe42vl1gcdgnahY7UQLcWGUr6--Fuc5G2LMW6rlTGwagT05SKzGRbTRef3gt8D8_hdsp654vnrdW2ReRQltnffHR9XL8buuKIduGW5vfiCVtNRFsaiT_o0SA86a5gK9qmXUGJIDPLc9onZ3v6G8gtFOES4MmR0elT2VTf22tM0GeIhnDOrjVRBa5I-M6c4OTMDrmeHKhUJygj-rjfNT5effpQzUz0_Xw"}]}'

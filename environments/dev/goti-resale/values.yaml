@@ -122,7 +122,7 @@ externalSecret:
 # --- Istio 보안/네트워크 정책 ---
 
 istioPolicy:
-  # Phase 1: payment → resale (양도 완료/거래 조회)
+  # Phase 1: payment → resale (양도 완료/거래 조회), ticketing → resale (마이페이지 양도 조회)
   authorizationPolicy:
     enabled: true
     allowFrom:
@@ -135,6 +135,15 @@ istioPolicy:
               - operation:
                   paths: ["/api/v1/resales/orders/*"]
                   methods: ["GET", "PATCH"]
+      - name: from-ticketing
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-ticketing-dev"]
+            to:
+              - operation:
+                  paths: ["/api/v1/resales/listings/count"]
+                  methods: ["GET"]
 
   # JWT 검증: issuer/outputClaimToHeaders는 base values 상속
   requestAuthentication:
