@@ -157,6 +157,7 @@ istioPolicy:
       - "/api/v1/resales/histories"
       - "/api/v1/resales/histories/*"
       - "/api/v1/resales/listings/count"
+      - "/api/v1/resales/orders/purchases"
       - "/actuator"
       - "/actuator/*"
       - "/swagger-ui"
