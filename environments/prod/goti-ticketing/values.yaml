@@ -104,6 +104,8 @@ env:
     value: "http://goti-stadium-prod.goti.svc.cluster.local:8080"
   - name: RESALE_BASE_URL
     value: "http://goti-resale-prod.goti.svc.cluster.local:8080"
+  - name: PAYMENT_BASE_URL
+    value: "http://goti-payment-prod.goti.svc.cluster.local:8080"
   - name: REDIS_PORT
     value: "6379"
   - name: SPRING_DATA_REDIS_SSL_ENABLED
