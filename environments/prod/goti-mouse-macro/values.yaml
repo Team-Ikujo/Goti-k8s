@@ -70,7 +70,7 @@ env:
   - name: S3_MODEL_PREFIX
     value: ""
   - name: DASHBOARD_SERVER_URL
-    value: "http://goti-guardrail-prod.goti.svc.cluster.local:8000"
+    value: "http://goti-security-dashboard-prod.goti.svc.cluster.local:8100"
 
 envFrom:
   - secretRef:

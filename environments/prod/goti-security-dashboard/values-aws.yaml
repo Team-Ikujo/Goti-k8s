@@ -1,0 +1,19 @@
+image:
+  repository: "harbor.go-ti.shop/prod/goti-security-dashboard"
+  tag: "prod-1-0000000"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: harbor-creds
+
+externalSecret:
+  enabled: false
+
+istioPolicy:
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"

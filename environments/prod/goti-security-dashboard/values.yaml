@@ -1,0 +1,72 @@
+nameOverride: goti-security-dashboard
+
+service:
+  type: ClusterIP
+  port: 8100
+  name: http
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+
+probes:
+  liveness:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 15
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 10
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+# Streamlit Cloud → 외부에서 read 엔드포인트 호출
+# /api/v1/events/* 는 클러스터 내부 서비스(mouse-macro, guardrail)만 사용 — 노출 불필요
+gateway:
+  enabled: true
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/detections"
+        - uri:
+            prefix: "/api/v1/stats"
+        - uri:
+            prefix: "/api/v1/mouse-macro"
+        - uri:
+            prefix: "/api/v1/interventions"
+      route:
+        - destination:
+            host: goti-security-dashboard-prod
+            port:
+              number: 8100
+
+istioPolicy:
+  authorizationPolicy:
+    enabled: false
+  requestAuthentication:
+    enabled: false
+  jwtAuthorizationPolicy:
+    enabled: false
+  destinationRule:
+    enabled: false
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
