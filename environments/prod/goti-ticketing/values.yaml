@@ -160,3 +160,8 @@ istioPolicy:
       - "/v3/api-docs/*"
   destinationRule:
     enabled: true
+image:
+  repository: harbor.go-ti.shop/prod/goti-ticketing
+  tag: prod-52-c0a6964
+imagePullSecrets:
+  - name: harbor-creds
