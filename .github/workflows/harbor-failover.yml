@@ -20,7 +20,7 @@ env:
   ECR_REGISTRY: 707925622666.dkr.ecr.ap-northeast-2.amazonaws.com
   HARBOR_PULL_SECRET: harbor-creds
   ECR_PULL_SECRET: ecr-creds
-  SERVICES: "goti-queue goti-user goti-stadium goti-resale goti-ticketing goti-guardrail goti-mouse-macro goti-payment"
+  SERVICES: "goti-queue goti-user goti-stadium goti-resale goti-ticketing goti-guardrail goti-mouse-macro goti-payment goti-security-dashboard"
 
 jobs:
   check-and-failover:

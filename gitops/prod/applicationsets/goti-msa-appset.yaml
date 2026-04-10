@@ -12,6 +12,10 @@ spec:
             namespace: goti
             valuesFile: environments/prod/goti-mouse-macro/values.yaml
             cloudValuesFile: environments/prod/goti-mouse-macro/values-aws.yaml
+          - service: security-dashboard
+            namespace: goti
+            valuesFile: environments/prod/goti-security-dashboard/values.yaml
+            cloudValuesFile: environments/prod/goti-security-dashboard/values-aws.yaml
           - service: user
             namespace: goti
             valuesFile: environments/prod/goti-user/values.yaml
