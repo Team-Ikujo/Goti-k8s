@@ -10,7 +10,7 @@ autoscaling:
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-queue"
-  tag: "dev-74-f46c772"
+  tag: "dev-77-93771f5"
   pullPolicy: Always
 
 imagePullSecrets:
