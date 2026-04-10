@@ -6,6 +6,9 @@ service:
   port: 8000
   name: http
 
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 1000   # Dockerfile: useradd -u 1000 appuser
@@ -43,9 +46,21 @@ resources:
     cpu: 1000m
     memory: 1Gi
 
-# 외부 노출 없음 — 내부 서비스(ticketing에서 POST /predict 호출)
 gateway:
-  enabled: false
+  enabled: true
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/mouse/predict"
+      route:
+        - destination:
+            host: goti-mouse-macro-prod
+            port:
+              number: 8000
 
 env:
   - name: AWS_REGION
@@ -61,16 +76,12 @@ envFrom:
 
 istioPolicy:
   authorizationPolicy:
-    enabled: false  # ticketing → mouse-macro 호출 허용 (내부망)
+    enabled: false
   requestAuthentication:
-    enabled: false   # JWT 검증 불필요 (내부 서비스 간 호출)
+    enabled: false
+  jwtAuthorizationPolicy:
+    enabled: false
   destinationRule:
-    enabled: true
+    enabled: false
   sidecar:
-    enabled: true
-    egress:
-      - hosts:
-          - "istio-system/*"
-          - "./*"
-          - "monitoring/*"
-          - "~/*.amazonaws.com"  # S3 모델 파일 접근
+    enabled: false
