@@ -31,8 +31,27 @@ resources:
     cpu: 500m
     memory: 256Mi
 
+# SQLite 영속 저장소 (EBS gp3)
+persistence:
+  enabled: true
+  storageClassName: "gp3"
+  size: "5Gi"
+
+extraVolumeMounts:
+  - name: data
+    mountPath: /data
+
+extraVolumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: goti-security-dashboard-prod-data
+
+env:
+  - name: DATABASE_DIR
+    value: "/data"
+
 # Streamlit Cloud → 외부에서 read 엔드포인트 호출
-# /api/v1/events/* 는 클러스터 내부 서비스(mouse-macro, guardrail)만 사용 — 노출 불필요
+# /api/v1/events/* 는 클러스터 내부(mouse-macro, guardrail)만 호출 — 노출 불필요
 gateway:
   enabled: true
   hosts:

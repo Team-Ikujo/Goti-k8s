@@ -93,6 +93,11 @@ securityContext:
 extraVolumeMounts: []
 extraVolumes: []
 
+persistence:
+  enabled: false
+  storageClassName: "gp3"
+  size: "5Gi"
+
 podAnnotations: {}
 nodeSelector: {}
 tolerations: []
