@@ -56,6 +56,8 @@ gateway:
     - match:
         - uri:
             prefix: "/api/v1/mouse/predict"
+      rewrite:
+        uri: "/predict"
       route:
         - destination:
             host: goti-mouse-macro-prod
