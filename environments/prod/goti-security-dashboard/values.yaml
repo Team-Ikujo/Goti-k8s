@@ -76,7 +76,26 @@ gateway:
 
 istioPolicy:
   authorizationPolicy:
-    enabled: false
+    enabled: true
+    allowFrom:
+      - name: from-mouse-macro
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-mouse-macro-prod"]
+            to:
+              - operation:
+                  paths: ["/api/v1/events/mouse-macro"]
+                  methods: ["POST"]
+      - name: from-guardrail
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-guardrail-prod"]
+            to:
+              - operation:
+                  paths: ["/api/v1/events/blocked"]
+                  methods: ["POST"]
   requestAuthentication:
     enabled: false
   jwtAuthorizationPolicy:
