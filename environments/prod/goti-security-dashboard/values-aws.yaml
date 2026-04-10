@@ -2,7 +2,7 @@ image:
   repository: "harbor.go-ti.shop/prod/goti-security-dashboard"
   tag: "prod-1-ff1ba85"
   pullPolicy: IfNotPresent
-
+ 
 imagePullSecrets:
   - name: harbor-creds
 
