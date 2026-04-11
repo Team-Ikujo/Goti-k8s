@@ -71,6 +71,8 @@ gateway:
   httpRoutes:
     - match:
         - uri:
+            prefix: "/api/v1/dashboard"
+        - uri:
             prefix: "/api/v1/detections"
         - uri:
             prefix: "/api/v1/stats"
@@ -80,6 +82,8 @@ gateway:
             prefix: "/api/v1/interventions"
         - uri:
             prefix: "/api/v1/analysis"
+        - uri:
+            prefix: "/api/v1/alerts"
       route:
         - destination:
             host: goti-security-dashboard-prod
