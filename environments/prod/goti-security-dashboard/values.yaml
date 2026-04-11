@@ -108,6 +108,29 @@ istioPolicy:
               - operation:
                   paths: ["/api/v1/events/blocked"]
                   methods: ["POST"]
+      # 브라우저(대시보드 프론트) → Istio ingress gateway 경유 GET 요청 허용
+      - name: from-ingress-gateway
+        rules:
+          - from:
+              - source:
+                  namespaces: ["istio-system"]
+            to:
+              - operation:
+                  paths:
+                    - "/api/v1/dashboard/overview"
+                    - "/api/v1/detections"
+                    - "/api/v1/stats/summary"
+                    - "/api/v1/mouse-macro/sessions"
+                    - "/api/v1/mouse-macro/sessions/*"
+                    - "/api/v1/analytics/detection-types"
+                    - "/api/v1/analytics/hourly-trend"
+                    - "/api/v1/analytics/risk-distribution"
+                    - "/api/v1/alerts"
+                    - "/api/v1/interventions/*/action"
+                    - "/api/v1/analysis/guardrail/*"
+                    - "/api/v1/analysis/mouse-macro/*"
+                    - "/health"
+                  methods: ["GET", "POST", "OPTIONS"]
   requestAuthentication:
     enabled: false
   jwtAuthorizationPolicy:
