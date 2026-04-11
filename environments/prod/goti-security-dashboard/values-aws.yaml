@@ -1,6 +1,6 @@
 image:
   repository: "harbor.go-ti.shop/prod/goti-security-dashboard"
-  tag: "prod-4-74bde0f"
+  tag: "prod-5-d34e743"
   pullPolicy: IfNotPresent
  
 imagePullSecrets:
