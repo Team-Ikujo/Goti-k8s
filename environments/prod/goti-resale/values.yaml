@@ -56,7 +56,7 @@ autoscaling:
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus
           metricName: http_rps_resale
-          query: sum(rate(http_server_request_duration_seconds_count{job="goti/goti-resale-prod"}[1m]))
+          query: sum(rate(http_server_request_duration_seconds_count{job="goti/goti-resale"}[1m]))
           threshold: "20"
 probes:
   liveness:
