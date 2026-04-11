@@ -66,7 +66,7 @@ env:
         name: goti-queue-prod-secrets
         key: REDIS_AUTH_TOKEN
   - name: QUEUE_MAX_CAPACITY
-    value: "100"
+    value: "300"
 envFrom:
   - secretRef:
       name: goti-queue-prod-secrets
