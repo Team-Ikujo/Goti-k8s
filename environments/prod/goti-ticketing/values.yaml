@@ -6,8 +6,8 @@ resources:
     cpu: 200m
     memory: 512Mi
   limits:
-    cpu: 2000m
-    memory: 1Gi
+    cpu: 500m
+    memory: 768Mi
 gateway:
   enabled: true
   hosts:
@@ -59,7 +59,7 @@ gateway:
               number: 8080
 autoscaling:
   enabled: true
-  minReplicas: 3 # 항상 3개 웜 상태 유지 (JVM 워밍업 완료된 인스턴스)
+  minReplicas: 2 # 부하테스트용 축소
   maxReplicas: 10 # 실제 티켓팅 스파이크 수용
   keda:
     enabled: true
