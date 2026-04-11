@@ -49,6 +49,12 @@ extraVolumes:
 env:
   - name: DATABASE_DIR
     value: "/data"
+  - name: PORT
+    value: "8100"
+
+envFrom:
+  - secretRef:
+      name: goti-security-dashboard-prod-secrets
 
 # Streamlit Cloud → 외부에서 read 엔드포인트 호출
 # /api/v1/events/* 는 클러스터 내부(mouse-macro, guardrail)만 호출 — 노출 불필요
@@ -68,6 +74,8 @@ gateway:
             prefix: "/api/v1/mouse-macro"
         - uri:
             prefix: "/api/v1/interventions"
+        - uri:
+            prefix: "/api/v1/analysis"
       route:
         - destination:
             host: goti-security-dashboard-prod
