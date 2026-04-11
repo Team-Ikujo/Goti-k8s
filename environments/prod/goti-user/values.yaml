@@ -49,7 +49,7 @@ gateway:
               number: 8080
 autoscaling:
   enabled: true
-  minReplicas: 3 # 야간 비용 절감 (현재 static 4개 → KEDA 관리로 전환)
+  minReplicas: 3
   maxReplicas: 10
   keda:
     enabled: true
