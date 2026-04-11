@@ -7,7 +7,13 @@ imagePullSecrets:
   - name: harbor-creds
 
 externalSecret:
-  enabled: false
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-ssm
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /prod/security-dashboard
 
 istioPolicy:
   sidecar:
@@ -17,3 +23,4 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/*"
+          - "~/*.upstage.ai"
