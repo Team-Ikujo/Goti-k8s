@@ -6,7 +6,7 @@ resources:
     cpu: 200m
     memory: 512Mi
   limits:
-    cpu: 500m
+    cpu: "1"
     memory: 768Mi
 gateway:
   enabled: true
@@ -78,7 +78,7 @@ autoscaling:
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus
           metricName: http_rps_ticketing
-          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-ticketing"}[1m]))
+          query: sum(rate(http_server_request_duration_seconds_count{job="goti/goti-ticketing-prod"}[1m]))
           threshold: "50"
 probes:
   liveness:
