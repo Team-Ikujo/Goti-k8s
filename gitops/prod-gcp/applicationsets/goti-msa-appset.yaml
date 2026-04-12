@@ -7,27 +7,22 @@ spec:
   generators:
     - list:
         elements:
-          # values 계층화: 공통 values.yaml + GCP 오버라이드 values-gcp.yaml
+          # Go 전환 완료 — prod-gcp 통합 values 단일 파일 사용
           - service: user
             namespace: goti
-            valuesFile: environments/prod/goti-user/values.yaml
-            cloudValuesFile: environments/prod/goti-user/values-gcp.yaml
+            valuesFile: environments/prod-gcp/goti-user/values.yaml
           - service: stadium
             namespace: goti
-            valuesFile: environments/prod/goti-stadium/values.yaml
-            cloudValuesFile: environments/prod/goti-stadium/values-gcp.yaml
+            valuesFile: environments/prod-gcp/goti-stadium/values.yaml
           - service: ticketing
             namespace: goti
-            valuesFile: environments/prod/goti-ticketing/values.yaml
-            cloudValuesFile: environments/prod/goti-ticketing/values-gcp.yaml
+            valuesFile: environments/prod-gcp/goti-ticketing/values.yaml
           - service: payment
             namespace: goti
-            valuesFile: environments/prod/goti-payment/values.yaml
-            cloudValuesFile: environments/prod/goti-payment/values-gcp.yaml
+            valuesFile: environments/prod-gcp/goti-payment/values.yaml
           - service: resale
             namespace: goti
-            valuesFile: environments/prod/goti-resale/values.yaml
-            cloudValuesFile: environments/prod/goti-resale/values-gcp.yaml
+            valuesFile: environments/prod-gcp/goti-resale/values.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod-gcp"
@@ -42,7 +37,6 @@ spec:
         helm:
           valueFiles:
             - "../../{{valuesFile}}"
-            - "../../{{cloudValuesFile}}"
       destination:
         server: "https://kubernetes.default.svc"
         namespace: "{{namespace}}"

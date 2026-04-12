@@ -1,19 +1,99 @@
 nameOverride: goti-stadium
 replicaCount: 1
+
 image:
-  repository: "asia-northeast3-docker.pkg.dev/goti-gcp/goti-prod-registry/goti-stadium"
-  tag: "prod-43-6f4c644"
+  repository: "asia-northeast3-docker.pkg.dev/goti-gcp/goti-prod-registry/goti-stadium-go"
+  tag: "latest"
   pullPolicy: IfNotPresent
-imagePullSecrets: []
-podAnnotations:
-  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+
+imagePullSecrets: []  # GKE Workload Identity → Artifact Registry 자동 인증
+
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+  interval: 15s
+  release: kube-prometheus-stack-prod-gcp
+
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+
 resources:
   requests:
-    cpu: 250m
-    memory: 384Mi
+    cpu: 50m
+    memory: 64Mi
   limits:
-    cpu: 1000m
-    memory: 768Mi
+    cpu: 200m
+    memory: 128Mi
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # Memorystore Redis TLS+AUTH — Istio mTLS와 충돌하므로 sidecar 우회
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+env:
+  # --- 인프라 (Secret에서 주입) ---
+  - name: STADIUM_DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-stadium-prod-secrets
+        key: DATASOURCE_URL
+  - name: STADIUM_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-stadium-prod-secrets
+        key: REDIS_URL
+  - name: STADIUM_JWT_PUBLIC_KEY_PEM
+    valueFrom:
+      secretKeyRef:
+        name: goti-stadium-prod-secrets
+        key: JWT_PUBLIC_KEY_PEM
+  # --- OTel ---
+  - name: STADIUM_OTEL_ENABLED
+    value: "true"
+  - name: STADIUM_OTEL_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+  - name: STADIUM_OTEL_SERVICE_NAME
+    value: "goti-stadium-go"
+  - name: OTEL_SERVICE_NAME
+    value: "goti-stadium-go"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+
+configMap:
+  enabled: false
+
 gateway:
   enabled: true
   hosts:
@@ -31,62 +111,7 @@ gateway:
             host: goti-stadium-prod
             port:
               number: 8080
-    - match:
-        - uri:
-            prefix: "/api/docs/stadium/swagger-ui/"
-      rewrite:
-        uri: "/swagger-ui/"
-      route:
-        - destination:
-            host: goti-stadium-prod
-            port:
-              number: 8080
-    - match:
-        - uri:
-            prefix: "/api/docs/stadium/v3/"
-      rewrite:
-        uri: "/v3/"
-      route:
-        - destination:
-            host: goti-stadium-prod
-            port:
-              number: 8080
-probes:
-  liveness:
-    httpGet:
-      path: /actuator/health/liveness
-      port: http
-    initialDelaySeconds: 60
-    periodSeconds: 10
-  readiness:
-    httpGet:
-      path: /actuator/health/readiness
-      port: http
-    initialDelaySeconds: 30
-    periodSeconds: 5
-env:
-  - name: SPRING_PROFILES_ACTIVE
-    value: "prod"
-  - name: JAVA_TOOL_OPTIONS
-    value: "-XX:MaxRAMPercentage=60.0"
-  - name: GOTI_MESH_ENABLED
-    value: "true"
-  - name: REDIS_PORT
-    value: "6379"
-  - name: SPRING_DATA_REDIS_SSL_ENABLED
-    value: "true"
-  - name: SPRING_DATA_REDIS_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: goti-stadium-prod-secrets
-        key: REDIS_AUTH_TOKEN
-  - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
-    value: "/api/docs/stadium/v3/api-docs/swagger-config"
-  - name: SPRINGDOC_SWAGGER_UI_URL
-    value: "/api/docs/stadium/v3/api-docs"
-envFrom:
-  - secretRef:
-      name: goti-stadium-prod-secrets
+
 externalSecret:
   enabled: true
   refreshInterval: "1h"
@@ -98,6 +123,8 @@ externalSecret:
     nameRewriteSource: "^goti-prod-server-(.*)$"
     overrideNameRegexp: "^goti-prod-stadium-"
     overrideNameRewriteSource: "^goti-prod-stadium-(.*)$"
+
+# --- Istio 보안/네트워크 정책 ---
 istioPolicy:
   authorizationPolicy:
     enabled: true
@@ -113,6 +140,7 @@ istioPolicy:
                   methods: ["GET"]
   requestAuthentication:
     enabled: true
+    issuer: "goti-user-service"
     jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"tXlfiSkDgSujDP6wUyQc57RrUGkTK6x3Fe-W5VhZhBumzDDoRNglcZ3C9AY_iF9GdlZOgcUdKLEVplLuEZGQpHUdA5CwgzQkwNXs242Mgo6QyHGdbDXZXEhe42vl1gcdgnahY7UQLcWGUr6--Fuc5G2LMW6rlTGwagT05SKzGRbTRef3gt8D8_hdsp654vnrdW2ReRQltnffHR9XL8buuKIduGW5vfiCVtNRFsaiT_o0SA86a5gK9qmXUGJIDPLc9onZ3v6G8gtFOES4MmR0elT2VTf22tM0GeIhnDOrjVRBa5I-M6c4OTMDrmeHKhUJygj-rjfNT5effpQzUz0_Xw"}]}'
   jwtAuthorizationPolicy:
     enabled: true
@@ -121,12 +149,9 @@ istioPolicy:
       - "/api/v1/stadiums/*"
       - "/api/v1/baseball-teams"
       - "/api/v1/baseball-teams/*"
-      - "/actuator"
-      - "/actuator/*"
-      - "/swagger-ui"
-      - "/swagger-ui/*"
-      - "/v3/api-docs"
-      - "/v3/api-docs/*"
+      - "/healthz"
+      - "/readyz"
+      - "/metrics"
   destinationRule:
     enabled: true
   sidecar:
