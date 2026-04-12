@@ -133,6 +133,8 @@ istioPolicy:
                     - "/api/v1/interventions/*/action"
                     - "/api/v1/analysis/guardrail/*"
                     - "/api/v1/analysis/mouse-macro/*"
+                    - "/api/v1/analysis/ip/*"
+                    - "/api/v1/analysis/ip-summary"
                     - "/health"
                   methods: ["GET", "POST", "OPTIONS"]
   requestAuthentication:
