@@ -1,0 +1,173 @@
+nameOverride: goti-stadium-go
+
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+  interval: 15s
+  release: kube-prometheus-stack-prod
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 256Mi
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+gateway:
+  enabled: true
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            exact: "/api/v1/stadiums"
+        - uri:
+            prefix: "/api/v1/baseball-teams"
+      route:
+        - destination:
+            host: goti-stadium-go-prod
+            port:
+              number: 8080
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  keda:
+    enabled: true
+    cooldownPeriod: 300
+    triggers:
+      - type: cron
+        metadata:
+          timezone: "Asia/Seoul"
+          start: "30 10 * * *"
+          end: "0 13 * * *"
+          desiredReplicas: "4"
+      - type: prometheus
+        metadata:
+          serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus
+          metricName: http_rps_stadium_go
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-stadium-go"}[1m]))
+          threshold: "50"
+
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # ElastiCache Redis TLS — Istio sidecar 우회
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+securityContext:
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+# 환경변수: STADIUM_ prefix (Viper가 config.Load("stadium")에서 자동 생성)
+# envFrom 사용하지 않음 — 개별 매핑으로 명시적 관리
+env:
+  # --- 인프라 (Secret에서 주입) ---
+  - name: STADIUM_DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-stadium-go-prod-secrets
+        key: STADIUM_DATABASE_URL
+  - name: STADIUM_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-stadium-go-prod-secrets
+        key: STADIUM_REDIS_URL
+  - name: STADIUM_JWT_PUBLIC_KEY_PEM
+    valueFrom:
+      secretKeyRef:
+        name: goti-stadium-go-prod-secrets
+        key: STADIUM_JWT_PUBLIC_KEY_PEM
+  # --- OTel ---
+  - name: STADIUM_OTEL_ENABLED
+    value: "true"
+  - name: STADIUM_OTEL_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+  - name: STADIUM_OTEL_SERVICE_NAME
+    value: "goti-stadium-go"
+  # OTel SDK 표준 환경변수 (Go SDK가 직접 참조)
+  - name: OTEL_SERVICE_NAME
+    value: "goti-stadium-go"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+
+configMap:
+  enabled: false
+
+# --- Istio 보안/네트워크 정책 ---
+istioPolicy:
+  # ticketing(Java) + ticketing-go(Go) 양쪽 호출자 허용 (Phase 6.5 공존 기간)
+  authorizationPolicy:
+    enabled: true
+    allowFrom:
+      - name: from-ticketing
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-ticketing-prod"]
+            to:
+              - operation:
+                  paths: ["/api/v1/stadiums*", "/api/v1/baseball-teams*"]
+                  methods: ["GET"]
+      - name: from-ticketing-go
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-ticketing-go-prod"]
+            to:
+              - operation:
+                  paths: ["/api/v1/stadiums*", "/api/v1/baseball-teams*"]
+                  methods: ["GET"]
+  requestAuthentication:
+    enabled: true
+    issuer: "goti-user-service"
+    jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"tXlfiSkDgSujDP6wUyQc57RrUGkTK6x3Fe-W5VhZhBumzDDoRNglcZ3C9AY_iF9GdlZOgcUdKLEVplLuEZGQpHUdA5CwgzQkwNXs242Mgo6QyHGdbDXZXEhe42vl1gcdgnahY7UQLcWGUr6--Fuc5G2LMW6rlTGwagT05SKzGRbTRef3gt8D8_hdsp654vnrdW2ReRQltnffHR9XL8buuKIduGW5vfiCVtNRFsaiT_o0SA86a5gK9qmXUGJIDPLc9onZ3v6G8gtFOES4MmR0elT2VTf22tM0GeIhnDOrjVRBa5I-M6c4OTMDrmeHKhUJygj-rjfNT5effpQzUz0_Xw"}]}'
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/api/v1/stadiums"
+      - "/api/v1/stadiums/*"
+      - "/api/v1/baseball-teams"
+      - "/api/v1/baseball-teams/*"
+      - "/healthz"
+      - "/readyz"
+      - "/metrics"
+  destinationRule:
+    enabled: true
