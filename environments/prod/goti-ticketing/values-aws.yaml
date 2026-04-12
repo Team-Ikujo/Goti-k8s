@@ -1,4 +1,8 @@
 replicaCount: 2
+# R1 capacity test (2026-04-12): KEDA 일시 비활성화로 pod=2 고정
+# 테스트 종료 후 autoscaling.enabled 줄 제거하여 원복 필요
+autoscaling:
+  enabled: false
 image:
   repository: "harbor.go-ti.shop/prod/goti-ticketing"
   tag: "prod-52-c0a6964"
