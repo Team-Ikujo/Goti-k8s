@@ -31,11 +31,11 @@ spec:
               params:
                 nodeResourceUtilizationThresholds:
                   thresholds:
-                    cpu: 20
-                    memory: 20
+                    cpu: 40
+                    memory: 40
                   targetThresholds:
-                    cpu: 70
-                    memory: 70
+                    cpu: 80
+                    memory: 80
             RemovePodsViolatingTopologySpreadConstraint:
               enabled: true
   destination:
