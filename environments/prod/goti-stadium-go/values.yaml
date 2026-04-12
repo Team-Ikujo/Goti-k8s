@@ -1,3 +1,7 @@
+# TODO(jwks-automation): user-service JWT 키 회전 시 본 파일 line ~163의
+# inline jwks를 모든 Go 서비스(현재 6개)와 수동 동기화 필요. Phase 6.5 4서비스
+# 확대 전 ConfigMap 또는 RequestAuthentication.jwksUri 참조 방식으로 자동화.
+# 메모리: project_jwks_automation_todo.md
 nameOverride: goti-stadium-go
 
 service:
@@ -24,6 +28,10 @@ pdb:
   enabled: true
   minAvailable: 1
 
+# TODO(W7): Java goti-stadium VS와 동일 (host, path) 조합 → Istio
+# MULTIPLE_VIRTUAL_SERVICES_FOR_HOST. ApplicationSet entry 추가 전 단일 VS에서
+# weight 분배(Java 100 / Go 0) 방식으로 통합 필요. Option A 채택.
+# Swagger 라우팅(/api/docs/stadium/*)은 Go 미구현 전제로 누락 — Java 전용 유지.
 gateway:
   enabled: true
   hosts:
@@ -33,7 +41,7 @@ gateway:
   httpRoutes:
     - match:
         - uri:
-            exact: "/api/v1/stadiums"
+            prefix: "/api/v1/stadiums"
         - uri:
             prefix: "/api/v1/baseball-teams"
       route:
@@ -42,6 +50,9 @@ gateway:
             port:
               number: 8080
 
+# TODO(tuning): cron 윈도우/replica/threshold는 ticketing-go 값 그대로 복제.
+# stadium은 read-heavy 메타 서비스(Redis 캐시 hit율 높음)이므로 부하 관측 후
+# 윈도우 좁히기 또는 desiredReplicas/threshold 차등화 검토.
 autoscaling:
   enabled: true
   minReplicas: 2
@@ -58,11 +69,13 @@ autoscaling:
           desiredReplicas: "4"
       - type: prometheus
         metadata:
-          serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus
+          serverAddress: http://mimir-prod-query-frontend.monitoring.svc.cluster.local:8080/prometheus
           metricName: http_rps_stadium_go
           query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-stadium-go"}[1m]))
           threshold: "50"
 
+# TODO(verify): /healthz가 DB/Redis ping 포함 시 RDS 풀 초기화에 3~5s 소요
+# 가능 → liveness 재시작 루프 위험. 코드 확인 후 필요 시 liveness만 10s로 조정.
 probes:
   liveness:
     httpGet:
@@ -118,6 +131,7 @@ env:
   # --- OTel ---
   - name: STADIUM_OTEL_ENABLED
     value: "true"
+  # FQDN .cluster.local 명시 — Istio sidecar/DNS proxy 환경 resolve 안전성
   - name: STADIUM_OTEL_ENDPOINT
     value: "http://otel-collector.monitoring.svc.cluster.local:4317"
   - name: STADIUM_OTEL_SERVICE_NAME
@@ -134,6 +148,8 @@ configMap:
 # --- Istio 보안/네트워크 정책 ---
 istioPolicy:
   # ticketing(Java) + ticketing-go(Go) 양쪽 호출자 허용 (Phase 6.5 공존 기간)
+  # TODO(phase 7 / Step 4b): Java ticketing deprecation 후 from-ticketing 규칙
+  # 제거. Java SA 잔존 시 공격 표면 확대.
   authorizationPolicy:
     enabled: true
     allowFrom:
@@ -155,17 +171,20 @@ istioPolicy:
               - operation:
                   paths: ["/api/v1/stadiums*", "/api/v1/baseball-teams*"]
                   methods: ["GET"]
+  # TODO(consistency): Java goti-stadium values에는 issuer 미설정. JWT iss claim
+  # 실제 발급 값 확인 후 Java values에도 동일 issuer 추가해 일관성 확보.
   requestAuthentication:
     enabled: true
     issuer: "goti-user-service"
     jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"tXlfiSkDgSujDP6wUyQc57RrUGkTK6x3Fe-W5VhZhBumzDDoRNglcZ3C9AY_iF9GdlZOgcUdKLEVplLuEZGQpHUdA5CwgzQkwNXs242Mgo6QyHGdbDXZXEhe42vl1gcdgnahY7UQLcWGUr6--Fuc5G2LMW6rlTGwagT05SKzGRbTRef3gt8D8_hdsp654vnrdW2ReRQltnffHR9XL8buuKIduGW5vfiCVtNRFsaiT_o0SA86a5gK9qmXUGJIDPLc9onZ3v6G8gtFOES4MmR0elT2VTf22tM0GeIhnDOrjVRBa5I-M6c4OTMDrmeHKhUJygj-rjfNT5effpQzUz0_Xw"}]}'
+  # 의도: stadium은 public read API (경기장/팀 메타데이터 조회) — 비로그인 접근 허용.
+  # AuthorizationPolicy.allowFrom으로 mesh 내부 호출자(GET only) 별도 제한.
+  # 향후 쓰기 메서드 추가 시 chart의 jwtAuthorizationPolicy에 method 분리 필요.
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
-      - "/api/v1/stadiums"
-      - "/api/v1/stadiums/*"
-      - "/api/v1/baseball-teams"
-      - "/api/v1/baseball-teams/*"
+      - "/api/v1/stadiums*"
+      - "/api/v1/baseball-teams*"
       - "/healthz"
       - "/readyz"
       - "/metrics"

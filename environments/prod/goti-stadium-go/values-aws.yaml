@@ -14,6 +14,9 @@ externalSecret:
     kind: ClusterSecretStore
   remoteRef:
     path: /prod/stadium-go
+# TODO(ticketing-go-sync): "~/*.amazonaws.com"는 Istio Sidecar hosts 비표준
+# (`~`는 sidecar 자체 namespace 의미). 외부 도메인은 "*.amazonaws.com" 형식이 표준.
+# ticketing-go-aws.values도 동일 패턴 사용 중이므로 함께 동기 수정 필요.
 istioPolicy:
   sidecar:
     enabled: true
@@ -22,4 +25,4 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/*"
-          - "~/*.amazonaws.com"
+          - "*.amazonaws.com"
