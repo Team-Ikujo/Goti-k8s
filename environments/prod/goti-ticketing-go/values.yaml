@@ -24,8 +24,11 @@ pdb:
   enabled: true
   minAvailable: 1
 
+# CRITICAL: Java goti-ticketing VS와 동일 (host, path) 조합 → Istio
+# MULTIPLE_VIRTUAL_SERVICES_FOR_HOST. cutover 전까지 gateway.enabled=false로 유지.
+# cutover 시 Java values의 gateway.enabled=false로 전환 후 본 파일 true.
 gateway:
-  enabled: true
+  enabled: false
   hosts:
     - "go-ti.shop"
     - "api.go-ti.shop"
@@ -139,6 +142,15 @@ env:
       secretKeyRef:
         name: goti-ticketing-go-prod-secrets
         key: TICKETING_QUEUE_TOKEN_SECRET
+  # --- DB pool (SDD Step 5 / S4: RDS max_conn=200, 6서비스 공유) ---
+  - name: TICKETING_DATABASE_MAX_CONNS
+    value: "3"
+  - name: TICKETING_DATABASE_MIN_CONNS
+    value: "1"
+  - name: TICKETING_DATABASE_MAX_CONN_IDLE_TIME_SEC
+    value: "30"
+  - name: TICKETING_DATABASE_MAX_CONN_LIFETIME_SEC
+    value: "1800"
   # --- 서비스 간 통신 ---
   - name: TICKETING_SERVICES_STADIUM
     value: "http://goti-stadium-prod.goti.svc.cluster.local:8080"
