@@ -56,12 +56,12 @@ autoscaling:
     cooldownPeriod: 300
     triggers:
       # ticketing보다 10분 앞서 준비 (로그인 트래픽이 먼저 발생)
-      - type: cron
-        metadata:
-          timezone: "Asia/Seoul"
-          start: "50 10 * * *" # 10:50 KST — 티켓 오픈 10분 전 사전 준비 (로그인 트래픽 선행)
-          end: "0 13 * * *" # 13:00 KST
-          desiredReplicas: "5"
+      # - type: cron
+      #   metadata:
+      #     timezone: "Asia/Seoul"
+      #     start: "50 10 * * *" # 10:50 KST — 티켓 오픈 10분 전 사전 준비 (로그인 트래픽 선행)
+      #     end: "0 13 * * *" # 13:00 KST
+      #     desiredReplicas: "5"
       - type: prometheus
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus

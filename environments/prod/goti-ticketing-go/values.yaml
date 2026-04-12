@@ -64,12 +64,12 @@ autoscaling:
     enabled: true
     cooldownPeriod: 300
     triggers:
-      - type: cron
-        metadata:
-          timezone: "Asia/Seoul"
-          start: "30 10 * * *"
-          end: "0 13 * * *"
-          desiredReplicas: "4"
+      # - type: cron
+      #   metadata:
+      #     timezone: "Asia/Seoul"
+      #     start: "30 10 * * *"
+      #     end: "0 13 * * *"
+      #     desiredReplicas: "4"
       - type: prometheus
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus

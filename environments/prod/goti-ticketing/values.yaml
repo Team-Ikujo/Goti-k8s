@@ -69,12 +69,12 @@ autoscaling:
     triggers:
       # Cron: 티켓 오픈 30분 전(9:30 KST) ~ 정오(12:00 KST) 바닥 6개 보장
       # → Karpenter가 미리 노드 프로비저닝 → JVM 워밍업 완료 후 트래픽 수신
-      - type: cron
-        metadata:
-          timezone: "Asia/Seoul"
-          start: "30 10 * * *" # 10:30 KST — 티켓 오픈 30분 전 사전 준비
-          end: "0 13 * * *" # 13:00 KST — 판매 마감 후 일반 수준으로 복귀
-          desiredReplicas: "6"
+      # - type: cron
+      #   metadata:
+      #     timezone: "Asia/Seoul"
+      #     start: "30 10 * * *" # 10:30 KST — 티켓 오픈 30분 전 사전 준비
+      #     end: "0 13 * * *" # 13:00 KST — 판매 마감 후 일반 수준으로 복귀
+      #     desiredReplicas: "6"
       # Prometheus: 실제 RPS 반응형 추가 스케일 (Cron이 바닥 보장, Prometheus가 천장 제어)
       - type: prometheus
         metadata:
