@@ -48,6 +48,10 @@ spec:
             namespace: goti
             valuesFile: environments/prod/goti-queue-gate/values.yaml
             cloudValuesFile: environments/prod/goti-queue-gate/values-aws.yaml
+          - service: ticketing-go
+            namespace: goti
+            valuesFile: environments/prod/goti-ticketing-go/values.yaml
+            cloudValuesFile: environments/prod/goti-ticketing-go/values-aws.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod"
