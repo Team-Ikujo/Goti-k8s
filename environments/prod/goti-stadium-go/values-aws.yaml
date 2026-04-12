@@ -1,0 +1,25 @@
+# SG1: 0% weight 첫 배포 — replicaCount: 0 (Java goti-stadium-prod 무영향 보장)
+replicaCount: 0
+image:
+  repository: "harbor.go-ti.shop/prod/goti-stadium-go"
+  tag: "prod-1-0000000"
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: harbor-creds
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-ssm
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /prod/stadium-go
+istioPolicy:
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "~/*.amazonaws.com"
