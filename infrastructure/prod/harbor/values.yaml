@@ -56,6 +56,9 @@ core:
     kyverno.io/exclude-resource-limits: "true"
 
 jobservice:
+  # RWO PVC(gp3) 동시 마운트 불가 → Recreate 필수
+  updateStrategy:
+    type: Recreate
   podAnnotations:
     sidecar.istio.io/inject: "false"
     kyverno.io/exclude-image-tag-policy: "true"
@@ -63,6 +66,9 @@ jobservice:
     kyverno.io/exclude-resource-limits: "true"
 
 registry:
+  # RWO PVC(gp3) 동시 마운트 불가 → Recreate 필수
+  updateStrategy:
+    type: Recreate
   # 노드 교체 시 EBS 볼륨 퍼미션 재적용 보장 (2026-04-08 permission denied 장애 대응)
   podSecurityContext:
     fsGroup: 10000
