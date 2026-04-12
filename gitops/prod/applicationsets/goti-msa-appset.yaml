@@ -48,10 +48,11 @@ spec:
             namespace: goti
             valuesFile: environments/prod/goti-queue-gate/values.yaml
             cloudValuesFile: environments/prod/goti-queue-gate/values-aws.yaml
-          - service: ticketing-go
-            namespace: goti
-            valuesFile: environments/prod/goti-ticketing-go/values.yaml
-            cloudValuesFile: environments/prod/goti-ticketing-go/values-aws.yaml
+          # ticketing-go: AWS/GCP 양쪽 모두 아직 배포 보류 — Go 마이그레이션 준비 완료 후 재추가
+          # - service: ticketing-go
+          #   namespace: goti
+          #   valuesFile: environments/prod/goti-ticketing-go/values.yaml
+          #   cloudValuesFile: environments/prod/goti-ticketing-go/values-aws.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod"
