@@ -1,19 +1,141 @@
 nameOverride: goti-user
 replicaCount: 2
+
 image:
-  repository: "asia-northeast3-docker.pkg.dev/goti-gcp/goti-prod-registry/goti-user"
-  tag: "prod-46-e652be4"
+  repository: "asia-northeast3-docker.pkg.dev/goti-gcp/goti-prod-registry/goti-user-go"
+  tag: "latest"
   pullPolicy: IfNotPresent
-imagePullSecrets: []  # GKE 노드 SA에 cloud-platform scope → Artifact Registry 자동 인증
-podAnnotations:
-  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
+
+imagePullSecrets: []  # GKE Workload Identity → Artifact Registry 자동 인증
+
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+  interval: 15s
+  release: kube-prometheus-stack-prod-gcp
+
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+
 resources:
   requests:
-    cpu: 250m
-    memory: 512Mi
+    cpu: 50m
+    memory: 64Mi
   limits:
-    cpu: 1000m
-    memory: 1Gi
+    cpu: 200m
+    memory: 128Mi
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # Memorystore Redis TLS+AUTH — Istio mTLS와 충돌하므로 sidecar 우회
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+env:
+  # --- 인프라 (Secret에서 주입) ---
+  - name: USER_DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: DATASOURCE_URL
+  - name: USER_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: REDIS_URL
+  - name: USER_JWT_PUBLIC_KEY_PEM
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: JWT_PUBLIC_KEY_PEM
+  # --- OAuth (Secret에서 주입) ---
+  - name: USER_OAUTH_KAKAO_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: KAKAO_CLIENT_ID
+  - name: USER_OAUTH_KAKAO_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: KAKAO_CLIENT_SECRET
+  - name: USER_OAUTH_NAVER_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: NAVER_CLIENT_ID
+  - name: USER_OAUTH_NAVER_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: NAVER_CLIENT_SECRET
+  - name: USER_OAUTH_GOOGLE_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: GOOGLE_CLIENT_ID
+  - name: USER_OAUTH_GOOGLE_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: GOOGLE_CLIENT_SECRET
+  # --- SMS ---
+  - name: USER_COOLSMS_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: COOLSMS_API_KEY
+  - name: USER_COOLSMS_API_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: COOLSMS_API_SECRET
+  # --- OTel ---
+  - name: USER_OTEL_ENABLED
+    value: "true"
+  - name: USER_OTEL_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+  - name: USER_OTEL_SERVICE_NAME
+    value: "goti-user-go"
+  - name: OTEL_SERVICE_NAME
+    value: "goti-user-go"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+
+configMap:
+  enabled: false
+
 gateway:
   enabled: true
   hosts:
@@ -25,68 +147,36 @@ gateway:
         - uri:
             prefix: "/api/v1/auth"
         - uri:
+            prefix: "/api/v1/members"
+        - uri:
             prefix: "/api/v1/test"
       route:
         - destination:
             host: goti-user-prod
             port:
               number: 8080
-    - match:
-        - uri:
-            prefix: "/api/docs/user/swagger-ui/"
-      rewrite:
-        uri: "/swagger-ui/"
-      route:
-        - destination:
-            host: goti-user-prod
-            port:
-              number: 8080
-    - match:
-        - uri:
-            prefix: "/api/docs/user/v3/"
-      rewrite:
-        uri: "/v3/"
-      route:
-        - destination:
-            host: goti-user-prod
-            port:
-              number: 8080
-probes:
-  liveness:
-    httpGet:
-      path: /actuator/health/liveness
-      port: http
-    initialDelaySeconds: 60
-    periodSeconds: 10
-  readiness:
-    httpGet:
-      path: /actuator/health/readiness
-      port: http
-    initialDelaySeconds: 30
-    periodSeconds: 5
-env:
-  - name: SPRING_PROFILES_ACTIVE
-    value: "prod"
-  - name: JAVA_TOOL_OPTIONS
-    value: "-XX:MaxRAMPercentage=60.0"
-  - name: REDIS_PORT
-    value: "6379"
-  - name: SPRING_DATA_REDIS_SSL_ENABLED
-    value: "true"
-  - name: SPRING_DATA_REDIS_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: goti-user-prod-secrets
-        key: REDIS_AUTH_TOKEN
-  - name: GOTI_TEST_USER_ENABLED
-    value: "true"
-  - name: SPRINGDOC_SWAGGER_UI_CONFIG_URL
-    value: "/api/docs/user/v3/api-docs/swagger-config"
-  - name: SPRINGDOC_SWAGGER_UI_URL
-    value: "/api/docs/user/v3/api-docs"
-envFrom:
-  - secretRef:
-      name: goti-user-prod-secrets
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  keda:
+    enabled: true
+    cooldownPeriod: 300
+    triggers:
+      - type: cron
+        metadata:
+          timezone: "Asia/Seoul"
+          start: "50 10 * * *"
+          end: "0 13 * * *"
+          desiredReplicas: "3"  # Go는 cold start 빠름 (Java 5 → Go 3)
+      - type: prometheus
+        metadata:
+          serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus
+          metricName: http_rps_user_go
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-user-go"}[1m]))
+          threshold: "40"
+
 externalSecret:
   enabled: true
   refreshInterval: "1h"
@@ -94,19 +184,19 @@ externalSecret:
     name: gcp-store
     kind: ClusterSecretStore
   remoteRef:
-    # GCP Secret Manager 모드 — secret ID prefix regexp
-    # goti-prod-server-DATASOURCE_URL → DATASOURCE_URL (공통 서버 설정)
     nameRegexp: "^goti-prod-server-"
     nameRewriteSource: "^goti-prod-server-(.*)$"
-    # goti-prod-user-DATASOURCE_URL → DATASOURCE_URL (user 서비스 RO 계정으로 override)
     overrideNameRegexp: "^goti-prod-user-"
     overrideNameRewriteSource: "^goti-prod-user-(.*)$"
+
+# --- Istio 보안/네트워크 정책 ---
 istioPolicy:
   authorizationPolicy:
     enabled: true
     allowFrom: []
   requestAuthentication:
     enabled: true
+    issuer: "goti-user-service"
     jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"tXlfiSkDgSujDP6wUyQc57RrUGkTK6x3Fe-W5VhZhBumzDDoRNglcZ3C9AY_iF9GdlZOgcUdKLEVplLuEZGQpHUdA5CwgzQkwNXs242Mgo6QyHGdbDXZXEhe42vl1gcdgnahY7UQLcWGUr6--Fuc5G2LMW6rlTGwagT05SKzGRbTRef3gt8D8_hdsp654vnrdW2ReRQltnffHR9XL8buuKIduGW5vfiCVtNRFsaiT_o0SA86a5gK9qmXUGJIDPLc9onZ3v6G8gtFOES4MmR0elT2VTf22tM0GeIhnDOrjVRBa5I-M6c4OTMDrmeHKhUJygj-rjfNT5effpQzUz0_Xw"}]}'
   testIpAllowlist:
     enabled: false
@@ -117,12 +207,9 @@ istioPolicy:
       - "/api/v1/auth/*"
       - "/api/v1/test"
       - "/api/v1/test/*"
-      - "/actuator"
-      - "/actuator/*"
-      - "/swagger-ui"
-      - "/swagger-ui/*"
-      - "/v3/api-docs"
-      - "/v3/api-docs/*"
+      - "/healthz"
+      - "/readyz"
+      - "/metrics"
       - "/.well-known"
       - "/.well-known/*"
   destinationRule:
@@ -134,9 +221,7 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/*"
-          - "kafka/*"
           - "~/*.googleapis.com"   # OAuth (Google)
           - "~/*.naver.com"        # OAuth (Naver)
           - "~/*.kakao.com"        # OAuth (Kakao)
           - "~/*.nurigo.com"       # SMS (CoolSMS)
-          # AWS ~/*.amazonaws.com 제외 — GCP는 Secret Manager를 ESO가 처리

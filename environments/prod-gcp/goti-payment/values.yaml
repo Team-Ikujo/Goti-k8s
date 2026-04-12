@@ -1,49 +1,136 @@
 nameOverride: goti-payment
 replicaCount: 2
+
 image:
-  repository: "asia-northeast3-docker.pkg.dev/goti-gcp/goti-prod-registry/goti-payment"
-  tag: "prod-43-6f4c644"
+  repository: "asia-northeast3-docker.pkg.dev/goti-gcp/goti-prod-registry/goti-payment-go"
+  tag: "latest"
   pullPolicy: IfNotPresent
-imagePullSecrets: []
-podAnnotations:
-  instrumentation.opentelemetry.io/inject-java: "goti/goti-java"
-resources:
-  requests:
-    cpu: 250m
-    memory: 512Mi
-  limits:
-    cpu: 1000m
-    memory: 1Gi
+
+imagePullSecrets: []  # GKE Workload Identity → Artifact Registry 자동 인증
+
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+  interval: 15s
+  release: kube-prometheus-stack-prod-gcp
+
 probes:
   liveness:
     httpGet:
-      path: /actuator/health/liveness
+      path: /healthz
       port: http
-    initialDelaySeconds: 60
+    initialDelaySeconds: 3
     periodSeconds: 10
+    failureThreshold: 3
   readiness:
     httpGet:
-      path: /actuator/health/readiness
+      path: /readyz
       port: http
-    initialDelaySeconds: 30
+    initialDelaySeconds: 3
     periodSeconds: 5
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # Memorystore Redis TLS+AUTH — Istio mTLS와 충돌하므로 sidecar 우회
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
 env:
-  - name: SPRING_PROFILES_ACTIVE
-    value: "prod"
-  - name: JAVA_TOOL_OPTIONS
-    value: "-XX:MaxRAMPercentage=60.0"
-  - name: REDIS_PORT
-    value: "6379"
-  - name: SPRING_DATA_REDIS_SSL_ENABLED
-    value: "true"
-  - name: SPRING_DATA_REDIS_PASSWORD
+  # --- 인프라 (Secret에서 주입) ---
+  - name: PAYMENT_DATABASE_URL
     valueFrom:
       secretKeyRef:
         name: goti-payment-prod-secrets
-        key: REDIS_AUTH_TOKEN
-envFrom:
-  - secretRef:
-      name: goti-payment-prod-secrets
+        key: DATASOURCE_URL
+  - name: PAYMENT_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-payment-prod-secrets
+        key: REDIS_URL
+  - name: PAYMENT_JWT_PUBLIC_KEY_PEM
+    valueFrom:
+      secretKeyRef:
+        name: goti-payment-prod-secrets
+        key: JWT_PUBLIC_KEY_PEM
+  # --- OTel ---
+  - name: PAYMENT_OTEL_ENABLED
+    value: "true"
+  - name: PAYMENT_OTEL_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+  - name: PAYMENT_OTEL_SERVICE_NAME
+    value: "goti-payment-go"
+  - name: OTEL_SERVICE_NAME
+    value: "goti-payment-go"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+
+configMap:
+  enabled: false
+
+gateway:
+  enabled: true
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/payments"
+      route:
+        - destination:
+            host: goti-payment-prod
+            port:
+              number: 8080
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  keda:
+    enabled: true
+    cooldownPeriod: 300
+    triggers:
+      - type: cron
+        metadata:
+          timezone: "Asia/Seoul"
+          start: "30 10 * * *"
+          end: "0 13 * * *"
+          desiredReplicas: "2"  # Go는 cold start 빠름 (Java 4 → Go 2)
+      - type: prometheus
+        metadata:
+          serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus
+          metricName: http_rps_payment_go
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-payment-go"}[1m]))
+          threshold: "30"
+
 externalSecret:
   enabled: true
   refreshInterval: "1h"
@@ -55,18 +142,32 @@ externalSecret:
     nameRewriteSource: "^goti-prod-server-(.*)$"
     overrideNameRegexp: "^goti-prod-payment-"
     overrideNameRewriteSource: "^goti-prod-payment-(.*)$"
+
+# --- Istio 보안/네트워크 정책 ---
 istioPolicy:
+  # resale → payment (양도 결제/환불)
   authorizationPolicy:
     enabled: true
-    allowFrom: []
+    allowFrom:
+      - name: from-resale
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-resale-prod"]
+            to:
+              - operation:
+                  paths: ["/api/v1/resales/payments", "/api/v1/resales/payments/*"]
+                  methods: ["POST", "PATCH"]
   requestAuthentication:
     enabled: true
+    issuer: "goti-user-service"
     jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"tXlfiSkDgSujDP6wUyQc57RrUGkTK6x3Fe-W5VhZhBumzDDoRNglcZ3C9AY_iF9GdlZOgcUdKLEVplLuEZGQpHUdA5CwgzQkwNXs242Mgo6QyHGdbDXZXEhe42vl1gcdgnahY7UQLcWGUr6--Fuc5G2LMW6rlTGwagT05SKzGRbTRef3gt8D8_hdsp654vnrdW2ReRQltnffHR9XL8buuKIduGW5vfiCVtNRFsaiT_o0SA86a5gK9qmXUGJIDPLc9onZ3v6G8gtFOES4MmR0elT2VTf22tM0GeIhnDOrjVRBa5I-M6c4OTMDrmeHKhUJygj-rjfNT5effpQzUz0_Xw"}]}'
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
-      - "/actuator"
-      - "/actuator/*"
+      - "/healthz"
+      - "/readyz"
+      - "/metrics"
   destinationRule:
     enabled: true
   sidecar:
@@ -76,4 +177,3 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/*"
-          - "kafka/*"
