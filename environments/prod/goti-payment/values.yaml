@@ -52,12 +52,12 @@ autoscaling:
     cooldownPeriod: 300
     triggers:
       # ticketing과 동시 준비 (결제는 ticketing 직후 연속으로 발생)
-      - type: cron
-        metadata:
-          timezone: "Asia/Seoul"
-          start: "30 10 * * *" # 10:30 KST — 티켓 오픈 30분 전 사전 준비
-          end: "0 13 * * *" # 13:00 KST
-          desiredReplicas: "4"
+      # - type: cron
+      #   metadata:
+      #     timezone: "Asia/Seoul"
+      #     start: "30 10 * * *" # 10:30 KST — 티켓 오픈 30분 전 사전 준비
+      #     end: "0 13 * * *" # 13:00 KST
+      #     desiredReplicas: "4"
       - type: prometheus
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus
