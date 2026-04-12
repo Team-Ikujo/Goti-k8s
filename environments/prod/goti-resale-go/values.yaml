@@ -1,0 +1,186 @@
+# TODO(jwks-automation): user-service JWT 키 회전 시 본 파일 inline jwks를
+# 모든 Go 서비스와 수동 동기화 필요. 메모리: project_jwks_automation_todo.md
+nameOverride: goti-resale-go
+
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+  interval: 15s
+  release: kube-prometheus-stack-prod
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 256Mi
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+# CRITICAL: Java goti-resale VS와 동일 (host, path) 조합 → Istio
+# MULTIPLE_VIRTUAL_SERVICES_FOR_HOST. gateway.enabled=false로 유지.
+# cutover 시 Java values의 gateway.enabled=false로 전환 후 본 파일 true.
+# Swagger 라우팅은 Go 미구현 전제로 누락 — Java 전용 유지.
+gateway:
+  enabled: false
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/resales"
+      route:
+        - destination:
+            host: goti-resale-go-prod
+            port:
+              number: 8080
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 6
+  keda:
+    enabled: true
+    cooldownPeriod: 180
+    triggers:
+      - type: prometheus
+        metadata:
+          serverAddress: http://mimir-prod-query-frontend.monitoring.svc.cluster.local:8080/prometheus
+          metricName: http_rps_resale_go
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-resale-go"}[1m]))
+          threshold: "20"
+
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+securityContext:
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+# 환경변수: RESALE_ prefix
+env:
+  # --- 인프라 (Secret에서 주입) ---
+  - name: RESALE_DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-resale-go-prod-secrets
+        key: RESALE_DATABASE_URL
+  - name: RESALE_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-resale-go-prod-secrets
+        key: RESALE_REDIS_URL
+  - name: RESALE_JWT_PUBLIC_KEY_PEM
+    valueFrom:
+      secretKeyRef:
+        name: goti-resale-go-prod-secrets
+        key: RESALE_JWT_PUBLIC_KEY_PEM
+  # --- DB pool (SDD Step 5 / S4) ---
+  - name: RESALE_DATABASE_MAX_CONNS
+    value: "3"
+  - name: RESALE_DATABASE_MIN_CONNS
+    value: "1"
+  - name: RESALE_DATABASE_MAX_CONN_IDLE_TIME_SEC
+    value: "30"
+  - name: RESALE_DATABASE_MAX_CONN_LIFETIME_SEC
+    value: "1800"
+  # --- 서비스 간 통신 ---
+  - name: RESALE_SERVICES_TICKETING
+    value: "http://goti-ticketing-go-prod.goti.svc.cluster.local:8080"
+  - name: RESALE_SERVICES_PAYMENT
+    value: "http://goti-payment-go-prod.goti.svc.cluster.local:8080"
+  # --- OTel ---
+  - name: RESALE_OTEL_ENABLED
+    value: "true"
+  - name: RESALE_OTEL_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+  - name: RESALE_OTEL_SERVICE_NAME
+    value: "goti-resale-go"
+  - name: OTEL_SERVICE_NAME
+    value: "goti-resale-go"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+
+configMap:
+  enabled: false
+
+# --- Istio 보안/네트워크 정책 ---
+# TODO(phase 7): Java payment/ticketing deprecation 후 from-X 규칙을 -go SA로 변경.
+istioPolicy:
+  authorizationPolicy:
+    enabled: true
+    allowFrom:
+      - name: from-payment
+        rules:
+          - from:
+              - source:
+                  principals:
+                    - "cluster.local/ns/goti/sa/goti-payment-prod"
+                    - "cluster.local/ns/goti/sa/goti-payment-go-prod"
+            to:
+              - operation:
+                  paths: ["/api/v1/resales/orders/*"]
+                  methods: ["GET", "PATCH"]
+      - name: from-ticketing
+        rules:
+          - from:
+              - source:
+                  principals:
+                    - "cluster.local/ns/goti/sa/goti-ticketing-prod"
+                    - "cluster.local/ns/goti/sa/goti-ticketing-go-prod"
+            to:
+              - operation:
+                  paths: ["/api/v1/resales/listings/count"]
+                  methods: ["GET"]
+  requestAuthentication:
+    enabled: true
+    issuer: "goti-user-service"
+    jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"tXlfiSkDgSujDP6wUyQc57RrUGkTK6x3Fe-W5VhZhBumzDDoRNglcZ3C9AY_iF9GdlZOgcUdKLEVplLuEZGQpHUdA5CwgzQkwNXs242Mgo6QyHGdbDXZXEhe42vl1gcdgnahY7UQLcWGUr6--Fuc5G2LMW6rlTGwagT05SKzGRbTRef3gt8D8_hdsp654vnrdW2ReRQltnffHR9XL8buuKIduGW5vfiCVtNRFsaiT_o0SA86a5gK9qmXUGJIDPLc9onZ3v6G8gtFOES4MmR0elT2VTf22tM0GeIhnDOrjVRBa5I-M6c4OTMDrmeHKhUJygj-rjfNT5effpQzUz0_Xw"}]}'
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/api/v1/resales/histories"
+      - "/api/v1/resales/histories/*"
+      - "/api/v1/resales/listings/count"
+      - "/api/v1/resales/orders/purchases"
+      - "/healthz"
+      - "/readyz"
+      - "/metrics"
+  destinationRule:
+    enabled: true

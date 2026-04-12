@@ -1,0 +1,24 @@
+replicaCount: 0
+image:
+  repository: "harbor.go-ti.shop/prod/goti-resale-go"
+  tag: "prod-1-0000000"
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: harbor-creds
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: aws-ssm
+    kind: ClusterSecretStore
+  remoteRef:
+    path: /prod/resale-go
+istioPolicy:
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "*.amazonaws.com"
