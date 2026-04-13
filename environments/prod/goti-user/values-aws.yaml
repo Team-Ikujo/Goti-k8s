@@ -1,4 +1,4 @@
-replicaCount: 4
+replicaCount: 0
 image:
   repository: "harbor.go-ti.shop/prod/goti-user"
   tag: "prod-52-c0a6964"
@@ -28,3 +28,7 @@ istioPolicy:
           - "~/*.kakao.com"
           - "~/*.nurigo.com"
           - "~/*.amazonaws.com"
+
+# Cutover: Java 비활성, Go 라우팅 take-over
+gateway:
+  enabled: false
