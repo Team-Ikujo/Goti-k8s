@@ -81,9 +81,9 @@ env:
         key: JWT_PUBLIC_KEY_PEM
   # --- 서비스 간 통신 ---
   - name: RESALE_SERVICES_TICKETING
-    value: "http://goti-ticketing-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-ticketing-prod-gcp.goti.svc.cluster.local:8080"
   - name: RESALE_SERVICES_PAYMENT
-    value: "http://goti-payment-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-payment-prod-gcp.goti.svc.cluster.local:8080"
   # --- OTel ---
   - name: RESALE_OTEL_ENABLED
     value: "true"

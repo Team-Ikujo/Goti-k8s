@@ -90,6 +90,11 @@ env:
     value: "goti-payment-go"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+  # --- 서비스 간 통신 (payment → ticketing, resale) ---
+  - name: PAYMENT_SERVICES_TICKETING
+    value: "http://goti-ticketing-prod-gcp.goti.svc.cluster.local:8080"
+  - name: PAYMENT_SERVICES_RESALE
+    value: "http://goti-resale-prod-gcp.goti.svc.cluster.local:8080"
 
 configMap:
   enabled: false
