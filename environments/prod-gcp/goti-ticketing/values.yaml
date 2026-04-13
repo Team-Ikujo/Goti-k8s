@@ -67,27 +67,27 @@ env:
   - name: TICKETING_DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: goti-ticketing-prod-secrets
+        name: goti-ticketing-prod-gcp-secrets
         key: DATASOURCE_URL
   - name: TICKETING_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-ticketing-prod-secrets
+        name: goti-ticketing-prod-gcp-secrets
         key: REDIS_URL
   - name: TICKETING_JWT_PUBLIC_KEY_PEM
     valueFrom:
       secretKeyRef:
-        name: goti-ticketing-prod-secrets
+        name: goti-ticketing-prod-gcp-secrets
         key: JWT_PUBLIC_KEY_PEM
   - name: TICKETING_TICKETING_QR_SECRET
     valueFrom:
       secretKeyRef:
-        name: goti-ticketing-prod-secrets
+        name: goti-ticketing-prod-gcp-secrets
         key: TICKETING_QR_SECRET
   - name: TICKETING_QUEUE_TOKEN_SECRET
     valueFrom:
       secretKeyRef:
-        name: goti-ticketing-prod-secrets
+        name: goti-ticketing-prod-gcp-secrets
         key: QUEUE_TOKEN_SECRET
   # --- 서비스 간 통신 ---
   - name: TICKETING_SERVICES_STADIUM

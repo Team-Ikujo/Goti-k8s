@@ -67,59 +67,59 @@ env:
   - name: USER_DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: goti-user-prod-secrets
+        name: goti-user-prod-gcp-secrets
         key: DATASOURCE_URL
   - name: USER_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-user-prod-secrets
+        name: goti-user-prod-gcp-secrets
         key: REDIS_URL
   - name: USER_JWT_PUBLIC_KEY_PEM
     valueFrom:
       secretKeyRef:
-        name: goti-user-prod-secrets
+        name: goti-user-prod-gcp-secrets
         key: JWT_PUBLIC_KEY_PEM
   # --- OAuth (Secret에서 주입) ---
   - name: USER_OAUTH_KAKAO_CLIENT_ID
     valueFrom:
       secretKeyRef:
-        name: goti-user-prod-secrets
+        name: goti-user-prod-gcp-secrets
         key: KAKAO_CLIENT_ID
   - name: USER_OAUTH_KAKAO_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
-        name: goti-user-prod-secrets
+        name: goti-user-prod-gcp-secrets
         key: KAKAO_CLIENT_SECRET
   - name: USER_OAUTH_NAVER_CLIENT_ID
     valueFrom:
       secretKeyRef:
-        name: goti-user-prod-secrets
+        name: goti-user-prod-gcp-secrets
         key: NAVER_CLIENT_ID
   - name: USER_OAUTH_NAVER_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
-        name: goti-user-prod-secrets
+        name: goti-user-prod-gcp-secrets
         key: NAVER_CLIENT_SECRET
   - name: USER_OAUTH_GOOGLE_CLIENT_ID
     valueFrom:
       secretKeyRef:
-        name: goti-user-prod-secrets
+        name: goti-user-prod-gcp-secrets
         key: GOOGLE_CLIENT_ID
   - name: USER_OAUTH_GOOGLE_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
-        name: goti-user-prod-secrets
+        name: goti-user-prod-gcp-secrets
         key: GOOGLE_CLIENT_SECRET
   # --- SMS ---
   - name: USER_COOLSMS_API_KEY
     valueFrom:
       secretKeyRef:
-        name: goti-user-prod-secrets
+        name: goti-user-prod-gcp-secrets
         key: COOLSMS_API_KEY
   - name: USER_COOLSMS_API_SECRET
     valueFrom:
       secretKeyRef:
-        name: goti-user-prod-secrets
+        name: goti-user-prod-gcp-secrets
         key: COOLSMS_API_SECRET
   # --- OTel ---
   - name: USER_OTEL_ENABLED

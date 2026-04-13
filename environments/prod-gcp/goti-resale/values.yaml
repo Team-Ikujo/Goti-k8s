@@ -67,17 +67,17 @@ env:
   - name: RESALE_DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: goti-resale-prod-secrets
+        name: goti-resale-prod-gcp-secrets
         key: DATASOURCE_URL
   - name: RESALE_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-resale-prod-secrets
+        name: goti-resale-prod-gcp-secrets
         key: REDIS_URL
   - name: RESALE_JWT_PUBLIC_KEY_PEM
     valueFrom:
       secretKeyRef:
-        name: goti-resale-prod-secrets
+        name: goti-resale-prod-gcp-secrets
         key: JWT_PUBLIC_KEY_PEM
   # --- 서비스 간 통신 ---
   - name: RESALE_SERVICES_TICKETING

@@ -49,12 +49,12 @@ env:
   - name: QUEUEGATE_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-queue-gate-prod-secrets
+        name: goti-queue-gate-prod-gcp-secrets
         key: QUEUEGATE_REDIS_URL
   - name: QUEUEGATE_GATE_QUEUE_URL
     valueFrom:
       secretKeyRef:
-        name: goti-queue-gate-prod-secrets
+        name: goti-queue-gate-prod-gcp-secrets
         key: QUEUEGATE_GATE_QUEUE_URL
 
 podAnnotations:
