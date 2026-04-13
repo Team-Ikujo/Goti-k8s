@@ -13,24 +13,28 @@ spec:
               elements:
                 - env: prod-gcp
           - list:
-              elements:
-                - component: kube-prometheus-stack
-                  chartRepo: https://prometheus-community.github.io/helm-charts
-                  chartName: kube-prometheus-stack
-                  chartVersion: "82.4.3"
-                  valuesFile: values-stacks/prod/kube-prometheus-stack-values.yaml
-                - component: prometheus-blackbox-exporter
-                  chartRepo: https://prometheus-community.github.io/helm-charts
-                  chartName: prometheus-blackbox-exporter
-                  chartVersion: "9.5.0"
-                  valuesFile: values-stacks/prod/blackbox-exporter-values.yaml
-                - component: loki
-                  chartRepo: https://grafana.github.io/helm-charts
-                  chartName: loki
-                  chartVersion: "6.53.0"
-                  valuesFile: values-stacks/prod/loki-values.yaml
-                # tempo/mimir/pyroscope: SSD_TOTAL_GB 300GB 쿼터 헤드룸 확보 위해 bring-up 기간 임시 제거.
-                # 쿼터 상향(≥500GB) 후 복구. 이슈: 2026-04-13 bring-up
+              # 전체 모니터링 스택 일시 비활성화 — 2026-04-13 bring-up
+              # 원인: SSD_TOTAL_GB=300 (free→paid 전환 직후 quota), CPU 압박
+              # server/Go 서비스 동작 검증 우선. quota 증설 후 순차 복구:
+              #   1) SSD 500GB+ 승인 → kube-prometheus-stack, loki 복구
+              #   2) SSD 1000GB+ 승인 → tempo, mimir, pyroscope 복구
+              #   3) otel-collector: app OTel 송신 정상화 후 복구
+              elements: []
+                # - component: kube-prometheus-stack
+                #   chartRepo: https://prometheus-community.github.io/helm-charts
+                #   chartName: kube-prometheus-stack
+                #   chartVersion: "82.4.3"
+                #   valuesFile: values-stacks/prod/kube-prometheus-stack-values.yaml
+                # - component: prometheus-blackbox-exporter
+                #   chartRepo: https://prometheus-community.github.io/helm-charts
+                #   chartName: prometheus-blackbox-exporter
+                #   chartVersion: "9.5.0"
+                #   valuesFile: values-stacks/prod/blackbox-exporter-values.yaml
+                # - component: loki
+                #   chartRepo: https://grafana.github.io/helm-charts
+                #   chartName: loki
+                #   chartVersion: "6.53.0"
+                #   valuesFile: values-stacks/prod/loki-values.yaml
                 # - component: tempo
                 #   chartRepo: https://grafana-community.github.io/helm-charts
                 #   chartName: tempo
@@ -46,16 +50,16 @@ spec:
                 #   chartName: pyroscope
                 #   chartVersion: "1.18.1"
                 #   valuesFile: values-stacks/prod/pyroscope-values.yaml
-                - component: otel-collector-front
-                  chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
-                  chartName: opentelemetry-collector
-                  chartVersion: "0.147.1"
-                  valuesFile: values-stacks/prod/otel-collector-front-values.yaml
-                - component: otel-collector-back
-                  chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
-                  chartName: opentelemetry-collector
-                  chartVersion: "0.147.1"
-                  valuesFile: values-stacks/prod/otel-collector-back-values.yaml
+                # - component: otel-collector-front
+                #   chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
+                #   chartName: opentelemetry-collector
+                #   chartVersion: "0.147.1"
+                #   valuesFile: values-stacks/prod/otel-collector-front-values.yaml
+                # - component: otel-collector-back
+                #   chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
+                #   chartName: opentelemetry-collector
+                #   chartVersion: "0.147.1"
+                #   valuesFile: values-stacks/prod/otel-collector-back-values.yaml
   template:
     metadata:
       name: "{{component}}-{{env}}"
