@@ -69,7 +69,7 @@ spec:
             valueFiles:
               - "$values/{{valuesFile}}"
         - repoURL: "https://github.com/Team-Ikujo/Goti-monitoring.git"
-          targetRevision: main
+          targetRevision: feature/go-cutover-infra
           ref: values
       destination:
         server: "https://kubernetes.default.svc"
