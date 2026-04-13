@@ -162,7 +162,7 @@ istioPolicy:
                   principals: ["cluster.local/ns/goti/sa/goti-resale-prod-gcp"]
             to:
               - operation:
-                  paths: ["/api/v1/resales/payments", "/api/v1/resales/payments/*"]
+                  paths: ["/api/v1/payments/resales", "/api/v1/payments/resales/*"]
                   methods: ["POST", "PATCH"]
   requestAuthentication:
     enabled: true
