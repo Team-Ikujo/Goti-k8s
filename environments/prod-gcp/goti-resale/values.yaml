@@ -1,25 +1,21 @@
 nameOverride: goti-resale
 replicaCount: 1
-
 image:
-  repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-resale-go"
-  tag: "bootstrap-20260414-servicesfix"
+  repository: "harbor.go-ti.shop/prod/goti-resale-go"
+  tag: "prod-7-5577103"
   pullPolicy: IfNotPresent
-
-imagePullSecrets: []  # GKE Workload Identity → Artifact Registry 자동 인증
-
-service:
+imagePullSecrets:
+  - name: harbor-creds
+service: # GKE Workload Identity → Artifact Registry 자동 인증
   type: ClusterIP
   port: 8080
   name: http
-
 serviceMonitor:
   enabled: true
   port: http
   path: /metrics
   interval: 15s
   release: kube-prometheus-stack-prod-gcp
-
 probes:
   liveness:
     httpGet:
@@ -35,7 +31,6 @@ probes:
     initialDelaySeconds: 3
     periodSeconds: 5
     failureThreshold: 3
-
 resources:
   requests:
     cpu: 50m
@@ -43,17 +38,14 @@ resources:
   limits:
     cpu: 200m
     memory: 128Mi
-
 podAnnotations:
   sidecar.istio.io/inject: "true"
   # Memorystore Redis TLS+AUTH — Istio mTLS와 충돌하므로 sidecar 우회
   traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
-
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 65532
   fsGroup: 65532
-
 securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
@@ -61,7 +53,6 @@ securityContext:
     drop: ["ALL"]
   seccompProfile:
     type: RuntimeDefault
-
 env:
   # --- 인프라 (Secret에서 주입) ---
   - name: RESALE_DATABASE_URL
@@ -95,10 +86,8 @@ env:
     value: "goti-resale-go"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "http://otel-collector.monitoring.svc.cluster.local:4317"
-
 configMap:
   enabled: false
-
 gateway:
   enabled: true
   hosts:
@@ -115,7 +104,6 @@ gateway:
             host: goti-resale-prod-gcp
             port:
               number: 8080
-
 autoscaling:
   enabled: true
   minReplicas: 1
@@ -130,7 +118,6 @@ autoscaling:
           metricName: http_rps_resale_go
           query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-resale-go"}[1m]))
           threshold: "20"
-
 externalSecret:
   enabled: true
   refreshInterval: "1h"
@@ -142,7 +129,6 @@ externalSecret:
     nameRewriteSource: "^goti-prod-server-(.*)$"
     overrideNameRegexp: "^goti-prod-resale-"
     overrideNameRewriteSource: "^goti-prod-resale-(.*)$"
-
 # --- Istio 보안/네트워크 정책 ---
 istioPolicy:
   # payment → resale (양도 완료/거래 조회), ticketing → resale (마이페이지 양도 조회)

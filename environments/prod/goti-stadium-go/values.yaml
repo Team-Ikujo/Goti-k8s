@@ -3,19 +3,16 @@
 # 확대 전 ConfigMap 또는 RequestAuthentication.jwksUri 참조 방식으로 자동화.
 # 메모리: project_jwks_automation_todo.md
 nameOverride: goti-stadium-go
-
 service:
   type: ClusterIP
   port: 8080
   name: http
-
 serviceMonitor:
   enabled: true
   port: http
   path: /metrics
   interval: 15s
   release: kube-prometheus-stack-prod
-
 resources:
   requests:
     cpu: 100m
@@ -23,11 +20,9 @@ resources:
   limits:
     cpu: 1000m
     memory: 256Mi
-
 pdb:
   enabled: true
   minAvailable: 1
-
 # CRITICAL: Java goti-stadium VS와 동일 (host, path) 조합 → Istio
 # MULTIPLE_VIRTUAL_SERVICES_FOR_HOST. cutover 전까지 gateway.enabled=false로 유지.
 # cutover 시 Java values의 gateway.enabled=false로 전환 후 본 파일 true.
@@ -49,7 +44,6 @@ gateway:
             host: goti-stadium-go-prod
             port:
               number: 8080
-
 # TODO(tuning): cron 윈도우/replica/threshold는 ticketing-go 값 그대로 복제.
 # stadium은 read-heavy 메타 서비스(Redis 캐시 hit율 높음)이므로 부하 관측 후
 # 윈도우 좁히기 또는 desiredReplicas/threshold 차등화 검토.
@@ -73,7 +67,6 @@ autoscaling:
           metricName: http_rps_stadium_go
           query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-stadium-go"}[1m]))
           threshold: "50"
-
 # TODO(verify): /healthz가 DB/Redis ping 포함 시 RDS 풀 초기화에 3~5s 소요
 # 가능 → liveness 재시작 루프 위험. 코드 확인 후 필요 시 liveness만 10s로 조정.
 probes:
@@ -91,24 +84,20 @@ probes:
     initialDelaySeconds: 3
     periodSeconds: 5
     failureThreshold: 3
-
 podAnnotations:
   sidecar.istio.io/inject: "true"
   # ElastiCache Redis TLS — Istio sidecar 우회
   traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
-
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 65532
   fsGroup: 65532
-
 securityContext:
   readOnlyRootFilesystem: true
   capabilities:
     drop: ["ALL"]
   seccompProfile:
     type: RuntimeDefault
-
 # 환경변수: STADIUM_ prefix (Viper가 config.Load("stadium")에서 자동 생성)
 # envFrom 사용하지 않음 — 개별 매핑으로 명시적 관리
 env:
@@ -150,10 +139,8 @@ env:
     value: "goti-stadium-go"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "http://otel-collector.monitoring.svc.cluster.local:4317"
-
 configMap:
   enabled: false
-
 # --- Istio 보안/네트워크 정책 ---
 istioPolicy:
   # ticketing(Java) + ticketing-go(Go) 양쪽 호출자 허용 (Phase 6.5 공존 기간)
@@ -199,3 +186,9 @@ istioPolicy:
       - "/metrics"
   destinationRule:
     enabled: true
+image:
+  repository: harbor.go-ti.shop/prod/goti-stadium-go
+  tag: prod-7-5577103
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: harbor-creds
