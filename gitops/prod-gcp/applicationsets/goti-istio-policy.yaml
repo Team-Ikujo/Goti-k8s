@@ -1,0 +1,36 @@
+# Goti namespace Istio 정책 (prod-gcp)
+# deny-all + allow rules + ServiceEntry를 하나의 Helm chart로 원자적 배포.
+# AWS prod와 동일 chart, values만 GCP 오버라이드 (Gateway SA namespace 차이).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: goti-istio-policy-gcp
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+spec:
+  project: goti
+  sources:
+    - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+      targetRevision: main
+      path: "infrastructure/prod/istio/goti-policy"
+      helm:
+        valueFiles:
+          - values.yaml
+          - values-gcp.yaml
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: goti
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
