@@ -68,14 +68,14 @@ gateway:
     - "go-ti.shop"
     - "api.go-ti.shop"
     - "gcp-api.go-ti.shop"
-  gatewayRef: "istio-system/goti-shared-gateway"
+  gatewayRef: "istio-ingress/goti-shared-gateway"
   httpRoutes:
     - match:
         - uri:
             prefix: "/gate"
       route:
         - destination:
-            host: goti-queue-gate-prod
+            host: goti-queue-gate-prod-gcp
             port:
               number: 8080
 
