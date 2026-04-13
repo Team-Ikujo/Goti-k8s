@@ -1,19 +1,16 @@
 # TODO(jwks-automation): user-service JWT 키 회전 시 본 파일 inline jwks를
 # 모든 Go 서비스와 수동 동기화 필요. 메모리: project_jwks_automation_todo.md
 nameOverride: goti-resale-go
-
 service:
   type: ClusterIP
   port: 8080
   name: http
-
 serviceMonitor:
   enabled: true
   port: http
   path: /metrics
   interval: 15s
   release: kube-prometheus-stack-prod
-
 resources:
   requests:
     cpu: 100m
@@ -21,11 +18,9 @@ resources:
   limits:
     cpu: 1000m
     memory: 256Mi
-
 pdb:
   enabled: true
   minAvailable: 1
-
 # CRITICAL: Java goti-resale VS와 동일 (host, path) 조합 → Istio
 # MULTIPLE_VIRTUAL_SERVICES_FOR_HOST. gateway.enabled=false로 유지.
 # cutover 시 Java values의 gateway.enabled=false로 전환 후 본 파일 true.
@@ -45,7 +40,6 @@ gateway:
             host: goti-resale-go-prod
             port:
               number: 8080
-
 autoscaling:
   enabled: true
   minReplicas: 1
@@ -60,7 +54,6 @@ autoscaling:
           metricName: http_rps_resale_go
           query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-resale-go"}[1m]))
           threshold: "20"
-
 probes:
   liveness:
     httpGet:
@@ -76,23 +69,19 @@ probes:
     initialDelaySeconds: 3
     periodSeconds: 5
     failureThreshold: 3
-
 podAnnotations:
   sidecar.istio.io/inject: "true"
   traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
-
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 65532
   fsGroup: 65532
-
 securityContext:
   readOnlyRootFilesystem: true
   capabilities:
     drop: ["ALL"]
   seccompProfile:
     type: RuntimeDefault
-
 # 환경변수: RESALE_ prefix
 env:
   # --- 인프라 (Secret에서 주입) ---
@@ -136,10 +125,8 @@ env:
     value: "goti-resale-go"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "http://otel-collector.monitoring.svc.cluster.local:4317"
-
 configMap:
   enabled: false
-
 # --- Istio 보안/네트워크 정책 ---
 # TODO(phase 7): Java payment/ticketing deprecation 후 from-X 규칙을 -go SA로 변경.
 istioPolicy:
@@ -184,3 +171,9 @@ istioPolicy:
       - "/metrics"
   destinationRule:
     enabled: true
+image:
+  repository: harbor.go-ti.shop/prod/goti-resale-go
+  tag: prod-7-5577103
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: harbor-creds
