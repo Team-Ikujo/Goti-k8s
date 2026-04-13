@@ -126,14 +126,16 @@ env:
   - name: QUEUE_OTEL_ENABLED
     value: "true"
   - name: QUEUE_OTEL_ENDPOINT
-    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+    value: "http://otel-front-prod.monitoring.svc:4317"
   - name: QUEUE_OTEL_SERVICE_NAME
     value: "goti-queue-go"
   # OTel SDK 표준 환경변수
   - name: OTEL_SERVICE_NAME
     value: "goti-queue-go"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
-    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+    value: "http://otel-front-prod.monitoring.svc:4317"
+  - name: OTEL_RESOURCE_ATTRIBUTES
+    value: "service.namespace=goti,deployment.environment.name=prod"
 configMap:
   enabled: false
 # --- Istio 보안/네트워크 정책 ---
