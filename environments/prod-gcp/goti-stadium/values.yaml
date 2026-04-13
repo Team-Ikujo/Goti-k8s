@@ -1,5 +1,5 @@
 nameOverride: goti-stadium
-replicaCount: 1
+replicaCount: 0
 image:
   repository: "harbor.go-ti.shop/prod/goti-stadium-go"
   tag: "prod-7-5577103"
@@ -149,3 +149,6 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/*"
+
+autoscaling:
+  enabled: false

@@ -1,5 +1,5 @@
 nameOverride: goti-ticketing
-replicaCount: 2
+replicaCount: 0
 image:
   repository: "harbor.go-ti.shop/prod/goti-ticketing-go"
   tag: "prod-6-5577103"
@@ -140,7 +140,7 @@ gateway:
             port:
               number: 8080
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 2
   maxReplicas: 10
   keda:

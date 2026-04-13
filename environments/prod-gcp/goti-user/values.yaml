@@ -1,5 +1,5 @@
 nameOverride: goti-user
-replicaCount: 2
+replicaCount: 0
 image:
   repository: "harbor.go-ti.shop/prod/goti-user-go"
   tag: "prod-7-5577103"
@@ -152,7 +152,7 @@ gateway:
             port:
               number: 8080
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 3
   maxReplicas: 10
   keda:
