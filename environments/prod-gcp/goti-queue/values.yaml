@@ -42,7 +42,7 @@ gateway:
     - "go-ti.shop"
     - "api.go-ti.shop"
     - "gcp-api.go-ti.shop"
-  gatewayRef: "istio-system/goti-shared-gateway"
+  gatewayRef: "istio-ingress/goti-shared-gateway"
   httpRoutes:
     - match:
         - uri:
@@ -54,7 +54,7 @@ gateway:
         retryOn: 5xx,reset,connect-failure
       route:
         - destination:
-            host: goti-queue-prod
+            host: goti-queue-prod-gcp
             port:
               number: 8080
 
