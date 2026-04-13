@@ -1,7 +1,6 @@
-replicaCount: 0
+replicaCount: 2
 image:
   repository: "harbor.go-ti.shop/prod/goti-payment-go"
-  tag: "prod-1-0000000"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
@@ -22,3 +21,7 @@ istioPolicy:
           - "./*"
           - "monitoring/*"
           - "*.amazonaws.com"
+
+# Cutover: Go 활성화
+gateway:
+  enabled: true

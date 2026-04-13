@@ -1,4 +1,4 @@
-replicaCount: 1
+replicaCount: 0
 image:
   repository: "harbor.go-ti.shop/prod/goti-stadium"
   tag: "prod-52-c0a6964"
@@ -24,3 +24,7 @@ istioPolicy:
           - "monitoring/*"
           - "kafka/*"
           - "~/*.amazonaws.com"
+
+# Cutover: Java 비활성, Go 라우팅 take-over
+gateway:
+  enabled: false
