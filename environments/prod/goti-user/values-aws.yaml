@@ -32,3 +32,7 @@ istioPolicy:
 # Cutover: Java 비활성, Go 라우팅 take-over
 gateway:
   enabled: false
+
+# Cutover: KEDA 비활성 (replicaCount: 0 효력 발생)
+autoscaling:
+  enabled: false
