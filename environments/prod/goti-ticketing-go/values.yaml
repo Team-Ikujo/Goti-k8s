@@ -219,7 +219,7 @@ istioPolicy:
     enabled: true
 image:
   repository: harbor.go-ti.shop/prod/goti-ticketing-go
-  tag: prod-20-0845b11
+  tag: prod-21-acd74a3
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
