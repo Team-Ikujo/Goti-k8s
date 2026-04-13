@@ -3,7 +3,7 @@ replicaCount: 2
 
 image:
   repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-payment-go"
-  tag: "bootstrap-20260413"
+  tag: "bootstrap-20260414-servicesfix"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []  # GKE Workload Identity → Artifact Registry 자동 인증
