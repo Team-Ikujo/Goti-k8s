@@ -209,7 +209,7 @@ istioPolicy:
     enabled: true
 image:
   repository: harbor.go-ti.shop/prod/goti-user-go
-  tag: prod-12-c96e1d8
+  tag: prod-17-c5f5d1d
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
