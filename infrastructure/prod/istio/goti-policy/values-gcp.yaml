@@ -1,0 +1,7 @@
+# GCP prod 오버라이드: Istio Gateway가 istio-ingress namespace에 배포되어
+# SA principal이 AWS(istio-system)와 다름. allowGateway ALLOW가 매칭되지
+# 않아 default-deny → 403 RBAC access denied 발생.
+
+allowGateway:
+  enabled: true
+  gatewaySA: "cluster.local/ns/istio-ingress/sa/istio-gateway"
