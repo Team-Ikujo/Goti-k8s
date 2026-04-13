@@ -3,7 +3,7 @@ replicaCount: 2
 
 image:
   repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-ticketing-go"
-  tag: "bootstrap-20260414-viperfix"
+  tag: "bootstrap-20260414-servicesfix"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []  # GKE Workload Identity → Artifact Registry 자동 인증
@@ -98,11 +98,11 @@ env:
     value: "5000"
   # --- 서비스 간 통신 ---
   - name: TICKETING_SERVICES_STADIUM
-    value: "http://goti-stadium-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-stadium-prod-gcp.goti.svc.cluster.local:8080"
   - name: TICKETING_SERVICES_PAYMENT
-    value: "http://goti-payment-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-payment-prod-gcp.goti.svc.cluster.local:8080"
   - name: TICKETING_SERVICES_RESALE
-    value: "http://goti-resale-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-resale-prod-gcp.goti.svc.cluster.local:8080"
   # --- OTel ---
   - name: TICKETING_OTEL_ENABLED
     value: "true"
