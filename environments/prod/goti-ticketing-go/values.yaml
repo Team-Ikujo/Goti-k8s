@@ -1,17 +1,14 @@
 nameOverride: goti-ticketing-go
-
 service:
   type: ClusterIP
   port: 8080
   name: http
-
 serviceMonitor:
   enabled: true
   port: http
   path: /metrics
   interval: 15s
   release: kube-prometheus-stack-prod
-
 resources:
   requests:
     cpu: 100m
@@ -19,11 +16,9 @@ resources:
   limits:
     cpu: 1000m
     memory: 256Mi
-
 pdb:
   enabled: true
   minAvailable: 1
-
 # CRITICAL: Java goti-ticketing VS와 동일 (host, path) 조합 → Istio
 # MULTIPLE_VIRTUAL_SERVICES_FOR_HOST. cutover 전까지 gateway.enabled=false로 유지.
 # cutover 시 Java values의 gateway.enabled=false로 전환 후 본 파일 true.
@@ -58,7 +53,6 @@ gateway:
             host: goti-ticketing-go-prod
             port:
               number: 8080
-
 autoscaling:
   enabled: true
   minReplicas: 2
@@ -79,7 +73,6 @@ autoscaling:
           metricName: http_rps_ticketing_go
           query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-ticketing-go"}[1m]))
           threshold: "50"
-
 probes:
   liveness:
     httpGet:
@@ -95,24 +88,20 @@ probes:
     initialDelaySeconds: 3
     periodSeconds: 5
     failureThreshold: 3
-
 podAnnotations:
   sidecar.istio.io/inject: "true"
   # ElastiCache Redis TLS — Istio sidecar 우회
   traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
-
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 65532
   fsGroup: 65532
-
 securityContext:
   readOnlyRootFilesystem: true
   capabilities:
     drop: ["ALL"]
   seccompProfile:
     type: RuntimeDefault
-
 # 환경변수: TICKETING_ prefix (Viper가 config.Load("ticketing")에서 자동 생성)
 # envFrom 사용하지 않음 — 개별 매핑으로 명시적 관리
 env:
@@ -170,10 +159,8 @@ env:
     value: "goti-ticketing-go"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "http://otel-collector.monitoring.svc.cluster.local:4317"
-
 configMap:
   enabled: false
-
 # --- Istio 보안/네트워크 정책 ---
 istioPolicy:
   authorizationPolicy:
@@ -219,3 +206,9 @@ istioPolicy:
       - "/metrics"
   destinationRule:
     enabled: true
+image:
+  repository: harbor.go-ti.shop/prod/goti-ticketing-go
+  tag: prod-5-5577103
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: harbor-creds
