@@ -21,7 +21,7 @@ istioPolicy:
           - "istio-system/*"
           - "./*"
           - "monitoring/*"
-          - "*.amazonaws.com"
+          - "~/*.amazonaws.com"
 
 # Cutover: Go 활성화
 gateway:
