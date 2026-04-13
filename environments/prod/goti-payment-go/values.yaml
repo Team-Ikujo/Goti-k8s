@@ -118,13 +118,15 @@ env:
   - name: PAYMENT_OTEL_ENABLED
     value: "true"
   - name: PAYMENT_OTEL_ENDPOINT
-    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+    value: "http://otel-front-prod.monitoring.svc:4317"
   - name: PAYMENT_OTEL_SERVICE_NAME
     value: "goti-payment-go"
   - name: OTEL_SERVICE_NAME
     value: "goti-payment-go"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
-    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+    value: "http://otel-front-prod.monitoring.svc:4317"
+  - name: OTEL_RESOURCE_ATTRIBUTES
+    value: "service.namespace=goti,deployment.environment.name=prod"
 configMap:
   enabled: false
 # --- Istio 보안/네트워크 정책 ---
