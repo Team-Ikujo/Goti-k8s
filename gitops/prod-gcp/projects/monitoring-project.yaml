@@ -88,3 +88,9 @@ spec:
       kind: PodDisruptionBudget
     - group: "external-secrets.io"
       kind: ExternalSecret
+    - group: "networking.k8s.io"
+      kind: NetworkPolicy
+    - group: "networking.k8s.io"
+      kind: Ingress
+    - group: "autoscaling"
+      kind: HorizontalPodAutoscaler
