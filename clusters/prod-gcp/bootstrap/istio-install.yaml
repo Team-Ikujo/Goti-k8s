@@ -14,7 +14,7 @@ spec:
   project: infra
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-      targetRevision: main
+      targetRevision: feature/go-cutover-infra
       path: "infrastructure/prod/istio/base"
       helm:
         valueFiles:
@@ -48,7 +48,7 @@ spec:
   project: infra
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-      targetRevision: main
+      targetRevision: feature/go-cutover-infra
       path: "infrastructure/prod/istio/istiod"
       helm:
         valueFiles:
@@ -83,7 +83,7 @@ spec:
   project: infra
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-      targetRevision: main
+      targetRevision: feature/go-cutover-infra
       path: "infrastructure/prod/istio/gateway"
       helm:
         valueFiles:
@@ -118,7 +118,7 @@ spec:
   project: infra
   sources:
     - repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-      targetRevision: main
+      targetRevision: feature/go-cutover-infra
       path: "infrastructure/prod/istio/mesh-policy"
       helm:
         valueFiles:
