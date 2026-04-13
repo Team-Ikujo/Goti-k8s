@@ -20,7 +20,7 @@ spec:
   project: infra
   source:
     repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-    targetRevision: feature/go-cutover-infra
+    targetRevision: main
     path: "infrastructure/prod/gcp"
     directory:
       recurse: true
@@ -54,7 +54,7 @@ spec:
   project: default
   source:
     repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-    targetRevision: feature/go-cutover-infra
+    targetRevision: main
     path: "gitops/prod-gcp/projects"
   destination:
     server: "https://kubernetes.default.svc"
@@ -92,7 +92,7 @@ spec:
   project: infra
   source:
     repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-    targetRevision: feature/go-cutover-infra
+    targetRevision: main
     path: "infrastructure/prod"
     directory:
       recurse: true
@@ -127,7 +127,7 @@ spec:
   project: infra
   source:
     repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-    targetRevision: feature/go-cutover-infra
+    targetRevision: main
     path: "gitops/prod-gcp/applicationsets"
   destination:
     server: "https://kubernetes.default.svc"
