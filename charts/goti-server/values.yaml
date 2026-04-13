@@ -100,8 +100,22 @@ persistence:
 
 podAnnotations: {}
 nodeSelector: {}
-tolerations: []
-affinity: {}
+# GKE spot 풀(taint: node-role=spot) 사용 허용. AWS EKS 등 taint 없는 환경에서는 무해.
+tolerations:
+  - key: node-role
+    operator: Equal
+    value: spot
+    effect: NoSchedule
+# spot 노드 우선 스케줄, 없으면 core로 fallback. GCP 전용 label이지만 AWS에서는 조건 미매치로 무시됨.
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: cloud.google.com/gke-spot
+              operator: In
+              values: ["true"]
 
 # Istio 보안/네트워크 정책
 istioPolicy:
