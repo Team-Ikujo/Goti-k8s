@@ -147,6 +147,13 @@ env:
     value: "http://goti-payment-go-prod.goti.svc.cluster.local:8080"
   - name: TICKETING_SERVICES_RESALE
     value: "http://goti-resale-go-prod.goti.svc.cluster.local:8080"
+  # --- ticketing 도메인 스케줄러 (viper default 없음, 필수 주입) ---
+  - name: TICKETING_TICKETING_HOLD_EXPIRY_INTERVAL_MS
+    value: "1000"
+  - name: TICKETING_TICKETING_HOLD_EXPIRY_BATCH_SIZE
+    value: "100"
+  - name: TICKETING_TICKETING_INVENTORY_SYNC_INTERVAL_MS
+    value: "5000"
   # --- OTel ---
   - name: TICKETING_OTEL_ENABLED
     value: "true"

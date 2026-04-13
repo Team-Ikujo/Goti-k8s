@@ -121,6 +121,52 @@ env:
   # --- 애플리케이션 ---
   - name: USER_TEST_USER_ENABLED
     value: "true"
+  # --- OAuth (기존 Java secret 재사용; Go는 os.Getenv("OAUTH_..")로 직접 읽음) ---
+  - name: OAUTH_GOOGLE_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: GOOGLE_CLIENT
+  - name: OAUTH_GOOGLE_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: GOOGLE_SECRET
+  - name: OAUTH_GOOGLE_REDIRECT_URI
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: GOOGLE_REDIRECT_URI
+  - name: OAUTH_KAKAO_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: KAKAO_CLIENT
+  - name: OAUTH_KAKAO_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: KAKAO_SECRET
+  - name: OAUTH_KAKAO_REDIRECT_URI
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: KAKAO_REDIRECT_URI
+  - name: OAUTH_NAVER_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: NAVER_CLIENT
+  - name: OAUTH_NAVER_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: NAVER_SECRET
+  - name: OAUTH_NAVER_REDIRECT_URI
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: NAVER_REDIRECT_URI
   # --- OTel ---
   - name: USER_OTEL_ENABLED
     value: "true"
