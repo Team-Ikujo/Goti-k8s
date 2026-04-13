@@ -2,7 +2,7 @@ nameOverride: goti-payment
 replicaCount: 0
 image:
   repository: "harbor.go-ti.shop/prod/goti-payment-go"
-  tag: "prod-19-a3ab08b"
+  tag: "prod-28-82159d8"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
