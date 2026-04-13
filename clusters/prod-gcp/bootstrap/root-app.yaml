@@ -81,6 +81,7 @@ spec:
 #      network-policies/**                   → GCP 버전은 goti-gcp-infra에서 처리
 #      external-secrets/config-application.yaml → AWS SSM 기반 config
 #      gcp/**                                → raw manifest, goti-gcp-infra에서 처리
+#      falco/**                              → 일시 비활성화 (CPU quota 압박, CPUS_ALL_REGIONS 16 한도, 2026-04-13~)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -97,7 +98,7 @@ spec:
     directory:
       recurse: true
       include: "*application.yaml"
-      exclude: "{karpenter/**,metrics-server/**,storage/**,network-policies/**,external-secrets/config-application.yaml,gcp/**}"
+      exclude: "{karpenter/**,metrics-server/**,storage/**,network-policies/**,external-secrets/config-application.yaml,gcp/**,falco/**}"
   destination:
     server: "https://kubernetes.default.svc"
     namespace: argocd
