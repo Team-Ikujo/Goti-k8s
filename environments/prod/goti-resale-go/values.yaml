@@ -1,12 +1,6 @@
-nameOverride: goti-resale
-replicaCount: 1
-
-image:
-  repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-resale-go"
-  tag: "latest"
-  pullPolicy: IfNotPresent
-
-imagePullSecrets: []  # GKE Workload Identity → Artifact Registry 자동 인증
+# TODO(jwks-automation): user-service JWT 키 회전 시 본 파일 inline jwks를
+# 모든 Go 서비스와 수동 동기화 필요. 메모리: project_jwks_automation_todo.md
+nameOverride: goti-resale-go
 
 service:
   type: ClusterIP
@@ -18,7 +12,54 @@ serviceMonitor:
   port: http
   path: /metrics
   interval: 15s
-  release: kube-prometheus-stack-prod-gcp
+  release: kube-prometheus-stack-prod
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 256Mi
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+# CRITICAL: Java goti-resale VS와 동일 (host, path) 조합 → Istio
+# MULTIPLE_VIRTUAL_SERVICES_FOR_HOST. gateway.enabled=false로 유지.
+# cutover 시 Java values의 gateway.enabled=false로 전환 후 본 파일 true.
+# Swagger 라우팅은 Go 미구현 전제로 누락 — Java 전용 유지.
+gateway:
+  enabled: false
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/resales"
+      route:
+        - destination:
+            host: goti-resale-go-prod
+            port:
+              number: 8080
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 6
+  keda:
+    enabled: true
+    cooldownPeriod: 180
+    triggers:
+      - type: prometheus
+        metadata:
+          serverAddress: http://mimir-prod-query-frontend.monitoring.svc.cluster.local:8080/prometheus
+          metricName: http_rps_resale_go
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-resale-go"}[1m]))
+          threshold: "20"
 
 probes:
   liveness:
@@ -36,17 +77,8 @@ probes:
     periodSeconds: 5
     failureThreshold: 3
 
-resources:
-  requests:
-    cpu: 50m
-    memory: 64Mi
-  limits:
-    cpu: 200m
-    memory: 128Mi
-
 podAnnotations:
   sidecar.istio.io/inject: "true"
-  # Memorystore Redis TLS+AUTH — Istio mTLS와 충돌하므로 sidecar 우회
   traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
 
 podSecurityContext:
@@ -55,35 +87,44 @@ podSecurityContext:
   fsGroup: 65532
 
 securityContext:
-  allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
   capabilities:
     drop: ["ALL"]
   seccompProfile:
     type: RuntimeDefault
 
+# 환경변수: RESALE_ prefix
 env:
   # --- 인프라 (Secret에서 주입) ---
   - name: RESALE_DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: goti-resale-prod-secrets
-        key: DATASOURCE_URL
+        name: goti-resale-go-prod-secrets
+        key: RESALE_DATABASE_URL
   - name: RESALE_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-resale-prod-secrets
-        key: REDIS_URL
+        name: goti-resale-go-prod-secrets
+        key: RESALE_REDIS_URL
   - name: RESALE_JWT_PUBLIC_KEY_PEM
     valueFrom:
       secretKeyRef:
-        name: goti-resale-prod-secrets
-        key: JWT_PUBLIC_KEY_PEM
+        name: goti-resale-go-prod-secrets
+        key: RESALE_JWT_PUBLIC_KEY_PEM
+  # --- DB pool (SDD Step 5 / S4) ---
+  - name: RESALE_DATABASE_MAX_CONNS
+    value: "3"
+  - name: RESALE_DATABASE_MIN_CONNS
+    value: "1"
+  - name: RESALE_DATABASE_MAX_CONN_IDLE_TIME_SEC
+    value: "30"
+  - name: RESALE_DATABASE_MAX_CONN_LIFETIME_SEC
+    value: "1800"
   # --- 서비스 간 통신 ---
   - name: RESALE_SERVICES_TICKETING
-    value: "http://goti-ticketing-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-ticketing-go-prod.goti.svc.cluster.local:8080"
   - name: RESALE_SERVICES_PAYMENT
-    value: "http://goti-payment-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-payment-go-prod.goti.svc.cluster.local:8080"
   # --- OTel ---
   - name: RESALE_OTEL_ENABLED
     value: "true"
@@ -99,52 +140,9 @@ env:
 configMap:
   enabled: false
 
-gateway:
-  enabled: true
-  hosts:
-    - "go-ti.shop"
-    - "api.go-ti.shop"
-  gatewayRef: "istio-system/goti-shared-gateway"
-  httpRoutes:
-    - match:
-        - uri:
-            prefix: "/api/v1/resales"
-      route:
-        - destination:
-            host: goti-resale-prod
-            port:
-              number: 8080
-
-autoscaling:
-  enabled: true
-  minReplicas: 1
-  maxReplicas: 6
-  keda:
-    enabled: true
-    cooldownPeriod: 180
-    triggers:
-      - type: prometheus
-        metadata:
-          serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus
-          metricName: http_rps_resale_go
-          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-resale-go"}[1m]))
-          threshold: "20"
-
-externalSecret:
-  enabled: true
-  refreshInterval: "1h"
-  secretStoreRef:
-    name: gcp-store
-    kind: ClusterSecretStore
-  remoteRef:
-    nameRegexp: "^goti-prod-server-"
-    nameRewriteSource: "^goti-prod-server-(.*)$"
-    overrideNameRegexp: "^goti-prod-resale-"
-    overrideNameRewriteSource: "^goti-prod-resale-(.*)$"
-
 # --- Istio 보안/네트워크 정책 ---
+# TODO(phase 7): Java payment/ticketing deprecation 후 from-X 규칙을 -go SA로 변경.
 istioPolicy:
-  # payment → resale (양도 완료/거래 조회), ticketing → resale (마이페이지 양도 조회)
   authorizationPolicy:
     enabled: true
     allowFrom:
@@ -152,7 +150,9 @@ istioPolicy:
         rules:
           - from:
               - source:
-                  principals: ["cluster.local/ns/goti/sa/goti-payment-prod"]
+                  principals:
+                    - "cluster.local/ns/goti/sa/goti-payment-prod"
+                    - "cluster.local/ns/goti/sa/goti-payment-go-prod"
             to:
               - operation:
                   paths: ["/api/v1/resales/orders/*"]
@@ -161,7 +161,9 @@ istioPolicy:
         rules:
           - from:
               - source:
-                  principals: ["cluster.local/ns/goti/sa/goti-ticketing-prod"]
+                  principals:
+                    - "cluster.local/ns/goti/sa/goti-ticketing-prod"
+                    - "cluster.local/ns/goti/sa/goti-ticketing-go-prod"
             to:
               - operation:
                   paths: ["/api/v1/resales/listings/count"]
@@ -182,10 +184,3 @@ istioPolicy:
       - "/metrics"
   destinationRule:
     enabled: true
-  sidecar:
-    enabled: true
-    egress:
-      - hosts:
-          - "istio-system/*"
-          - "./*"
-          - "monitoring/*"

@@ -3,7 +3,7 @@ nameOverride: goti-load-observer
 replicaCount: 1
 
 image:
-  repository: "asia-northeast3-docker.pkg.dev/goti-gcp/goti-prod-registry/goti-load-observer"
+  repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-load-observer"
   tag: "dev-9-ee6198a"
   pullPolicy: Always
 

@@ -8,6 +8,9 @@ spec:
   sourceRepos:
     - "https://github.com/Team-Ikujo/Goti-k8s.git"
     - "https://kedacore.github.io/charts"
+    - "https://helm.goharbor.io"
+    - "https://kubernetes-sigs.github.io/descheduler"
+    - "https://falcosecurity.github.io/charts"
     # Karpenter 제외 (GKE Cluster Autoscaler 내장)
   destinations:
     - namespace: argocd
@@ -27,6 +30,10 @@ spec:
     - namespace: kube-system
       server: "https://kubernetes.default.svc"
     - namespace: keda
+      server: "https://kubernetes.default.svc"
+    - namespace: harbor
+      server: "https://kubernetes.default.svc"
+    - namespace: falco
       server: "https://kubernetes.default.svc"
   clusterResourceWhitelist:
     - group: ""

@@ -48,11 +48,37 @@ spec:
             namespace: goti
             valuesFile: environments/prod/goti-queue-gate/values.yaml
             cloudValuesFile: environments/prod/goti-queue-gate/values-aws.yaml
-          # ticketing-go: AWS/GCP 양쪽 모두 아직 배포 보류 — Go 마이그레이션 준비 완료 후 재추가
-          # - service: ticketing-go
-          #   namespace: goti
-          #   valuesFile: environments/prod/goti-ticketing-go/values.yaml
-          #   cloudValuesFile: environments/prod/goti-ticketing-go/values-aws.yaml
+          # --- Go 마이그레이션 서비스 (replicaCount=0 상태로 배포, 토글로 활성화) ---
+          # Java 서비스와 values-aws.yaml replicaCount 토글로 Blue/Green cutover.
+          # cutover 절차:
+          #   1. CI 트리거 → Harbor 이미지 push → yq PR 자동 생성
+          #   2. PR merge 시 이미지 태그만 업데이트 (replicaCount=0 유지)
+          #   3. cutover 시점: Java values-aws.yaml replicaCount=0 + -go replicaCount=N
+          #   4. ArgoCD auto-sync (prune+selfHeal) → rolling cutover
+          - service: ticketing-go
+            namespace: goti
+            valuesFile: environments/prod/goti-ticketing-go/values.yaml
+            cloudValuesFile: environments/prod/goti-ticketing-go/values-aws.yaml
+          - service: stadium-go
+            namespace: goti
+            valuesFile: environments/prod/goti-stadium-go/values.yaml
+            cloudValuesFile: environments/prod/goti-stadium-go/values-aws.yaml
+          - service: queue-go
+            namespace: goti
+            valuesFile: environments/prod/goti-queue-go/values.yaml
+            cloudValuesFile: environments/prod/goti-queue-go/values-aws.yaml
+          - service: payment-go
+            namespace: goti
+            valuesFile: environments/prod/goti-payment-go/values.yaml
+            cloudValuesFile: environments/prod/goti-payment-go/values-aws.yaml
+          - service: resale-go
+            namespace: goti
+            valuesFile: environments/prod/goti-resale-go/values.yaml
+            cloudValuesFile: environments/prod/goti-resale-go/values-aws.yaml
+          - service: user-go
+            namespace: goti
+            valuesFile: environments/prod/goti-user-go/values.yaml
+            cloudValuesFile: environments/prod/goti-user-go/values-aws.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod"
