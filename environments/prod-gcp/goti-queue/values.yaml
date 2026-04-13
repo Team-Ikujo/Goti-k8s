@@ -1,3 +1,4 @@
+replicaCount: 0
 # TODO(jwks-automation): user-service JWT 키 회전 시 본 파일 inline jwks를
 # 모든 Go 서비스(현재 6개)와 수동 동기화 필요. ConfigMap 또는
 # RequestAuthentication.jwksUri 참조 방식으로 자동화 예정.
@@ -52,7 +53,7 @@ gateway:
             port:
               number: 8080
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 2
   maxReplicas: 10
   keda:
