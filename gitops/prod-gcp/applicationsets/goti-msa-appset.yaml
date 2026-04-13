@@ -32,7 +32,7 @@ spec:
       project: goti
       source:
         repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
-        targetRevision: feature/go-cutover-infra
+        targetRevision: main
         path: "charts/goti-server"
         helm:
           valueFiles:
