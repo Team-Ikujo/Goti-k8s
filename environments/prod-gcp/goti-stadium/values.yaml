@@ -100,7 +100,7 @@ gateway:
     - "go-ti.shop"
     - "api.go-ti.shop"
     - "gcp-api.go-ti.shop"
-  gatewayRef: "istio-system/goti-shared-gateway"
+  gatewayRef: "istio-ingress/goti-shared-gateway"
   httpRoutes:
     - match:
         - uri:
@@ -109,7 +109,7 @@ gateway:
             prefix: "/api/v1/baseball-teams"
       route:
         - destination:
-            host: goti-stadium-prod
+            host: goti-stadium-prod-gcp
             port:
               number: 8080
 

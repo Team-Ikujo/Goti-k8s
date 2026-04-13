@@ -124,7 +124,7 @@ gateway:
     - "go-ti.shop"
     - "api.go-ti.shop"
     - "gcp-api.go-ti.shop"
-  gatewayRef: "istio-system/goti-shared-gateway"
+  gatewayRef: "istio-ingress/goti-shared-gateway"
   httpRoutes:
     - match:
         - uri:
@@ -147,7 +147,7 @@ gateway:
             prefix: "/api/v1/stadiums/"
       route:
         - destination:
-            host: goti-ticketing-prod
+            host: goti-ticketing-prod-gcp
             port:
               number: 8080
 
