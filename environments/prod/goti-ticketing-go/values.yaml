@@ -142,11 +142,11 @@ env:
     value: "1800"
   # --- 서비스 간 통신 ---
   - name: TICKETING_SERVICES_STADIUM
-    value: "http://goti-stadium-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-stadium-go-prod.goti.svc.cluster.local:8080"
   - name: TICKETING_SERVICES_PAYMENT
-    value: "http://goti-payment-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-payment-go-prod.goti.svc.cluster.local:8080"
   - name: TICKETING_SERVICES_RESALE
-    value: "http://goti-resale-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-resale-go-prod.goti.svc.cluster.local:8080"
   # --- OTel ---
   - name: TICKETING_OTEL_ENABLED
     value: "true"
