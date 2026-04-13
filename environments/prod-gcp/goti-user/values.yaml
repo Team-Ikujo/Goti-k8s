@@ -80,47 +80,53 @@ env:
         name: goti-user-prod-gcp-secrets
         key: JWT_PUBLIC_KEY_PEM
   # --- OAuth (Secret에서 주입) ---
-  - name: USER_OAUTH_KAKAO_CLIENT_ID
+  # Go 코드가 os.Getenv("OAUTH_..")로 직접 읽으므로 USER_ 접두사 없음.
+  # Secret 키는 Terraform config 네이밍(KAKAO_CLIENT_ID / KAKAO_SECRET 등)을 그대로 사용.
+  - name: OAUTH_KAKAO_CLIENT_ID
     valueFrom:
       secretKeyRef:
         name: goti-user-prod-gcp-secrets
         key: KAKAO_CLIENT_ID
-  - name: USER_OAUTH_KAKAO_CLIENT_SECRET
+  - name: OAUTH_KAKAO_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
         name: goti-user-prod-gcp-secrets
-        key: KAKAO_CLIENT_SECRET
-  - name: USER_OAUTH_NAVER_CLIENT_ID
+        key: KAKAO_SECRET
+  - name: OAUTH_KAKAO_REDIRECT_URI
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: KAKAO_REDIRECT_URI
+  - name: OAUTH_NAVER_CLIENT_ID
     valueFrom:
       secretKeyRef:
         name: goti-user-prod-gcp-secrets
         key: NAVER_CLIENT_ID
-  - name: USER_OAUTH_NAVER_CLIENT_SECRET
+  - name: OAUTH_NAVER_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
         name: goti-user-prod-gcp-secrets
-        key: NAVER_CLIENT_SECRET
-  - name: USER_OAUTH_GOOGLE_CLIENT_ID
+        key: NAVER_SECRET
+  - name: OAUTH_NAVER_REDIRECT_URI
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: NAVER_REDIRECT_URI
+  - name: OAUTH_GOOGLE_CLIENT_ID
     valueFrom:
       secretKeyRef:
         name: goti-user-prod-gcp-secrets
         key: GOOGLE_CLIENT_ID
-  - name: USER_OAUTH_GOOGLE_CLIENT_SECRET
+  - name: OAUTH_GOOGLE_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
         name: goti-user-prod-gcp-secrets
-        key: GOOGLE_CLIENT_SECRET
-  # --- SMS ---
-  - name: USER_COOLSMS_API_KEY
+        key: GOOGLE_SECRET
+  - name: OAUTH_GOOGLE_REDIRECT_URI
     valueFrom:
       secretKeyRef:
         name: goti-user-prod-gcp-secrets
-        key: COOLSMS_API_KEY
-  - name: USER_COOLSMS_API_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: goti-user-prod-gcp-secrets
-        key: COOLSMS_API_SECRET
+        key: GOOGLE_REDIRECT_URI
   # --- OTel ---
   - name: USER_OTEL_ENABLED
     value: "true"
