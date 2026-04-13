@@ -91,7 +91,9 @@ istioPolicy:
         rules:
           - from:
               - source:
-                  principals: ["cluster.local/ns/goti/sa/goti-ticketing-prod"]
+                  principals:
+                    - "cluster.local/ns/goti/sa/goti-ticketing-prod"
+                    - "cluster.local/ns/goti/sa/goti-ticketing-go-prod"
             to:
               - operation:
                   paths: ["/api/v1/stadiums*", "/api/v1/baseball-teams*"]
