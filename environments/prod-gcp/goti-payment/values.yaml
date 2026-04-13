@@ -67,17 +67,17 @@ env:
   - name: PAYMENT_DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: goti-payment-prod-secrets
+        name: goti-payment-prod-gcp-secrets
         key: DATASOURCE_URL
   - name: PAYMENT_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-payment-prod-secrets
+        name: goti-payment-prod-gcp-secrets
         key: REDIS_URL
   - name: PAYMENT_JWT_PUBLIC_KEY_PEM
     valueFrom:
       secretKeyRef:
-        name: goti-payment-prod-secrets
+        name: goti-payment-prod-gcp-secrets
         key: JWT_PUBLIC_KEY_PEM
   # --- OTel ---
   - name: PAYMENT_OTEL_ENABLED

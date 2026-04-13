@@ -67,17 +67,17 @@ env:
   - name: STADIUM_DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: goti-stadium-prod-secrets
+        name: goti-stadium-prod-gcp-secrets
         key: DATASOURCE_URL
   - name: STADIUM_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-stadium-prod-secrets
+        name: goti-stadium-prod-gcp-secrets
         key: REDIS_URL
   - name: STADIUM_JWT_PUBLIC_KEY_PEM
     valueFrom:
       secretKeyRef:
-        name: goti-stadium-prod-secrets
+        name: goti-stadium-prod-gcp-secrets
         key: JWT_PUBLIC_KEY_PEM
   # --- OTel ---
   - name: STADIUM_OTEL_ENABLED

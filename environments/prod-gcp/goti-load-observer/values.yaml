@@ -49,12 +49,12 @@ env:
   - name: DB_DSN
     valueFrom:
       secretKeyRef:
-        name: goti-load-observer-prod-secrets
+        name: goti-load-observer-prod-gcp-secrets
         key: LOAD_OBSERVER_DB_DSN
   - name: REDIS_ADDR
     valueFrom:
       secretKeyRef:
-        name: goti-load-observer-prod-secrets
+        name: goti-load-observer-prod-gcp-secrets
         key: LOAD_OBSERVER_REDIS_ADDR
   - name: SERVER_PORT
     value: "9090"
