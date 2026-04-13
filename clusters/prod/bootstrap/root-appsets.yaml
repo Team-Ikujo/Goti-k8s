@@ -50,6 +50,8 @@ spec:
       directory:
         recurse: true
         include: "*application.yaml"
+        # falco/**: 미사용 + 알람 꺼져있어 리소스만 차지 (2026-04-13 비활성화). GCP는 이미 제외 처리됨
+        exclude: "{falco/**}"
   destination:
     server: "https://kubernetes.default.svc"
     namespace: argocd
