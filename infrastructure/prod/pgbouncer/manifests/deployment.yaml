@@ -25,6 +25,7 @@ spec:
       labels:
         app: pgbouncer
         version: v1
+        monitoring: "true"
       annotations:
         # 5432: PostgreSQL wire protocol — sidecar 통과 불가, exclude 필수.
         # 9127: HTTP metrics — sidecar 가 mTLS 받아 exporter 로 전달해야 ambient ztunnel
