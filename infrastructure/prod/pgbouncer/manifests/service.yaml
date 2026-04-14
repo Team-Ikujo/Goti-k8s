@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgbouncer
+  namespace: goti
+  labels:
+    app: pgbouncer
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432       # 앱이 5432로 접속해도 6432로 포워딩 — DATABASE_URL 변경 최소화
+      targetPort: 6432
+      name: pg
+  selector:
+    app: pgbouncer
+---
+# PodDisruptionBudget — 최소 1개 pod 유지
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: pgbouncer-pdb
+  namespace: goti
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: pgbouncer

@@ -1,0 +1,113 @@
+# PgBouncer Deployment — 2 replicas HA
+# ADR 0013 Phase A
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgbouncer
+  namespace: goti
+  labels:
+    app: pgbouncer
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: pgbouncer
+  template:
+    metadata:
+      labels:
+        app: pgbouncer
+        version: v1
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70   # edoburu/pgbouncer 기본 사용자
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app: pgbouncer
+      initContainers:
+        # userlist.txt 를 Secret 에서 추출해 writable emptyDir 로 복사
+        # ConfigMap 의 pgbouncer.ini 는 DB_HOST/DB_USER 를 런타임 치환
+        - name: render-config
+          image: busybox:1.37
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              envsubst < /etc/pgbouncer-template/pgbouncer.ini > /etc/pgbouncer/pgbouncer.ini
+              echo "\"${DB_USER}\" \"${DB_USER_PASSWORD}\"" > /etc/pgbouncer/userlist.txt
+              chmod 600 /etc/pgbouncer/userlist.txt
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef: { name: pgbouncer-secret, key: db-host }
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef: { name: pgbouncer-secret, key: db-user }
+            - name: DB_USER_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: pgbouncer-secret, key: db-user-password }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            readOnlyRootFilesystem: true
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { cpu: 100m, memory: 64Mi }
+          volumeMounts:
+            - name: config-template
+              mountPath: /etc/pgbouncer-template
+            - name: config-runtime
+              mountPath: /etc/pgbouncer
+      containers:
+        - name: pgbouncer
+          image: edoburu/pgbouncer:1.23.1
+          command: ["/usr/sbin/pgbouncer"]
+          args: ["/etc/pgbouncer/pgbouncer.ini"]
+          ports:
+            - containerPort: 6432
+              name: pgbouncer
+          readinessProbe:
+            tcpSocket:
+              port: 6432
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 6432
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: config-runtime
+              mountPath: /etc/pgbouncer
+      volumes:
+        - name: config-template
+          configMap:
+            name: pgbouncer-config
+        - name: config-runtime
+          emptyDir: {}
