@@ -114,7 +114,7 @@ env:
   - name: QUEUE_DATABASE_MAX_CONNS
     value: "3"
   - name: QUEUE_DATABASE_MIN_CONNS
-    value: "1"
+    value: "5"
   - name: QUEUE_DATABASE_MAX_CONN_IDLE_TIME_SEC
     value: "30"
   - name: QUEUE_DATABASE_MAX_CONN_LIFETIME_SEC

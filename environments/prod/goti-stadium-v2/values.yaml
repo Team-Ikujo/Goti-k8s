@@ -123,7 +123,7 @@ env:
   - name: STADIUM_DATABASE_MAX_CONNS
     value: "8"
   - name: STADIUM_DATABASE_MIN_CONNS
-    value: "1"
+    value: "5"
   - name: STADIUM_DATABASE_MAX_CONN_IDLE_TIME_SEC
     value: "30"
   - name: STADIUM_DATABASE_MAX_CONN_LIFETIME_SEC
