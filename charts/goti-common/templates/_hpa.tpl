@@ -15,11 +15,13 @@ spec:
   minReplicaCount: {{ .Values.autoscaling.minReplicas }}
   maxReplicaCount: {{ .Values.autoscaling.maxReplicas }}
   cooldownPeriod: {{ .Values.autoscaling.keda.cooldownPeriod | default 60 }}
-  {{- with .Values.autoscaling.keda.pollingInterval }}
-  pollingInterval: {{ . }}
+  {{- /* hasKey: 0 같은 falsy 값을 보존 (with는 0/empty를 skip).
+         특히 idleReplicaCount=0 (scale-to-zero)은 KEDA의 핵심 유효 값. */}}
+  {{- if hasKey .Values.autoscaling.keda "pollingInterval" }}
+  pollingInterval: {{ .Values.autoscaling.keda.pollingInterval }}
   {{- end }}
-  {{- with .Values.autoscaling.keda.idleReplicaCount }}
-  idleReplicaCount: {{ . }}
+  {{- if hasKey .Values.autoscaling.keda "idleReplicaCount" }}
+  idleReplicaCount: {{ .Values.autoscaling.keda.idleReplicaCount }}
   {{- end }}
   {{- with .Values.autoscaling.keda.advanced }}
   advanced:
