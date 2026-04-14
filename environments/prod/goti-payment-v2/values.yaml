@@ -93,7 +93,7 @@ env:
         name: pgbouncer-secret
         key: db-user-password
   - name: PAYMENT_DATABASE_URL
-    value: "postgres://goti:$(DB_PASSWORD)@pgbouncer.goti.svc:5432/goti?sslmode=disable&search_path=payment_service"
+    value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti sslmode=disable search_path=payment_service"
   - name: PAYMENT_DATABASE_PGBOUNCER_COMPAT
     value: "true" 
   - name: PAYMENT_REDIS_URL
