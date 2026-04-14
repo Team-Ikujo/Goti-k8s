@@ -64,11 +64,147 @@ gateway:
               number: 8080
     - match:
         - uri:
-            regex: /api/[^/]+/v1/(orders|games|game-seats|tickets|seats|seat-reservations|stadium-seats|teams|stadiums)/.*
+            prefix: "/api/KIA/v1/orders"
+        - uri:
+            prefix: "/api/samsung/v1/orders"
       rewrite:
-        regexRewrite:
-          match: /api/[^/]+(/v1/.*)
-          rewrite: /api\1
+        uri: "/api/v1/orders"
+      timeout: 12s
+      retries:
+        attempts: 3
+        perTryTimeout: 3s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/KIA/v1/games"
+        - uri:
+            prefix: "/api/samsung/v1/games"
+      rewrite:
+        uri: "/api/v1/games"
+      timeout: 12s
+      retries:
+        attempts: 3
+        perTryTimeout: 3s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/KIA/v1/game-seats"
+        - uri:
+            prefix: "/api/samsung/v1/game-seats"
+      rewrite:
+        uri: "/api/v1/game-seats"
+      timeout: 12s
+      retries:
+        attempts: 3
+        perTryTimeout: 3s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/KIA/v1/tickets"
+        - uri:
+            prefix: "/api/samsung/v1/tickets"
+      rewrite:
+        uri: "/api/v1/tickets"
+      timeout: 12s
+      retries:
+        attempts: 3
+        perTryTimeout: 3s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/KIA/v1/seats"
+        - uri:
+            prefix: "/api/samsung/v1/seats"
+      rewrite:
+        uri: "/api/v1/seats"
+      timeout: 12s
+      retries:
+        attempts: 3
+        perTryTimeout: 3s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/KIA/v1/seat-reservations"
+        - uri:
+            prefix: "/api/samsung/v1/seat-reservations"
+      rewrite:
+        uri: "/api/v1/seat-reservations"
+      timeout: 12s
+      retries:
+        attempts: 3
+        perTryTimeout: 3s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/KIA/v1/stadium-seats"
+        - uri:
+            prefix: "/api/samsung/v1/stadium-seats"
+      rewrite:
+        uri: "/api/v1/stadium-seats"
+      timeout: 12s
+      retries:
+        attempts: 3
+        perTryTimeout: 3s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/KIA/v1/teams"
+        - uri:
+            prefix: "/api/samsung/v1/teams"
+      rewrite:
+        uri: "/api/v1/teams"
+      timeout: 12s
+      retries:
+        attempts: 3
+        perTryTimeout: 3s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/KIA/v1/stadiums"
+        - uri:
+            prefix: "/api/samsung/v1/stadiums"
+      rewrite:
+        uri: "/api/v1/stadiums"
       timeout: 12s
       retries:
         attempts: 3

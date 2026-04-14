@@ -48,11 +48,11 @@ gateway:
               number: 8080
     - match:
         - uri:
-            regex: /api/[^/]+/v1/resales.*
+            prefix: "/api/KIA/v1/resales"
+        - uri:
+            prefix: "/api/samsung/v1/resales"
       rewrite:
-        regexRewrite:
-          match: /api/[^/]+(/v1/.*)
-          rewrite: /api\1
+        uri: "/api/v1/resales"
       timeout: 10s
       retries:
         attempts: 2
