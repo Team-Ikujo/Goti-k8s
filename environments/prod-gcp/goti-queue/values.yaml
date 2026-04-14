@@ -6,7 +6,7 @@ replicaCount: 0
 nameOverride: goti-queue
 image:
   repository: "harbor.go-ti.shop/prod/goti-queue-go"
-  tag: "prod-30-0e318ee" # linux/amd64 buildx 재빌드 (기존 bootstrap-20260413은 arm64로 잘못 푸시됨). CD 실행 시 gcp-N-SHA 로 auto-update
+  tag: "prod-34-0dea0b2" # linux/amd64 buildx 재빌드 (기존 bootstrap-20260413은 arm64로 잘못 푸시됨). CD 실행 시 gcp-N-SHA 로 auto-update
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
