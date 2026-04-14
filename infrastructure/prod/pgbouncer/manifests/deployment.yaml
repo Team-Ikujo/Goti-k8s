@@ -23,6 +23,10 @@ spec:
       labels:
         app: pgbouncer
         version: v1
+      annotations:
+        # Istio sidecar 가 PostgreSQL wire protocol 을 가로채면 SSL startup 실패.
+        # 5432 inbound 를 Envoy 에서 제외하고 raw TCP 로 통과시킴.
+        traffic.sidecar.istio.io/excludeInboundPorts: "5432"
     spec:
       securityContext:
         runAsNonRoot: true
