@@ -87,8 +87,10 @@ spec:
               value: "scram-sha-256"
             - name: SERVER_TLS_SSLMODE
               value: "require"
+            # search_path 는 pgx 가 startup parameter 로 전달 — 무시하면 기본 public 로
+            # 세팅되어 서비스 schema 테이블을 못 찾음 (SQLSTATE 42P01).
             - name: IGNORE_STARTUP_PARAMETERS
-              value: "extra_float_digits,application_name,search_path"
+              value: "extra_float_digits,application_name"
             - name: LISTEN_ADDR
               value: "0.0.0.0"
             - name: LISTEN_PORT
