@@ -31,4 +31,9 @@ spec:
             ports: ["8000"]
             paths: ["/metrics"]
             methods: ["GET"]
+        # pgbouncer-exporter (ADR 0013 Phase D)
+        - operation:
+            ports: ["9127"]
+            paths: ["/metrics"]
+            methods: ["GET"]
 {{- end }}
