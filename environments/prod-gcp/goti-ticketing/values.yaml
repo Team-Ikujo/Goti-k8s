@@ -2,7 +2,7 @@ nameOverride: goti-ticketing
 replicaCount: 0
 image:
   repository: "harbor.go-ti.shop/prod/goti-ticketing-go"
-  tag: "prod-30-0e318ee"
+  tag: "prod-31-2b5157e"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
