@@ -2,7 +2,7 @@ nameOverride: goti-user
 replicaCount: 0
 image:
   repository: "harbor.go-ti.shop/prod/goti-user-go"
-  tag: "prod-30-0e318ee"
+  tag: "prod-33-cd95e89"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
