@@ -1,7 +1,8 @@
 # PgBouncer config — 서비스별 DB 이름으로 search_path 고정 (ADR 0013)
-# 각 서비스는 pgbouncer 에 dbname=goti_{svc} 로 접속, pgbouncer 는 내부적으로
-# options='-c search_path={svc}_service' 로 RDS 연결.
-# → transaction pool mode 에서도 search_path 가 server connection 에 안전 고정.
+# pgbouncer 는 databases 섹션에서 `options=` 키를 지원하지 않는다.
+# connect_query 로 서버 연결 시점에 search_path 를 고정하고,
+# server_reset_query 는 search_path 를 보존하기 위해 DISCARD PLANS 로 약화한다.
+# (prepared statement 는 app 이 SimpleProtocol 을 쓰므로 잔류 위험 없음)
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,12 +11,12 @@ metadata:
 data:
   pgbouncer.ini: |
     [databases]
-    goti_ticketing = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti options='-c search_path=ticketing_service'
-    goti_stadium   = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti options='-c search_path=stadium_service'
-    goti_user      = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti options='-c search_path=user_service'
-    goti_payment   = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti options='-c search_path=payment_service'
-    goti_resale    = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti options='-c search_path=resale_service'
-    goti_queue     = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti options='-c search_path=queue_service'
+    goti_ticketing = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti connect_query='SET search_path TO ticketing_service'
+    goti_stadium   = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti connect_query='SET search_path TO stadium_service'
+    goti_user      = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti connect_query='SET search_path TO user_service'
+    goti_payment   = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti connect_query='SET search_path TO payment_service'
+    goti_resale    = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti connect_query='SET search_path TO resale_service'
+    goti_queue     = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti connect_query='SET search_path TO queue_service'
 
     [pgbouncer]
     listen_addr = 0.0.0.0
@@ -33,12 +34,13 @@ data:
 
     server_lifetime = 3600
     server_idle_timeout = 300
-    server_reset_query = DISCARD ALL
+    ; search_path 를 connect_query 로 고정했으므로 DISCARD ALL (RESET ALL 포함) 금지.
+    ; DISCARD PLANS 로 약화 — SimpleProtocol 사용 중이라 prepared statement 잔류 없음.
+    server_reset_query = DISCARD PLANS
 
     server_tls_sslmode = require
 
-    ; search_path 는 서비스별 databases 섹션의 options 로 주입되므로 client 측 startup 에서 제외 가능.
-    ignore_startup_parameters = extra_float_digits,application_name,search_path
+    ignore_startup_parameters = extra_float_digits,application_name,search_path,options
 
     log_connections = 1
     log_disconnections = 0
