@@ -141,12 +141,12 @@ env:
         key: TICKETING_QUEUE_TOKEN_SECRET
   # --- DB pool (SDD Step 5 / S4: RDS max_conn 300, 2026-04-14 상향) ---
   # 12 → 18: 3000 VU 부하에서 begin tx: context canceled 210건 관측.
-  # 10 replicas × 18 = 180 peak. stadium 48 + others 45 = 273 (RDS 300 내).
-  # PgBouncer 도입 전 마지막 임시 상향.
+  # PgBouncer session 모드: pod ↔ pgbouncer client conn 1:1 → pgbouncer ↔ RDS server 1:1.
+  # 6 replica × 10 = 60 client conn → pgbouncer goti_ticketing pool_size=100 안에 여유.
   - name: TICKETING_DATABASE_MAX_CONNS
-    value: "18"
+    value: "10"
   - name: TICKETING_DATABASE_MIN_CONNS
-    value: "5"
+    value: "3"
   - name: TICKETING_DATABASE_MAX_CONN_IDLE_TIME_SEC
     value: "30"
   - name: TICKETING_DATABASE_MAX_CONN_LIFETIME_SEC
