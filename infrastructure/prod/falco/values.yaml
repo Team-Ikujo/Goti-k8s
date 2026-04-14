@@ -1,20 +1,32 @@
 # Falco prod values — EKS Bottlerocket 환경
 # Chart 8.0.x / Falco 0.43.0
 #
-# ⚠️ 알려진 이슈: Bottlerocket + modern_ebpf에서 메모리 누수 (falco#3643)
+# ============================================================================
+# ⛔ DISABLED (2026-04-14)
+# ============================================================================
+# 비활성화 사유: 미사용 + 알람 확인 안 됨 + 리소스만 차지 (root-appsets exclude 동일 사유)
+# 배포 경로: Application은 `gitops/prod/applicationsets` exclude="{falco/**}"로 제외됨.
+# 아래 values는 재활성화(exclude 해제) 시에도 즉시 기동되지 않도록 하는 안전장치.
+# 재활성화 절차: (1) 이 파일의 DISABLED 섹션 복원 (2) appset exclude 해제
+#
+# ⚠️ 알려진 이슈(재활성화 시 참조): Bottlerocket + modern_ebpf 메모리 누수 (falco#3643)
 #   - 수정: libs#2854 머지됨, Falco 0.44.0에서 릴리스 예정
-#   - 대응: memory limit 1Gi로 상향 + OOMKill 시 자동 재시작으로 운영
-#   - 0.44.0 출시 시 chart 업그레이드 필요
+#   - 대응: memory limit 1Gi로 상향 + OOMKill 시 자동 재시작
+#
+# 기존 `goti-rules` 및 `goti-exceptions` 커스텀 룰은 재활성화 대비 보존.
 
-# nodeSelector 초기화 — kubectl 직접 수정으로 falco-disabled=true가 설정되어 있었음
-nodeSelector: {}
+# DaemonSet을 일치하지 않는 nodeSelector로 0 pod 유지
+nodeSelector:
+  falco-disabled: "true"
 
 driver:
   kind: modern_ebpf
+  # 재활성화 전까지 syscall 수집기 비활성 (CPU/메모리 즉시 0)
+  enabled: false
 
 collectors:
   kubernetes:
-    enabled: true
+    enabled: false
 
 # 리소스 — Bottlerocket 메모리 누수 대응으로 limit 상향
 resources:
@@ -31,9 +43,9 @@ tolerations:
     value: spot
     effect: NoSchedule
 
-# Falcosidekick — 알림 전송 (Discord webhook)
+# Falcosidekick — 알림 전송 (Discord webhook) — DISABLED
 falcosidekick:
-  enabled: true
+  enabled: false
   resources:
     requests:
       cpu: 50m
