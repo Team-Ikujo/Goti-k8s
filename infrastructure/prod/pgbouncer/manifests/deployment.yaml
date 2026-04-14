@@ -46,6 +46,8 @@ spec:
                 labelSelector:
                   matchLabels:
                     app: pgbouncer
+      # 2m 동안 in-flight transaction 드레인 허용 (기본 30s는 pgbouncer tx complete 대기에 부족 가능)
+      terminationGracePeriodSeconds: 120
       containers:
         - name: pgbouncer
           image: edoburu/pgbouncer:v1.23.1-p3
@@ -112,3 +114,34 @@ spec:
             allowPrivilegeEscalation: false
             capabilities: { drop: ["ALL"] }
             readOnlyRootFilesystem: false  # edoburu entrypoint 가 /etc/pgbouncer 에 쓰기 필요
+          # preStop: SIGTERM 전에 k8s Endpoint 제거 전파 대기 (5s).
+          # pgbouncer 는 SIGTERM 시 신규 연결 차단 + 기존 tx 완료 대기.
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 5"]
+        # --- Prometheus metrics sidecar (ADR 0013 Phase D) ---
+        - name: exporter
+          image: prometheuscommunity/pgbouncer-exporter:v0.10.4
+          args:
+            - "--pgBouncer.connectionString=postgres://$(EXPORTER_USER):$(EXPORTER_PASSWORD)@localhost:5432/pgbouncer?sslmode=disable"
+            - "--web.listen-address=:9127"
+          ports:
+            - containerPort: 9127
+              name: metrics
+          env:
+            - name: EXPORTER_USER
+              valueFrom: { secretKeyRef: { name: pgbouncer-secret, key: db-user } }
+            - name: EXPORTER_PASSWORD
+              valueFrom: { secretKeyRef: { name: pgbouncer-secret, key: db-user-password } }
+          readinessProbe:
+            httpGet: { path: /metrics, port: 9127 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { cpu: 100m, memory: 64Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            readOnlyRootFilesystem: true

@@ -85,11 +85,17 @@ securityContext:
 # 환경변수: PAYMENT_ prefix (Viper가 config.Load("payment")에서 자동 생성)
 env:
   # --- 인프라 (Secret에서 주입) ---
-  - name: PAYMENT_DATABASE_URL
+  # --- DATABASE via PgBouncer (ADR 0013) ---
+  # TODO: 서비스별 dedicated user 복구 — 현재는 master goti 단일 사용 (pgbouncer 멀티유저 설정 후 복구)
+  - name: DB_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: goti-payment-v2-prod-secrets
-        key: PAYMENT_DATABASE_URL
+        name: pgbouncer-secret
+        key: db-user-password
+  - name: PAYMENT_DATABASE_URL
+    value: "postgres://goti:$(DB_PASSWORD)@pgbouncer.goti.svc:5432/goti?sslmode=disable&search_path=payment_service"
+  - name: PAYMENT_DATABASE_PGBOUNCER_COMPAT
+    value: "true" 
   - name: PAYMENT_REDIS_URL
     valueFrom:
       secretKeyRef:
