@@ -198,7 +198,7 @@ istioPolicy:
     enabled: true
 image:
   repository: harbor.go-ti.shop/prod/goti-stadium-go
-  tag: prod-39-c6ac3b3
+  tag: prod-40-ad8b68d
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
