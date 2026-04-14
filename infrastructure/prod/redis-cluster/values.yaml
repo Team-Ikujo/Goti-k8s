@@ -1,0 +1,92 @@
+# Redis Cluster — SDD-0005 Redis Source of Truth (D0)
+# Bitnami redis-cluster chart: https://github.com/bitnami/charts/tree/main/bitnami/redis-cluster
+#
+# 토폴로지: 6 master + 6 replica (replicas=1 per master) = 12 pod
+# 메모리 정책: noeviction (SoT — eviction = 데이터 유실 = 티켓 중복판매)
+# persistence: RDB 5m + AOF everysec (1초 유실 허용, outbox replay로 복구)
+# hash tag `{game_id}` 통일로 한 게임의 모든 키를 같은 cluster slot에 배치.
+#
+# 주의: 본 values는 scaffolding. 실제 활성화는 Application.yaml 언커밋 + ArgoCD sync.
+# 부하 테스트 검증 전 production wiring(TICKETING_REDIS_URL 전환) 금지.
+
+cluster:
+  nodes: 6            # master 6개 (각 슬롯 그룹)
+  replicas: 1         # master 당 replica 1개 → 총 12 pod
+
+auth:
+  enabled: false      # 내부 통신, NetworkPolicy로 격리
+
+# TLS는 초기엔 비활성(Istio sidecar excludeOutboundPorts=6379로 우회).
+tls:
+  enabled: false
+
+persistence:
+  enabled: true
+  storageClass: gp3
+  size: 20Gi          # 메모리 4~6Gi의 4~5배 여유
+
+redis:
+  configmap: |
+    # SoT 정책: eviction 절대 금지
+    maxmemory-policy noeviction
+    maxmemory 2500mb
+    # Persistence
+    appendonly yes
+    appendfsync everysec
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 512mb
+    save 300 100
+    # fork latency 감소
+    no-appendfsync-on-rewrite yes
+    # 클러스터
+    cluster-require-full-coverage no
+    cluster-allow-reads-when-down no
+    # slowlog
+    slowlog-log-slower-than 10000
+    slowlog-max-len 256
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 4Gi
+    limits:
+      cpu: 2000m
+      memory: 6Gi
+
+  # 노드 분산 필수 (같은 host에 master+replica 안 됨)
+  podAntiAffinityPreset: hard
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: redis-cluster
+
+  podDisruptionBudget:
+    create: true
+    maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 60
+
+  podAnnotations:
+    # 6379: Istio sidecar mTLS가 Redis protocol과 충돌. 내부 통신은 NetworkPolicy로 보호.
+    sidecar.istio.io/inject: "false"
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: goti
+    labels:
+      release: kube-prometheus-stack-prod
+
+networkPolicy:
+  enabled: true
+  # ticketing / payment / stadium 만 접근 허용 (SDD-0005)
+  allowExternal: false
+  ingressNSMatchLabels:
+    kubernetes.io/metadata.name: goti
+  ingressNSPodMatchLabels:
+    # 추후 ticketing/payment/stadium 라벨 구체화
+    app.kubernetes.io/part-of: goti
