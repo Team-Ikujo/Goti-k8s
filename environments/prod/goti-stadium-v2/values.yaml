@@ -2,7 +2,7 @@
 # inline jwks를 모든 Go 서비스(현재 6개)와 수동 동기화 필요. Phase 6.5 4서비스
 # 확대 전 ConfigMap 또는 RequestAuthentication.jwksUri 참조 방식으로 자동화.
 # 메모리: project_jwks_automation_todo.md
-nameOverride: goti-stadium-go
+nameOverride: goti-stadium-v2
 service:
   type: ClusterIP
   port: 8080
@@ -41,7 +41,7 @@ gateway:
             prefix: "/api/v1/baseball-teams"
       route:
         - destination:
-            host: goti-stadium-go-prod
+            host: goti-stadium-v2-prod
             port:
               number: 8080
 # TODO(tuning): cron 윈도우/replica/threshold는 ticketing-go 값 그대로 복제.
@@ -65,7 +65,7 @@ autoscaling:
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc.cluster.local:8080/prometheus
           metricName: http_rps_stadium_go
-          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-stadium-go"}[1m]))
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-stadium-v2"}[1m]))
           threshold: "50"
 # TODO(verify): /healthz가 DB/Redis ping 포함 시 RDS 풀 초기화에 3~5s 소요
 # 가능 → liveness 재시작 루프 위험. 코드 확인 후 필요 시 liveness만 10s로 조정.
@@ -105,17 +105,17 @@ env:
   - name: STADIUM_DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: goti-stadium-go-prod-secrets
+        name: goti-stadium-v2-prod-secrets
         key: STADIUM_DATABASE_URL
   - name: STADIUM_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-stadium-go-prod-secrets
+        name: goti-stadium-v2-prod-secrets
         key: STADIUM_REDIS_URL
   - name: STADIUM_JWT_PUBLIC_KEY_PEM
     valueFrom:
       secretKeyRef:
-        name: goti-stadium-go-prod-secrets
+        name: goti-stadium-v2-prod-secrets
         key: STADIUM_JWT_PUBLIC_KEY_PEM
   # --- DB pool (SDD Step 5 / S4: RDS max_conn=200, 6서비스 공유) ---
   # 3 → 8: 부하테스트에서 seat_selection p95 60s 확인 (2026-04-14 queue-oneshot).
@@ -135,10 +135,10 @@ env:
   - name: STADIUM_OTEL_ENDPOINT
     value: "http://otel-front-prod.monitoring.svc:4317"
   - name: STADIUM_OTEL_SERVICE_NAME
-    value: "goti-stadium-go"
+    value: "goti-stadium-v2"
   # OTel SDK 표준 환경변수 (Go SDK가 직접 참조)
   - name: OTEL_SERVICE_NAME
-    value: "goti-stadium-go"
+    value: "goti-stadium-v2"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "http://otel-front-prod.monitoring.svc:4317"
   - name: OTEL_RESOURCE_ATTRIBUTES
@@ -166,7 +166,7 @@ istioPolicy:
         rules:
           - from:
               - source:
-                  principals: ["cluster.local/ns/goti/sa/goti-ticketing-go-prod"]
+                  principals: ["cluster.local/ns/goti/sa/goti-ticketing-v2-prod"]
             to:
               - operation:
                   paths: ["/api/v1/stadiums*", "/api/v1/baseball-teams*"]
