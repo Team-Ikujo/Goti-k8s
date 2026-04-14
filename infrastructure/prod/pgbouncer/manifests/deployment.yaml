@@ -107,8 +107,36 @@ spec:
             - name: config-runtime
               mountPath: /etc/pgbouncer
         # Prometheus exporter (ADR 0013 Phase D)
-        # TODO: 비밀번호 특수문자(|, %, ^) URL escape 처리 후 재활성화.
-        # 현재는 장애 차단 우선으로 비활성화.
+        # 비밀번호 특수문자(|, %, ^, #) 때문에 DSN URL parse 실패 → SSM 에 url-encoded 사본
+        # (/prod/pgbouncer/db-user-password-urlenc) 을 별도 키로 보관해 그대로 주입한다.
+        - name: exporter
+          image: prometheuscommunity/pgbouncer-exporter:v0.12.0
+          args:
+            - "--pgBouncer.connectionString=postgres://$(EXPORTER_USER):$(EXPORTER_PASSWORD_URLENC)@localhost:5432/pgbouncer?sslmode=disable"
+            - "--web.listen-address=:9127"
+          ports:
+            - containerPort: 9127
+              name: metrics
+          env:
+            - name: EXPORTER_USER
+              valueFrom: { secretKeyRef: { name: pgbouncer-secret, key: db-user } }
+            - name: EXPORTER_PASSWORD_URLENC
+              valueFrom: { secretKeyRef: { name: pgbouncer-secret, key: db-user-password-urlenc } }
+          readinessProbe:
+            httpGet: { path: /metrics, port: 9127 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /metrics, port: 9127 }
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { cpu: 100m, memory: 64Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            readOnlyRootFilesystem: true
       volumes:
         - name: config-template
           configMap:
