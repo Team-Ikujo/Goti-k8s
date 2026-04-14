@@ -26,7 +26,10 @@ spec:
         app: pgbouncer
         version: v1
       annotations:
-        traffic.sidecar.istio.io/excludeInboundPorts: "5432,9127"
+        # 5432: PostgreSQL wire protocol — sidecar 통과 불가, exclude 필수.
+        # 9127: HTTP metrics — sidecar 가 mTLS 받아 exporter 로 전달해야 ambient ztunnel
+        #       (monitoring ns) 에서 mTLS 로 scrape 가능. exclude 하면 503 발생.
+        traffic.sidecar.istio.io/excludeInboundPorts: "5432"
     spec:
       securityContext:
         runAsNonRoot: true
