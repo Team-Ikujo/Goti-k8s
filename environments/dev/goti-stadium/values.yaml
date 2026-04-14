@@ -50,11 +50,28 @@ gateway:
               number: 8080
     - match:
         - uri:
-            regex: /api/[^/]+/v1/(stadiums|baseball-teams).*
+            prefix: "/api/KIA/v1/stadiums"
+        - uri:
+            prefix: "/api/samsung/v1/stadiums"
       rewrite:
-        regexRewrite:
-          match: /api/[^/]+(/v1/.*)
-          rewrite: /api\1
+        uri: "/api/v1/stadiums"
+      timeout: 5s
+      retries:
+        attempts: 2
+        perTryTimeout: 2s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-stadium-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: "/api/KIA/v1/baseball-teams"
+        - uri:
+            prefix: "/api/samsung/v1/baseball-teams"
+      rewrite:
+        uri: "/api/v1/baseball-teams"
       timeout: 5s
       retries:
         attempts: 2
