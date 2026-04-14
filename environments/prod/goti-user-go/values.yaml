@@ -170,6 +170,29 @@ env:
       secretKeyRef:
         name: goti-user-prod-secrets
         key: NAVER_REDIRECT_URI
+  # --- SMS (CoolSMS) ---
+  - name: SMS_ENABLED
+    value: "true"
+  - name: SMS_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: SMS_API_KEY
+  - name: SMS_API_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: SMS_API_SECRET
+  - name: SMS_API_SENDER
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: SMS_API_SENDER
+  - name: SMS_API_DOMAIN
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-secrets
+        key: SMS_API_DOMAIN
   # --- OTel ---
   - name: USER_OTEL_ENABLED
     value: "true"
