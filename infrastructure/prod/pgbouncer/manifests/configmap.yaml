@@ -11,7 +11,7 @@ metadata:
 data:
   pgbouncer.ini: |
     [databases]
-    goti_ticketing = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti connect_query='SET search_path TO ticketing_service'
+    goti_ticketing = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti connect_query='SET search_path TO ticketing_service' pool_size=100
     goti_stadium   = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti connect_query='SET search_path TO stadium_service'
     goti_user      = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti connect_query='SET search_path TO user_service'
     goti_payment   = host=DB_HOST_PLACEHOLDER port=5432 dbname=goti user=goti connect_query='SET search_path TO payment_service'
