@@ -75,7 +75,7 @@ probes:
     failureThreshold: 3
 podAnnotations:
   sidecar.istio.io/inject: "true"
-  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379,5432"
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 65532

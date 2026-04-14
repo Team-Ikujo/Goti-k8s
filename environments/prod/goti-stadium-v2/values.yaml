@@ -87,7 +87,7 @@ probes:
 podAnnotations:
   sidecar.istio.io/inject: "true"
   # ElastiCache Redis TLS — Istio sidecar 우회
-  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379,5432"
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 65532
