@@ -2,7 +2,7 @@ nameOverride: goti-stadium
 replicaCount: 0
 image:
   repository: "harbor.go-ti.shop/prod/goti-stadium-go"
-  tag: "prod-30-0e318ee"
+  tag: "prod-34-0dea0b2"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
