@@ -14,7 +14,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: goti-overprovision
-  namespace: goti
+  # CR-002: Application destination.namespace=karpenter 와 일치 (manifest namespace 우선이지만 tracking 통일)
+  namespace: karpenter
   labels:
     app: goti-overprovision
 spec:
@@ -30,8 +31,11 @@ spec:
         sidecar.istio.io/inject: "false"
     spec:
       priorityClassName: goti-overprovision
+      # CR-001: 반드시 Karpenter NodePool에만 스케줄. 기존 Spot NodeGroup에 가면
+      # Karpenter burst가 트리거되지 않아 overprovision 의도 무효화.
+      nodeSelector:
+        pool: app-spot
       tolerations:
-        # Karpenter NodePool 과 기존 Spot NodeGroup 모두 호환되는 toleration
         - key: node-role
           operator: Equal
           value: spot
