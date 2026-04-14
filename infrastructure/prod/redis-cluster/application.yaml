@@ -1,0 +1,36 @@
+# Redis Cluster ArgoCD Application — SDD-0005 D0 scaffolding
+#
+# 주의: 초기엔 비활성(주석) 상태. SDD-0005 D0 착수 시점에 주석 해제 + prune/selfHeal off로 먼저 sync.
+# ticketing이 이 cluster로 전환되는 시점은 D1~D7 단계별 feature flag로 관리.
+#
+# ServerSideApply=true 사용 앱에서는 Force Sync 금지 (rules/user-approval.md).
+#
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: goti-redis-cluster
+#   namespace: argocd
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "-5"
+# spec:
+#   project: default
+#   sources:
+#     - repoURL: https://charts.bitnami.com/bitnami
+#       chart: redis-cluster
+#       targetRevision: 11.*
+#       helm:
+#         valueFiles:
+#           - $values/infrastructure/prod/redis-cluster/values.yaml
+#     - repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
+#       targetRevision: main
+#       ref: values
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: goti
+#   syncPolicy:
+#     automated:
+#       selfHeal: false   # 초기엔 수동 sync로 검증 우선
+#       prune: false
+#     syncOptions:
+#       - CreateNamespace=true
+#       - ServerSideApply=true
