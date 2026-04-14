@@ -183,9 +183,6 @@ env:
     value: "http://otel-front-prod.monitoring.svc:4317"
   - name: OTEL_RESOURCE_ATTRIBUTES
     value: "service.namespace=goti,deployment.environment.name=prod"
-  # --- TestUser (부하테스트 전용 endpoint 활성화) ---
-  - name: USER_TEST_USER_ENABLED
-    value: "true"
 configMap:
   enabled: false
 # --- Istio 보안/네트워크 정책 ---
