@@ -118,8 +118,10 @@ env:
         name: goti-stadium-go-prod-secrets
         key: STADIUM_JWT_PUBLIC_KEY_PEM
   # --- DB pool (SDD Step 5 / S4: RDS max_conn=200, 6서비스 공유) ---
+  # 3 → 8: 부하테스트에서 seat_selection p95 60s 확인 (2026-04-14 queue-oneshot).
+  # 4 replicas × 8 = 32. ticketing 96 + others 45 = 173, RDS 여유 27.
   - name: STADIUM_DATABASE_MAX_CONNS
-    value: "3"
+    value: "8"
   - name: STADIUM_DATABASE_MIN_CONNS
     value: "1"
   - name: STADIUM_DATABASE_MAX_CONN_IDLE_TIME_SEC
