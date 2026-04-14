@@ -25,10 +25,14 @@ data:
     auth_type = scram-sha-256
     auth_file = /etc/pgbouncer/userlist.txt
 
-    pool_mode = transaction
-    default_pool_size = 40
-    min_pool_size = 5
-    reserve_pool_size = 10
+    # pool_mode: transaction 은 sqlc 가 생성한 prepared statement / pgx 의 type
+    # describe 와 충돌(stmtcache, encode plan, bind param mismatch)이 잦아 일시
+    # session 모드로 운영. session 은 client ↔ server 1:1 매핑이므로 부하 예상치
+    # 에 맞춰 default_pool_size 를 충분히 키워야 한다.
+    pool_mode = session
+    default_pool_size = 80
+    min_pool_size = 10
+    reserve_pool_size = 20
     reserve_pool_timeout = 3
     max_client_conn = 5000
 
