@@ -52,7 +52,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/stadiums"
         - uri:
-            prefix: "/api/samsung/v1/stadiums"
+            prefix: "/api/SS/v1/stadiums"
       rewrite:
         uri: "/api/v1/stadiums"
       timeout: 5s
@@ -69,7 +69,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/baseball-teams"
         - uri:
-            prefix: "/api/samsung/v1/baseball-teams"
+            prefix: "/api/SS/v1/baseball-teams"
       rewrite:
         uri: "/api/v1/baseball-teams"
       timeout: 5s

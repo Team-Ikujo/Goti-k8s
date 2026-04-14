@@ -50,7 +50,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/payments"
         - uri:
-            prefix: "/api/samsung/v1/payments"
+            prefix: "/api/SS/v1/payments"
       rewrite:
         uri: "/api/v1/payments"
       timeout: 15s

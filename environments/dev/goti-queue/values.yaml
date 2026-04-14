@@ -53,7 +53,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/queue"
         - uri:
-            prefix: "/api/samsung/v1/queue"
+            prefix: "/api/SS/v1/queue"
       rewrite:
         uri: "/api/v1/queue"
       timeout: 10s

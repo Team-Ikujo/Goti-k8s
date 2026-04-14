@@ -66,7 +66,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/orders"
         - uri:
-            prefix: "/api/samsung/v1/orders"
+            prefix: "/api/SS/v1/orders"
       rewrite:
         uri: "/api/v1/orders"
       timeout: 12s
@@ -83,7 +83,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/games"
         - uri:
-            prefix: "/api/samsung/v1/games"
+            prefix: "/api/SS/v1/games"
       rewrite:
         uri: "/api/v1/games"
       timeout: 12s
@@ -100,7 +100,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/game-seats"
         - uri:
-            prefix: "/api/samsung/v1/game-seats"
+            prefix: "/api/SS/v1/game-seats"
       rewrite:
         uri: "/api/v1/game-seats"
       timeout: 12s
@@ -117,7 +117,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/tickets"
         - uri:
-            prefix: "/api/samsung/v1/tickets"
+            prefix: "/api/SS/v1/tickets"
       rewrite:
         uri: "/api/v1/tickets"
       timeout: 12s
@@ -134,7 +134,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/seats"
         - uri:
-            prefix: "/api/samsung/v1/seats"
+            prefix: "/api/SS/v1/seats"
       rewrite:
         uri: "/api/v1/seats"
       timeout: 12s
@@ -151,7 +151,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/seat-reservations"
         - uri:
-            prefix: "/api/samsung/v1/seat-reservations"
+            prefix: "/api/SS/v1/seat-reservations"
       rewrite:
         uri: "/api/v1/seat-reservations"
       timeout: 12s
@@ -168,7 +168,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/stadium-seats"
         - uri:
-            prefix: "/api/samsung/v1/stadium-seats"
+            prefix: "/api/SS/v1/stadium-seats"
       rewrite:
         uri: "/api/v1/stadium-seats"
       timeout: 12s
@@ -185,7 +185,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/teams"
         - uri:
-            prefix: "/api/samsung/v1/teams"
+            prefix: "/api/SS/v1/teams"
       rewrite:
         uri: "/api/v1/teams"
       timeout: 12s
@@ -202,7 +202,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/stadiums"
         - uri:
-            prefix: "/api/samsung/v1/stadiums"
+            prefix: "/api/SS/v1/stadiums"
       rewrite:
         uri: "/api/v1/stadiums"
       timeout: 12s
