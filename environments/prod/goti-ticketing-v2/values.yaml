@@ -57,8 +57,8 @@ autoscaling:
   enabled: true
   # 2026-04-14 부하테스트: scale-up 대기 중 k6 timeout 누적. prewarm 목적으로 min 2→6.
   # DB 예산: 6 × 12 = 72 idle, 10 × 12 = 120 peak (RDS max_conn=200 내 stadium/queue/others 합 ≈ 200).
-  minReplicas: 6
-  maxReplicas: 10
+  minReplicas: 8
+  maxReplicas: 12
   keda:
     enabled: true
     cooldownPeriod: 300
@@ -144,7 +144,7 @@ env:
   # PgBouncer session 모드 + goti_ticketing pool_size=100. 2026-04-14 2차 부하에서
   # 18→10 변경이 역효과(throughput 감소)로 확인되어 18 복귀.
   - name: TICKETING_DATABASE_MAX_CONNS
-    value: "18"
+    value: "15"
   - name: TICKETING_DATABASE_MIN_CONNS
     value: "5"
   - name: TICKETING_DATABASE_MAX_CONN_IDLE_TIME_SEC
