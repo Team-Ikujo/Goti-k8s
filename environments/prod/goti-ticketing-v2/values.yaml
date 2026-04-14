@@ -55,26 +55,44 @@ gateway:
               number: 8080
 autoscaling:
   enabled: true
-  # 2026-04-14 부하테스트: scale-up 대기 중 k6 timeout 누적. prewarm 목적으로 min 2→6.
-  # DB 예산: 6 × 12 = 72 idle, 10 × 12 = 120 peak (RDS max_conn=200 내 stadium/queue/others 합 ≈ 200).
-  minReplicas: 8
-  maxReplicas: 12
+  # SDD-0007 PR-3: scale-up 반응성 튜닝. min 12 prewarm, max 24.
+  # DB 예산: MaxConns 10 × 24 = 240 < pgbouncer pool 300 안전.
+  minReplicas: 12
+  maxReplicas: 24
   keda:
     enabled: true
-    cooldownPeriod: 300
+    pollingInterval: 10
+    cooldownPeriod: 120
+    advanced:
+      horizontalPodAutoscalerConfig:
+        behavior:
+          scaleUp:
+            stabilizationWindowSeconds: 0
+            policies:
+              - { type: Pods, value: 8, periodSeconds: 15 }
+              - { type: Percent, value: 200, periodSeconds: 15 }
+            selectPolicy: Max
+          scaleDown:
+            stabilizationWindowSeconds: 300
+            policies:
+              - { type: Percent, value: 25, periodSeconds: 60 }
     triggers:
-      # - type: cron
-      #   metadata:
-      #     timezone: "Asia/Seoul"
-      #     start: "30 10 * * *"
-      #     end: "0 13 * * *"
-      #     desiredReplicas: "4"
+      - type: cron
+        metadata:
+          timezone: "Asia/Seoul"
+          start: "30 09 * * *"
+          end: "0 13 * * *"
+          desiredReplicas: "18"
       - type: prometheus
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus
           metricName: http_rps_ticketing_go
-          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-ticketing-v2"}[1m]))
-          threshold: "50"
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-ticketing-v2"}[30s]))
+          threshold: "30"
+      - type: cpu
+        metricType: Utilization
+        metadata:
+          value: "70"
 probes:
   liveness:
     httpGet:
@@ -143,8 +161,9 @@ env:
   # 12 → 18: 3000 VU 부하에서 begin tx: context canceled 210건 관측.
   # PgBouncer session 모드 + goti_ticketing pool_size=100. 2026-04-14 2차 부하에서
   # 18→10 변경이 역효과(throughput 감소)로 확인되어 18 복귀.
+  # SDD-0007 PR-3: maxReplicas=24 전제, 24 × 10 = 240 < pgbouncer pool 300 안전
   - name: TICKETING_DATABASE_MAX_CONNS
-    value: "15"
+    value: "10"
   - name: TICKETING_DATABASE_MIN_CONNS
     value: "5"
   - name: TICKETING_DATABASE_MAX_CONN_IDLE_TIME_SEC
