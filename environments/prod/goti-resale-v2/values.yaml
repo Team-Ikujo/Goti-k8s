@@ -175,7 +175,7 @@ istioPolicy:
     enabled: true
 image:
   repository: harbor.go-ti.shop/prod/goti-resale-go
-  tag: prod-36-a47dac1
+  tag: prod-38-18d0b20
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
