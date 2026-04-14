@@ -51,6 +51,23 @@ gateway:
               number: 8080
     - match:
         - uri:
+            regex: /api/[^/]+/v1/queue.*
+      rewrite:
+        regexRewrite:
+          match: /api/[^/]+(/v1/.*)
+          rewrite: /api\1
+      timeout: 10s
+      retries:
+        attempts: 2
+        perTryTimeout: 5s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-queue-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
             prefix: "/api/docs/queue/swagger-ui/"
       rewrite:
         uri: "/swagger-ui/"

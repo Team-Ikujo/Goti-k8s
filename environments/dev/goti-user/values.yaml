@@ -53,6 +53,23 @@ gateway:
               number: 8080
     - match:
         - uri:
+            regex: /api/[^/]+/v1/(auth|members|test).*
+      rewrite:
+        regexRewrite:
+          match: /api/[^/]+(/v1/.*)
+          rewrite: /api\1
+      timeout: 5s
+      retries:
+        attempts: 2
+        perTryTimeout: 2s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-user-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
             prefix: "/api/docs/user/swagger-ui/"
       rewrite:
         uri: "/swagger-ui/"

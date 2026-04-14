@@ -48,6 +48,23 @@ gateway:
               number: 8080
     - match:
         - uri:
+            regex: /api/[^/]+/v1/resales.*
+      rewrite:
+        regexRewrite:
+          match: /api/[^/]+(/v1/.*)
+          rewrite: /api\1
+      timeout: 10s
+      retries:
+        attempts: 2
+        perTryTimeout: 3s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-resale-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
             prefix: "/api/docs/resale/swagger-ui/"
       rewrite:
         uri: "/swagger-ui/"
