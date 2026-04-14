@@ -97,7 +97,7 @@ env:
         name: pgbouncer-secret
         key: db-user-password
   - name: USER_DATABASE_URL
-    value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti sslmode=disable search_path=user_service"
+    value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti_user sslmode=disable"
   - name: USER_DATABASE_PGBOUNCER_COMPAT
     value: "true" 
   - name: USER_REDIS_URL

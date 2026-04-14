@@ -103,7 +103,7 @@ env:
         name: pgbouncer-secret
         key: db-user-password
   - name: QUEUE_DATABASE_URL
-    value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti sslmode=disable search_path=queue_service"
+    value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti_queue sslmode=disable"
   - name: QUEUE_DATABASE_PGBOUNCER_COMPAT
     value: "true" 
   - name: QUEUE_REDIS_URL
