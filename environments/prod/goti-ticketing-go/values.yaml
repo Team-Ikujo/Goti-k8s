@@ -55,7 +55,9 @@ gateway:
               number: 8080
 autoscaling:
   enabled: true
-  minReplicas: 2
+  # 2026-04-14 부하테스트: scale-up 대기 중 k6 timeout 누적. prewarm 목적으로 min 2→6.
+  # DB 예산: 6 × 12 = 72 idle, 10 × 12 = 120 peak (RDS max_conn=200 내 stadium/queue/others 합 ≈ 200).
+  minReplicas: 6
   maxReplicas: 10
   keda:
     enabled: true
