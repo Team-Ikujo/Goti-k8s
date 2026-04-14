@@ -110,7 +110,7 @@ env:
         name: pgbouncer-secret
         key: db-user-password
   - name: STADIUM_DATABASE_URL
-    value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti sslmode=disable search_path=stadium_service"
+    value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti_stadium sslmode=disable"
   - name: STADIUM_DATABASE_PGBOUNCER_COMPAT
     value: "true" 
   - name: STADIUM_REDIS_URL

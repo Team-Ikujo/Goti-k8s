@@ -1,5 +1,7 @@
 # PgBouncer Deployment — 2 replicas HA (ADR 0013 Phase A)
-# edoburu/pgbouncer 는 env 변수 기반 자동 설정. ConfigMap 마운트 불필요.
+# ConfigMap 기반 multi-db 설정: 각 서비스는 dbname=goti_{svc} 로 접속,
+# PgBouncer 가 options='-c search_path={svc}_service' 를 server conn 에 주입.
+# → transaction pool mode 에서도 search_path 안전 고정.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,8 +26,6 @@ spec:
         app: pgbouncer
         version: v1
       annotations:
-        # Istio sidecar 가 PostgreSQL wire protocol 을 가로채면 SSL startup 실패.
-        # 5432 inbound 를 Envoy 에서 제외하고 raw TCP 로 통과시킴.
         traffic.sidecar.istio.io/excludeInboundPorts: "5432"
     spec:
       securityContext:
@@ -46,83 +46,67 @@ spec:
                 labelSelector:
                   matchLabels:
                     app: pgbouncer
-      # 2m 동안 in-flight transaction 드레인 허용 (기본 30s는 pgbouncer tx complete 대기에 부족 가능)
       terminationGracePeriodSeconds: 120
-      containers:
-        - name: pgbouncer
-          image: edoburu/pgbouncer:v1.23.1-p3
-          ports:
-            - containerPort: 5432
-              name: pgbouncer
+      initContainers:
+        - name: render-config
+          image: busybox:1.37
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+              sed "s|DB_HOST_PLACEHOLDER|$DB_HOST|g" /etc/pgbouncer-template/pgbouncer.ini > /etc/pgbouncer/pgbouncer.ini
+              printf '"%s" "%s"\n' "$DB_USER" "$DB_PASSWORD" > /etc/pgbouncer/userlist.txt
+              chmod 600 /etc/pgbouncer/userlist.txt
           env:
-            # edoburu entrypoint 가 DATABASE_URL 을 파싱해 pgbouncer.ini 를 생성
             - name: DB_HOST
               valueFrom: { secretKeyRef: { name: pgbouncer-secret, key: db-host } }
             - name: DB_USER
               valueFrom: { secretKeyRef: { name: pgbouncer-secret, key: db-user } }
             - name: DB_PASSWORD
               valueFrom: { secretKeyRef: { name: pgbouncer-secret, key: db-user-password } }
-            - name: DB_NAME
-              value: "goti"
-            # 연결 풀 설정 (ADR 0013)
-            - name: POOL_MODE
-              value: "transaction"
-            - name: MAX_CLIENT_CONN
-              value: "5000"
-            - name: DEFAULT_POOL_SIZE
-              value: "40"
-            - name: MIN_POOL_SIZE
-              value: "5"
-            - name: RESERVE_POOL_SIZE
-              value: "10"
-            - name: RESERVE_POOL_TIMEOUT
-              value: "3"
-            - name: SERVER_RESET_QUERY
-              value: "DISCARD ALL"
-            - name: SERVER_IDLE_TIMEOUT
-              value: "300"
-            - name: SERVER_LIFETIME
-              value: "3600"
-            - name: AUTH_TYPE
-              value: "scram-sha-256"
-            - name: SERVER_TLS_SSLMODE
-              value: "require"
-            # search_path 는 pgx 가 startup parameter 로 전달 — 무시하면 기본 public 로
-            # 세팅되어 서비스 schema 테이블을 못 찾음 (SQLSTATE 42P01).
-            - name: IGNORE_STARTUP_PARAMETERS
-              value: "extra_float_digits,application_name"
-            - name: LISTEN_ADDR
-              value: "0.0.0.0"
-            - name: LISTEN_PORT
-              value: "5432"
-          readinessProbe:
-            tcpSocket:
-              port: 5432
-            initialDelaySeconds: 5
-            periodSeconds: 5
-          livenessProbe:
-            tcpSocket:
-              port: 5432
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 500m
-              memory: 256Mi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities: { drop: ["ALL"] }
-            readOnlyRootFilesystem: false  # edoburu entrypoint 가 /etc/pgbouncer 에 쓰기 필요
-          # preStop: SIGTERM 전에 k8s Endpoint 제거 전파 대기 (5s).
-          # pgbouncer 는 SIGTERM 시 신규 연결 차단 + 기존 tx 완료 대기.
+            readOnlyRootFilesystem: true
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { cpu: 100m, memory: 64Mi }
+          volumeMounts:
+            - name: config-template
+              mountPath: /etc/pgbouncer-template
+            - name: config-runtime
+              mountPath: /etc/pgbouncer
+      containers:
+        - name: pgbouncer
+          image: edoburu/pgbouncer:v1.23.1-p3
+          # initContainer 가 /etc/pgbouncer/pgbouncer.ini 를 미리 생성해두면 edoburu
+          # entrypoint 가 env 기반 ini 생성 대신 그 파일을 사용한다.
+          ports:
+            - containerPort: 5432
+              name: pgbouncer
+          readinessProbe:
+            tcpSocket: { port: 5432 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket: { port: 5432 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+            readOnlyRootFilesystem: false
           lifecycle:
             preStop:
               exec:
                 command: ["sh", "-c", "sleep 5"]
-        # --- Prometheus metrics sidecar (ADR 0013 Phase D) ---
+          volumeMounts:
+            - name: config-runtime
+              mountPath: /etc/pgbouncer
+        # Prometheus exporter (ADR 0013 Phase D)
         - name: exporter
           image: prometheuscommunity/pgbouncer-exporter:v0.10.4
           args:
@@ -147,3 +131,9 @@ spec:
             allowPrivilegeEscalation: false
             capabilities: { drop: ["ALL"] }
             readOnlyRootFilesystem: true
+      volumes:
+        - name: config-template
+          configMap:
+            name: pgbouncer-config
+        - name: config-runtime
+          emptyDir: {}

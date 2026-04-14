@@ -116,7 +116,7 @@ env:
         name: pgbouncer-secret
         key: db-user-password
   - name: TICKETING_DATABASE_URL
-    value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti sslmode=disable search_path=ticketing_service"
+    value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti_ticketing sslmode=disable"
   - name: TICKETING_DATABASE_PGBOUNCER_COMPAT
     value: "true" 
   - name: TICKETING_REDIS_URL
