@@ -29,6 +29,11 @@ spec:
         runAsUser: 70   # edoburu/pgbouncer 기본 사용자
         seccompProfile:
           type: RuntimeDefault
+      # core 노드 포화 시 spot 에도 스케줄. Goti go 서비스와 동일한 taint 수용.
+      tolerations:
+        - key: "node-role"
+          value: "spot"
+          effect: "NoSchedule"
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
