@@ -67,7 +67,7 @@ autoscaling:
       horizontalPodAutoscalerConfig:
         behavior:
           scaleUp:
-            stabilizationWindowSeconds: 0
+            stabilizationWindowSeconds: 15
             policies:
               - { type: Pods, value: 8, periodSeconds: 15 }
               - { type: Percent, value: 200, periodSeconds: 15 }
@@ -80,14 +80,14 @@ autoscaling:
       - type: cron
         metadata:
           timezone: "Asia/Seoul"
-          start: "30 09 * * *"
+          start: "20 09 * * *"
           end: "0 13 * * *"
           desiredReplicas: "18"
       - type: prometheus
         metadata:
-          serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus
+          serverAddress: http://mimir-prod-query-frontend.monitoring.svc.cluster.local:8080/prometheus
           metricName: http_rps_ticketing_go
-          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-ticketing-v2"}[30s]))
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-ticketing-v2"}[45s]))
           threshold: "30"
       - type: cpu
         metricType: Utilization
@@ -157,11 +157,10 @@ env:
       secretKeyRef:
         name: goti-ticketing-v2-prod-secrets
         key: TICKETING_QUEUE_TOKEN_SECRET
-  # --- DB pool (SDD Step 5 / S4: RDS max_conn 300, 2026-04-14 상향) ---
-  # 12 → 18: 3000 VU 부하에서 begin tx: context canceled 210건 관측.
-  # PgBouncer session 모드 + goti_ticketing pool_size=100. 2026-04-14 2차 부하에서
-  # 18→10 변경이 역효과(throughput 감소)로 확인되어 18 복귀.
-  # SDD-0007 PR-3: maxReplicas=24 전제, 24 × 10 = 240 < pgbouncer pool 300 안전
+  # --- DB pool (SDD-0007 PR-3) ---
+  # maxReplicas=24 전제, 24 × 10 = 240 < pgbouncer pool 300 안전.
+  # PgBouncer session 모드 + goti_ticketing pool_size=150 × 2 replicas.
+  # 이전 (2026-04-14) "18 복귀" 결정은 본 PR의 maxReplicas=24 + cron prewarm 18 도입으로 무효화됨.
   - name: TICKETING_DATABASE_MAX_CONNS
     value: "10"
   - name: TICKETING_DATABASE_MIN_CONNS

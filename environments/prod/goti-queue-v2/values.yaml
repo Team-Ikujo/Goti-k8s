@@ -50,7 +50,7 @@ gateway:
               number: 8080
 autoscaling:
   enabled: true
-  # SDD-0007 PR-3: 큐 진입 burst 흡수. Redis-only이라 RDS conn 제약 없음.
+  # SDD-0007 PR-3: 큐 진입 burst 흡수. 주요 로직이 Redis 기반이라 RDS 부하가 상대적으로 적음.
   minReplicas: 4
   maxReplicas: 20
   keda:
@@ -61,7 +61,7 @@ autoscaling:
       horizontalPodAutoscalerConfig:
         behavior:
           scaleUp:
-            stabilizationWindowSeconds: 0
+            stabilizationWindowSeconds: 15
             policies:
               - { type: Pods, value: 8, periodSeconds: 15 }
               - { type: Percent, value: 200, periodSeconds: 15 }
@@ -74,14 +74,14 @@ autoscaling:
       - type: cron
         metadata:
           timezone: "Asia/Seoul"
-          start: "30 09 * * *"
+          start: "20 09 * * *"
           end: "0 13 * * *"
           desiredReplicas: "8"
       - type: prometheus
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc.cluster.local:8080/prometheus
           metricName: http_rps_queue_go
-          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-queue-v2"}[30s]))
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-queue-v2"}[45s]))
           threshold: "30"
 probes:
   liveness:

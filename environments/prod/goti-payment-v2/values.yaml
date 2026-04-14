@@ -53,7 +53,7 @@ autoscaling:
       horizontalPodAutoscalerConfig:
         behavior:
           scaleUp:
-            stabilizationWindowSeconds: 0
+            stabilizationWindowSeconds: 15
             policies:
               - { type: Pods, value: 8, periodSeconds: 15 }
               - { type: Percent, value: 200, periodSeconds: 15 }
@@ -66,14 +66,14 @@ autoscaling:
       - type: cron
         metadata:
           timezone: "Asia/Seoul"
-          start: "30 09 * * *"
+          start: "20 09 * * *"
           end: "0 13 * * *"
           desiredReplicas: "10"
       - type: prometheus
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc.cluster.local:8080/prometheus
           metricName: http_rps_payment_go
-          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-payment-v2"}[30s]))
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-payment-v2"}[45s]))
           threshold: "20"
       - type: cpu
         metricType: Utilization
