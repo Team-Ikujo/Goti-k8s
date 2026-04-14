@@ -1,5 +1,5 @@
-# PgBouncer Deployment — 2 replicas HA
-# ADR 0013 Phase A
+# PgBouncer Deployment — 2 replicas HA (ADR 0013 Phase A)
+# edoburu/pgbouncer 는 env 변수 기반 자동 설정. ConfigMap 마운트 불필요.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,10 +26,9 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
-        runAsUser: 70   # edoburu/pgbouncer 기본 사용자
+        runAsUser: 70
         seccompProfile:
           type: RuntimeDefault
-      # core 노드 포화 시 spot 에도 스케줄. Goti go 서비스와 동일한 taint 수용.
       tolerations:
         - key: "node-role"
           value: "spot"
@@ -43,59 +42,59 @@ spec:
                 labelSelector:
                   matchLabels:
                     app: pgbouncer
-      initContainers:
-        # userlist.txt 를 Secret 에서 추출해 writable emptyDir 로 복사.
-        # ConfigMap 의 pgbouncer.ini 는 ${DB_HOST}/${DB_USER} 리터럴을 포함 —
-        # busybox sh + sed 로 런타임 치환 (envsubst 없이).
-        - name: render-config
-          image: busybox:1.37
-          command:
-            - sh
-            - -c
-            - |
-              set -e
-              sed -e "s|\${DB_HOST}|$DB_HOST|g" -e "s|\${DB_USER}|$DB_USER|g" \
-                /etc/pgbouncer-template/pgbouncer.ini > /etc/pgbouncer/pgbouncer.ini
-              printf '"%s" "%s"\n' "$DB_USER" "$DB_USER_PASSWORD" > /etc/pgbouncer/userlist.txt
-              chmod 600 /etc/pgbouncer/userlist.txt
-          env:
-            - name: DB_HOST
-              valueFrom:
-                secretKeyRef: { name: pgbouncer-secret, key: db-host }
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef: { name: pgbouncer-secret, key: db-user }
-            - name: DB_USER_PASSWORD
-              valueFrom:
-                secretKeyRef: { name: pgbouncer-secret, key: db-user-password }
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities: { drop: ["ALL"] }
-            readOnlyRootFilesystem: true
-          resources:
-            requests: { cpu: 10m, memory: 16Mi }
-            limits: { cpu: 100m, memory: 64Mi }
-          volumeMounts:
-            - name: config-template
-              mountPath: /etc/pgbouncer-template
-            - name: config-runtime
-              mountPath: /etc/pgbouncer
       containers:
         - name: pgbouncer
           image: edoburu/pgbouncer:v1.23.1-p3
-          command: ["/usr/sbin/pgbouncer"]
-          args: ["/etc/pgbouncer/pgbouncer.ini"]
           ports:
-            - containerPort: 6432
+            - containerPort: 5432
               name: pgbouncer
+          env:
+            # edoburu entrypoint 가 DATABASE_URL 을 파싱해 pgbouncer.ini 를 생성
+            - name: DB_HOST
+              valueFrom: { secretKeyRef: { name: pgbouncer-secret, key: db-host } }
+            - name: DB_USER
+              valueFrom: { secretKeyRef: { name: pgbouncer-secret, key: db-user } }
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: pgbouncer-secret, key: db-user-password } }
+            - name: DB_NAME
+              value: "goti"
+            # 연결 풀 설정 (ADR 0013)
+            - name: POOL_MODE
+              value: "transaction"
+            - name: MAX_CLIENT_CONN
+              value: "5000"
+            - name: DEFAULT_POOL_SIZE
+              value: "40"
+            - name: MIN_POOL_SIZE
+              value: "5"
+            - name: RESERVE_POOL_SIZE
+              value: "10"
+            - name: RESERVE_POOL_TIMEOUT
+              value: "3"
+            - name: SERVER_RESET_QUERY
+              value: "DISCARD ALL"
+            - name: SERVER_IDLE_TIMEOUT
+              value: "300"
+            - name: SERVER_LIFETIME
+              value: "3600"
+            - name: AUTH_TYPE
+              value: "scram-sha-256"
+            - name: SERVER_TLS_SSLMODE
+              value: "require"
+            - name: IGNORE_STARTUP_PARAMETERS
+              value: "extra_float_digits,application_name,search_path"
+            - name: LISTEN_ADDR
+              value: "0.0.0.0"
+            - name: LISTEN_PORT
+              value: "5432"
           readinessProbe:
             tcpSocket:
-              port: 6432
+              port: 5432
             initialDelaySeconds: 5
             periodSeconds: 5
           livenessProbe:
             tcpSocket:
-              port: 6432
+              port: 5432
             initialDelaySeconds: 30
             periodSeconds: 10
           resources:
@@ -108,13 +107,4 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             capabilities: { drop: ["ALL"] }
-            readOnlyRootFilesystem: true
-          volumeMounts:
-            - name: config-runtime
-              mountPath: /etc/pgbouncer
-      volumes:
-        - name: config-template
-          configMap:
-            name: pgbouncer-config
-        - name: config-runtime
-          emptyDir: {}
+            readOnlyRootFilesystem: false  # edoburu entrypoint 가 /etc/pgbouncer 에 쓰기 필요

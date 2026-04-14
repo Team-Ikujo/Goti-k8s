@@ -8,8 +8,8 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: 5432       # 앱이 5432로 접속해도 6432로 포워딩 — DATABASE_URL 변경 최소화
-      targetPort: 6432
+    - port: 5432
+      targetPort: 5432
       name: pg
   selector:
     app: pgbouncer
