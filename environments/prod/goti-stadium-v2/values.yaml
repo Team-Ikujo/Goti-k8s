@@ -112,7 +112,7 @@ env:
   - name: STADIUM_DATABASE_URL
     value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti_stadium sslmode=disable"
   - name: STADIUM_DATABASE_PGBOUNCER_COMPAT
-    value: "true" 
+    value: "true"
   - name: STADIUM_REDIS_URL
     valueFrom:
       secretKeyRef:
@@ -198,7 +198,7 @@ istioPolicy:
     enabled: true
 image:
   repository: harbor.go-ti.shop/prod/goti-stadium-go
-  tag: prod-38-18d0b20
+  tag: prod-39-c6ac3b3
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
