@@ -133,11 +133,12 @@ env:
       secretKeyRef:
         name: goti-ticketing-go-prod-secrets
         key: TICKETING_QUEUE_TOKEN_SECRET
-  # --- DB pool (SDD Step 5 / S4: RDS max_conn=200, 6서비스 공유) ---
-  # 3 → 12: 부하테스트에서 병목 확정 (2026-04-14 queue-oneshot 3000 VU, order_creation p95 60s).
-  # PgBouncer 도입 전 임시 상향. 8 replicas × 12 = 96. stadium 32 + others 45 = 173, RDS 여유 27.
+  # --- DB pool (SDD Step 5 / S4: RDS max_conn 300, 2026-04-14 상향) ---
+  # 12 → 18: 3000 VU 부하에서 begin tx: context canceled 210건 관측.
+  # 10 replicas × 18 = 180 peak. stadium 48 + others 45 = 273 (RDS 300 내).
+  # PgBouncer 도입 전 마지막 임시 상향.
   - name: TICKETING_DATABASE_MAX_CONNS
-    value: "12"
+    value: "18"
   - name: TICKETING_DATABASE_MIN_CONNS
     value: "1"
   - name: TICKETING_DATABASE_MAX_CONN_IDLE_TIME_SEC
