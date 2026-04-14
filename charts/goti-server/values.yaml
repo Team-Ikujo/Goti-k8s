@@ -124,19 +124,25 @@ istioPolicy:
     enabled: false
     allowFrom: []
   # Phase 2: DestinationRule (circuit breaker, connection pool)
+  # 2026-04-14 부하테스트 튜닝:
+  #   - maxConnections 100 → 500: 1000 VU × 6~10 pod 기준 pod당 ~100~166 concurrent 수용
+  #   - maxRequestsPerConnection 100 → 1000: 장기 load 중 잦은 재연결/TLS handshake 증가 방지
+  #   - consecutive5xxErrors 5 → 20: context canceled 기반 500 (서버 책임 아님) 에 의한 억울한 ejection 완화
+  #   - baseEjectionTime 30s → 15s: ejection 걸려도 빠른 복귀
+  #   - maxEjectionPercent 50 → 33: 다수 이젝트 시 남은 pod 과부하 방지
   destinationRule:
     enabled: false
     connectionPool:
       tcp:
-        maxConnections: 100
+        maxConnections: 500
         connectTimeout: 5s
       http:
-        maxRequestsPerConnection: 100
+        maxRequestsPerConnection: 1000
     outlierDetection:
-      consecutive5xxErrors: 5
+      consecutive5xxErrors: 20
       interval: 30s
-      baseEjectionTime: 30s
-      maxEjectionPercent: 50
+      baseEjectionTime: 15s
+      maxEjectionPercent: 33
     loadBalancer:
       simple: LEAST_REQUEST
   # JWT 검증: Istio RequestAuthentication (기본 비활성화)
