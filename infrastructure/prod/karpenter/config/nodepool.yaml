@@ -44,9 +44,10 @@ spec:
     cpu: "100"
     memory: 400Gi
   disruption:
-    consolidationPolicy: WhenEmptyOrUnderutilized
-    # prod 안정성: 워밍업 + 트래픽 안정화 시까지 성급한 노드 반납 방지
-    consolidateAfter: 15m
+    # CR-004: 초기 안정화 단계는 WhenEmpty (Underutilized 재배치로 인한 Go/JVM 재기동 비용 회피).
+    # 2~4주 운영 후 비용 최적화 단계에서 WhenEmptyOrUnderutilized로 전환 검토.
+    consolidationPolicy: WhenEmpty
+    consolidateAfter: 30m
     budgets:
       # Karpenter 자발적 축출은 동시 1대만. spot 강제 회수와는 별개.
       - nodes: "1"
