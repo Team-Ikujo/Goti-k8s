@@ -50,7 +50,7 @@ gateway:
         - uri:
             prefix: "/api/KIA/v1/resales"
         - uri:
-            prefix: "/api/samsung/v1/resales"
+            prefix: "/api/SS/v1/resales"
       rewrite:
         uri: "/api/v1/resales"
       timeout: 10s
