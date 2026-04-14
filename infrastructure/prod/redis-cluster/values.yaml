@@ -1,0 +1,124 @@
+# Redis Cluster — SDD-0005 Redis Source of Truth (D0)
+# Bitnami redis-cluster chart: https://github.com/bitnami/charts/tree/main/bitnami/redis-cluster
+#
+# 토폴로지: 6 master + 6 replica = 12 pod
+# Bitnami schema: cluster.nodes 는 "총 노드 수"(master+replica 합). replicas=1 per master → 6M + 6R = nodes 6 ? 12 ?
+# 활성화 전 `helm template infrastructure/prod/redis-cluster -f values.yaml | grep -E "kind: StatefulSet|replicas:"` 검증 필수.
+#
+# 메모리 정책: noeviction (SoT — eviction = 데이터 유실 = 티켓 중복판매)
+# persistence: RDB 5m + AOF everysec (1초 유실 목표, outbox replay로 복구)
+# hash tag `{game_id}` 통일로 한 게임의 모든 키를 같은 cluster slot에 배치.
+#
+# 주의: 본 values는 scaffolding. 실제 활성화는 Application.yaml 언커밋 + ArgoCD sync.
+# 부하 테스트 검증 전 production wiring(TICKETING_REDIS_URL 전환) 금지.
+# D7 완료 후 `infrastructure/prod/redis/` (standalone, 현재 주석 상태) 디렉토리 삭제 PR 동반 필요.
+
+cluster:
+  nodes: 6            # Bitnami: master 수 기준. replicas=1이면 총 pod = 6 × (1+1) = 12.
+  replicas: 1         # master 당 replica 1개 → 총 12 pod
+
+auth:
+  enabled: true       # SoT 방어. ExternalSecret에서 주입.
+  existingSecret: goti-redis-cluster-auth
+  existingSecretPasswordKey: redis-password
+  usePasswordFiles: true
+
+# TLS는 초기엔 비활성(Istio sidecar excludeOutboundPorts=6379로 우회).
+# 활성화 시 BITNAMI tls.authClients=false + tls.existingSecret 조합 사용.
+tls:
+  enabled: false
+
+persistence:
+  enabled: true
+  # multi-cloud 호환: AWS=gp3, GCP=standard-rwo/premium-rwo.
+  # 빈 문자열 → 클러스터 default StorageClass 사용. env별 override 가능.
+  storageClass: ""
+  size: 20Gi          # 메모리 4~6Gi의 3~4배 여유
+
+redis:
+  configmap: |
+    # SoT 정책: eviction 절대 금지
+    maxmemory-policy noeviction
+    # limit 6Gi의 ~65% → OOMKill 여유 + 쓰기 실패 조기 감지
+    maxmemory 4000mb
+    # Persistence — 1초 유실 목표
+    appendonly yes
+    appendfsync everysec
+    # rewrite 중에도 fsync 유지 (CR-004: yes면 수 분 유실 가능)
+    no-appendfsync-on-rewrite no
+    # rewrite 시 RDB preamble 사용 → rewrite latency 완화
+    aof-use-rdb-preamble yes
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 512mb
+    save 300 100
+    # 클러스터
+    cluster-require-full-coverage no
+    cluster-allow-reads-when-down no
+    # slowlog
+    slowlog-log-slower-than 10000
+    slowlog-max-len 256
+
+  # Guaranteed QoS: SoT 안정성을 위해 request=limit.
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 6Gi
+    limits:
+      cpu: 2000m
+      memory: 6Gi
+
+  # 노드 분산 필수 (같은 host에 master+replica 안 됨)
+  podAntiAffinityPreset: hard
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: redis-cluster
+
+  podAnnotations:
+    # 6379: Istio sidecar mTLS가 Redis protocol과 충돌. 내부 통신은 NetworkPolicy로 보호.
+    # Ambient mesh 사용 시 namespace label `istio.io/dataplane-mode` 확인 필요.
+    sidecar.istio.io/inject: "false"
+
+# PDB: top-level (Bitnami schema). redis.podDisruptionBudget은 미정의 키 → PDB 미생성됨.
+pdb:
+  create: true
+  maxUnavailable: 1
+
+# SHUTDOWN SAVE 시간 확보 — top-level (Bitnami schema).
+terminationGracePeriodSeconds: 60
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: goti
+    labels:
+      release: kube-prometheus-stack-prod
+
+networkPolicy:
+  enabled: true
+  # SoT 최소권한: Redis 접근이 실제로 필요한 서비스만 허용 (SDD-0005).
+  allowExternal: false
+  ingressNSMatchLabels:
+    kubernetes.io/metadata.name: goti
+  # 서비스별 podSelector — part-of=goti 로 전체 허용하던 CR-007 수정.
+  extraIngress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: goti
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - goti-ticketing-v2
+                  - goti-payment-v2
+                  - goti-queue-v2
+                  - goti-stadium-v2
+      ports:
+        - port: 6379
+          protocol: TCP

@@ -9,13 +9,18 @@ serviceMonitor:
   path: /metrics
   interval: 15s
   release: kube-prometheus-stack-prod
+# Resource sizing rationale (CR-009, CR-010):
+#  - CPU request 1 core / limit 2 core → ratio 1:2, CFS throttling jitter 최소화
+#  - Go GOMAXPROCS는 limit 기준 자동 승격, env로 명시하여 안정성 확보
+#  - 8 replicas × 2 core = 16 core burst (기존 24 core 대비 절감)
+#  - Memory request 512Mi / limit 1Gi → GOMEMLIMIT=900MiB 로 OOM 여유 확보
 resources:
   requests:
-    cpu: 100m
-    memory: 128Mi
-  limits:
     cpu: 1000m
-    memory: 256Mi
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 1Gi
 pdb:
   enabled: true
   minAvailable: 1
@@ -107,6 +112,13 @@ securityContext:
 # 환경변수: TICKETING_ prefix (Viper가 config.Load("ticketing")에서 자동 생성)
 # envFrom 사용하지 않음 — 개별 매핑으로 명시적 관리
 env:
+  # --- Go runtime (CR-009/010) ---
+  # GOMAXPROCS: CPU limit 2 core에 맞춰 명시 (auto-detect도 동일하지만 안정성 위해 고정)
+  - name: GOMAXPROCS
+    value: "2"
+  # GOMEMLIMIT: memory limit 1Gi의 ~90% → GC가 OOM 직전 aggressive 하게 동작
+  - name: GOMEMLIMIT
+    value: "900MiB"
   # --- 인프라 (Secret에서 주입) ---
   # --- DATABASE via PgBouncer (ADR 0013) ---
   # TODO: 서비스별 dedicated user 복구 — 현재는 master goti 단일 사용 (pgbouncer 멀티유저 설정 후 복구)

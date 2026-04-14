@@ -1,0 +1,46 @@
+# Redis Cluster ArgoCD Application — SDD-0005 D0 scaffolding
+#
+# 활성화 전 체크리스트 (CR-001~016):
+#  [ ] CR-003 ExternalSecret `goti-redis-cluster-auth` 배포 (ESO sync-wave -2 선행)
+#  [ ] CR-005 chart targetRevision 고정 버전 확정 (현재 "11.*"는 예시)
+#  [ ] CR-007 NetworkPolicy podSelector 서비스 라벨 실제 배포 환경과 일치하는지 확인
+#  [ ] CR-008 `helm template` 로 StatefulSet replicas 수 검증 (6M+6R=12 pod 여부)
+#  [ ] CR-011 D7 완료 후 `infrastructure/prod/redis/` (standalone) 디렉토리 삭제 PR 동반
+#  [ ] CR-014 auth 활성화 시 sync-wave -5 → -1 로 조정 (ExternalSecret 이후)
+#
+# 금지 사항 (rules/user-approval.md):
+#  - ServerSideApply=true Application에 Force Sync 금지 (2026-03-28 사고)
+#  - prune/selfHeal 초기엔 off, 수동 sync로 검증 우선
+#
+# 현재 파일은 전체 주석 처리되어 ArgoCD에서 인식되지 않음 (CR-012).
+# 활성화 시점에 주석 해제 + chart 버전 pin.
+#
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: goti-redis-cluster
+#   namespace: argocd
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "-1"   # auth 활성화 시 ESO(-2) 이후
+# spec:
+#   project: default
+#   sources:
+#     - repoURL: https://charts.bitnami.com/bitnami
+#       chart: redis-cluster
+#       targetRevision: 11.3.5   # TODO: 활성화 시점 최신 stable 버전으로 pin (Renovate 관리)
+#       helm:
+#         valueFiles:
+#           - $values/infrastructure/prod/redis-cluster/values.yaml
+#     - repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
+#       targetRevision: main
+#       ref: values
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: goti
+#   syncPolicy:
+#     automated:
+#       selfHeal: false   # 초기엔 수동 sync로 검증 우선
+#       prune: false
+#     syncOptions:
+#       - CreateNamespace=true
+#       - ServerSideApply=true
