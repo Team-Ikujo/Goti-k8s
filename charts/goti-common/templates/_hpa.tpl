@@ -15,6 +15,20 @@ spec:
   minReplicaCount: {{ .Values.autoscaling.minReplicas }}
   maxReplicaCount: {{ .Values.autoscaling.maxReplicas }}
   cooldownPeriod: {{ .Values.autoscaling.keda.cooldownPeriod | default 60 }}
+  {{- with .Values.autoscaling.keda.pollingInterval }}
+  pollingInterval: {{ . }}
+  {{- end }}
+  {{- with .Values.autoscaling.keda.idleReplicaCount }}
+  idleReplicaCount: {{ . }}
+  {{- end }}
+  {{- with .Values.autoscaling.keda.advanced }}
+  advanced:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.autoscaling.keda.fallback }}
+  fallback:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   triggers:
     {{- toYaml .Values.autoscaling.keda.triggers | nindent 4 }}
 {{- else }}
