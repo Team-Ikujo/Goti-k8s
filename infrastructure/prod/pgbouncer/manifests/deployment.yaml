@@ -108,7 +108,7 @@ spec:
               mountPath: /etc/pgbouncer
         # Prometheus exporter (ADR 0013 Phase D)
         - name: exporter
-          image: prometheuscommunity/pgbouncer-exporter:v0.10.4
+          image: prometheuscommunity/pgbouncer-exporter:v0.12.0
           args:
             - "--pgBouncer.connectionString=postgres://$(EXPORTER_USER):$(EXPORTER_PASSWORD)@localhost:5432/pgbouncer?sslmode=disable"
             - "--web.listen-address=:9127"
