@@ -44,8 +44,9 @@ spec:
                   matchLabels:
                     app: pgbouncer
       initContainers:
-        # userlist.txt 를 Secret 에서 추출해 writable emptyDir 로 복사
-        # ConfigMap 의 pgbouncer.ini 는 DB_HOST/DB_USER 를 런타임 치환
+        # userlist.txt 를 Secret 에서 추출해 writable emptyDir 로 복사.
+        # ConfigMap 의 pgbouncer.ini 는 ${DB_HOST}/${DB_USER} 리터럴을 포함 —
+        # busybox sh + sed 로 런타임 치환 (envsubst 없이).
         - name: render-config
           image: busybox:1.37
           command:
@@ -53,8 +54,9 @@ spec:
             - -c
             - |
               set -e
-              envsubst < /etc/pgbouncer-template/pgbouncer.ini > /etc/pgbouncer/pgbouncer.ini
-              echo "\"${DB_USER}\" \"${DB_USER_PASSWORD}\"" > /etc/pgbouncer/userlist.txt
+              sed -e "s|\${DB_HOST}|$DB_HOST|g" -e "s|\${DB_USER}|$DB_USER|g" \
+                /etc/pgbouncer-template/pgbouncer.ini > /etc/pgbouncer/pgbouncer.ini
+              printf '"%s" "%s"\n' "$DB_USER" "$DB_USER_PASSWORD" > /etc/pgbouncer/userlist.txt
               chmod 600 /etc/pgbouncer/userlist.txt
           env:
             - name: DB_HOST
