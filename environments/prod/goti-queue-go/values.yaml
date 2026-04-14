@@ -120,8 +120,10 @@ env:
   - name: QUEUE_DATABASE_MAX_CONN_LIFETIME_SEC
     value: "1800"
   # --- 애플리케이션 ---
+  # 티켓팅 수용인원 1000명 기준 (2026-04-14 부하테스트 기준 변경).
+  # 이전 3000은 대기열 자체 처리량 확인용이었고, 실 admitted concurrent 1000이 ticketing 병목/성공률 측정 기준.
   - name: QUEUE_MAX_CAPACITY
-    value: "3000"
+    value: "1000"
   # --- OTel ---
   - name: QUEUE_OTEL_ENABLED
     value: "true"
