@@ -64,6 +64,23 @@ gateway:
               number: 8080
     - match:
         - uri:
+            regex: /api/[^/]+/v1/(orders|games|game-seats|tickets|seats|seat-reservations|stadium-seats|teams|stadiums)/.*
+      rewrite:
+        regexRewrite:
+          match: /api/[^/]+(/v1/.*)
+          rewrite: /api\1
+      timeout: 12s
+      retries:
+        attempts: 3
+        perTryTimeout: 3s
+        retryOn: 5xx,reset,connect-failure
+      route:
+        - destination:
+            host: goti-ticketing-dev
+            port:
+              number: 8080
+    - match:
+        - uri:
             prefix: "/api/docs/ticketing/swagger-ui/"
       rewrite:
         uri: "/swagger-ui/"
