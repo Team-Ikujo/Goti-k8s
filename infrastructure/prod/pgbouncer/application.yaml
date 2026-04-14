@@ -1,0 +1,29 @@
+# PgBouncer — PostgreSQL connection multiplexer (ADR 0013)
+#
+# 앱(pod) pool ↔ RDS 사이에서 transaction pooling 으로 연결 다중화.
+# RDS max_connections 한계를 앱-level pool 로부터 격리.
+#
+# 아키텍처:
+#   Goti Go service (pool 500+) → PgBouncer (transaction mode, ~100 DB conn)
+#   → RDS Primary (write)  /  RDS Replica (read, ADR 0012)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pgbouncer
+  namespace: argocd
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/Team-Ikujo/Goti-k8s.git
+    targetRevision: main
+    path: infrastructure/prod/pgbouncer/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: goti
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
