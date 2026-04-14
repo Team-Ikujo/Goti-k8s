@@ -11,11 +11,11 @@ serviceMonitor:
   release: kube-prometheus-stack-prod
 resources:
   requests:
-    cpu: 100m
-    memory: 128Mi
-  limits:
-    cpu: 1000m
+    cpu: 500m
     memory: 256Mi
+  limits:
+    cpu: 3000m
+    memory: 512Mi
 pdb:
   enabled: true
   minAvailable: 1
