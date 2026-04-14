@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgbouncer-metrics
+  namespace: goti
+  labels:
+    app: pgbouncer
+    monitoring: "true"
+spec:
+  type: ClusterIP
+  clusterIP: None    # headless — 모든 pod 에 직접 scrape
+  ports:
+    - port: 9127
+      targetPort: 9127
+      name: metrics
+  selector:
+    app: pgbouncer
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pgbouncer
+  namespace: goti
+  labels:
+    release: kube-prometheus-stack-prod
+spec:
+  selector:
+    matchLabels:
+      app: pgbouncer
+      monitoring: "true"
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+  namespaceSelector:
+    matchNames:
+      - goti

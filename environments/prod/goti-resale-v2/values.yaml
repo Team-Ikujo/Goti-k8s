@@ -85,11 +85,17 @@ securityContext:
 # 환경변수: RESALE_ prefix
 env:
   # --- 인프라 (Secret에서 주입) ---
-  - name: RESALE_DATABASE_URL
+  # --- DATABASE via PgBouncer (ADR 0013) ---
+  # TODO: 서비스별 dedicated user 복구 — 현재는 master goti 단일 사용 (pgbouncer 멀티유저 설정 후 복구)
+  - name: DB_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: goti-resale-v2-prod-secrets
-        key: RESALE_DATABASE_URL
+        name: pgbouncer-secret
+        key: db-user-password
+  - name: RESALE_DATABASE_URL
+    value: "postgres://goti:$(DB_PASSWORD)@pgbouncer.goti.svc:5432/goti?sslmode=disable&search_path=resale_service"
+  - name: RESALE_DATABASE_PGBOUNCER_COMPAT
+    value: "true" 
   - name: RESALE_REDIS_URL
     valueFrom:
       secretKeyRef:
