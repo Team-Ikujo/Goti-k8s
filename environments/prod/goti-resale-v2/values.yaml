@@ -1,6 +1,6 @@
 # TODO(jwks-automation): user-service JWT 키 회전 시 본 파일 inline jwks를
 # 모든 Go 서비스와 수동 동기화 필요. 메모리: project_jwks_automation_todo.md
-nameOverride: goti-payment-go
+nameOverride: goti-resale-v2
 service:
   type: ClusterIP
   port: 8080
@@ -21,7 +21,7 @@ resources:
 pdb:
   enabled: true
   minAvailable: 1
-# CRITICAL: Java goti-payment VS와 동일 (host, path) 조합 → Istio
+# CRITICAL: Java goti-resale VS와 동일 (host, path) 조합 → Istio
 # MULTIPLE_VIRTUAL_SERVICES_FOR_HOST. gateway.enabled=false로 유지.
 # cutover 시 Java values의 gateway.enabled=false로 전환 후 본 파일 true.
 # Swagger 라우팅은 Go 미구현 전제로 누락 — Java 전용 유지.
@@ -34,26 +34,26 @@ gateway:
   httpRoutes:
     - match:
         - uri:
-            prefix: "/api/v1/payments"
+            prefix: "/api/v1/resales"
       route:
         - destination:
-            host: goti-payment-go-prod
+            host: goti-resale-v2-prod
             port:
               number: 8080
 autoscaling:
   enabled: true
-  minReplicas: 2
-  maxReplicas: 8
+  minReplicas: 1
+  maxReplicas: 6
   keda:
     enabled: true
-    cooldownPeriod: 300
+    cooldownPeriod: 180
     triggers:
       - type: prometheus
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc.cluster.local:8080/prometheus
-          metricName: http_rps_payment_go
-          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-payment-go"}[1m]))
-          threshold: "30"
+          metricName: http_rps_resale_go
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-resale-v2"}[1m]))
+          threshold: "20"
 probes:
   liveness:
     httpGet:
@@ -82,47 +82,47 @@ securityContext:
     drop: ["ALL"]
   seccompProfile:
     type: RuntimeDefault
-# 환경변수: PAYMENT_ prefix (Viper가 config.Load("payment")에서 자동 생성)
+# 환경변수: RESALE_ prefix
 env:
   # --- 인프라 (Secret에서 주입) ---
-  - name: PAYMENT_DATABASE_URL
+  - name: RESALE_DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: goti-payment-go-prod-secrets
-        key: PAYMENT_DATABASE_URL
-  - name: PAYMENT_REDIS_URL
+        name: goti-resale-v2-prod-secrets
+        key: RESALE_DATABASE_URL
+  - name: RESALE_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-payment-go-prod-secrets
-        key: PAYMENT_REDIS_URL
-  - name: PAYMENT_JWT_PUBLIC_KEY_PEM
+        name: goti-resale-v2-prod-secrets
+        key: RESALE_REDIS_URL
+  - name: RESALE_JWT_PUBLIC_KEY_PEM
     valueFrom:
       secretKeyRef:
-        name: goti-payment-go-prod-secrets
-        key: PAYMENT_JWT_PUBLIC_KEY_PEM
+        name: goti-resale-v2-prod-secrets
+        key: RESALE_JWT_PUBLIC_KEY_PEM
   # --- DB pool (SDD Step 5 / S4) ---
-  - name: PAYMENT_DATABASE_MAX_CONNS
+  - name: RESALE_DATABASE_MAX_CONNS
     value: "3"
-  - name: PAYMENT_DATABASE_MIN_CONNS
+  - name: RESALE_DATABASE_MIN_CONNS
     value: "1"
-  - name: PAYMENT_DATABASE_MAX_CONN_IDLE_TIME_SEC
+  - name: RESALE_DATABASE_MAX_CONN_IDLE_TIME_SEC
     value: "30"
-  - name: PAYMENT_DATABASE_MAX_CONN_LIFETIME_SEC
+  - name: RESALE_DATABASE_MAX_CONN_LIFETIME_SEC
     value: "1800"
   # --- 서비스 간 통신 ---
-  - name: PAYMENT_SERVICES_TICKETING
-    value: "http://goti-ticketing-go-prod.goti.svc.cluster.local:8080"
-  - name: PAYMENT_SERVICES_RESALE
-    value: "http://goti-resale-go-prod.goti.svc.cluster.local:8080"
+  - name: RESALE_SERVICES_TICKETING
+    value: "http://goti-ticketing-v2-prod.goti.svc.cluster.local:8080"
+  - name: RESALE_SERVICES_PAYMENT
+    value: "http://goti-payment-v2-prod.goti.svc.cluster.local:8080"
   # --- OTel ---
-  - name: PAYMENT_OTEL_ENABLED
+  - name: RESALE_OTEL_ENABLED
     value: "true"
-  - name: PAYMENT_OTEL_ENDPOINT
+  - name: RESALE_OTEL_ENDPOINT
     value: "http://otel-front-prod.monitoring.svc:4317"
-  - name: PAYMENT_OTEL_SERVICE_NAME
-    value: "goti-payment-go"
+  - name: RESALE_OTEL_SERVICE_NAME
+    value: "goti-resale-v2"
   - name: OTEL_SERVICE_NAME
-    value: "goti-payment-go"
+    value: "goti-resale-v2"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "http://otel-front-prod.monitoring.svc:4317"
   - name: OTEL_RESOURCE_ATTRIBUTES
@@ -130,23 +130,33 @@ env:
 configMap:
   enabled: false
 # --- Istio 보안/네트워크 정책 ---
-# TODO(phase 7): Java resale deprecation 후 from-resale 규칙을 resale-go SA로 변경.
-# 공존 기간 동안은 양쪽 SA 모두 허용.
+# TODO(phase 7): Java payment/ticketing deprecation 후 from-X 규칙을 -go SA로 변경.
 istioPolicy:
   authorizationPolicy:
     enabled: true
     allowFrom:
-      - name: from-resale
+      - name: from-payment
         rules:
           - from:
               - source:
                   principals:
-                    - "cluster.local/ns/goti/sa/goti-resale-prod"
-                    - "cluster.local/ns/goti/sa/goti-resale-go-prod"
+                    - "cluster.local/ns/goti/sa/goti-payment-prod"
+                    - "cluster.local/ns/goti/sa/goti-payment-v2-prod"
             to:
               - operation:
-                  paths: ["/api/v1/resales/payments", "/api/v1/resales/payments/*"]
-                  methods: ["POST", "PATCH"]
+                  paths: ["/api/v1/resales/orders/*"]
+                  methods: ["GET", "PATCH"]
+      - name: from-ticketing
+        rules:
+          - from:
+              - source:
+                  principals:
+                    - "cluster.local/ns/goti/sa/goti-ticketing-prod"
+                    - "cluster.local/ns/goti/sa/goti-ticketing-v2-prod"
+            to:
+              - operation:
+                  paths: ["/api/v1/resales/listings/count"]
+                  methods: ["GET"]
   requestAuthentication:
     enabled: true
     issuer: "goti-user-service"
@@ -154,13 +164,17 @@ istioPolicy:
   jwtAuthorizationPolicy:
     enabled: true
     excludePaths:
+      - "/api/v1/resales/histories"
+      - "/api/v1/resales/histories/*"
+      - "/api/v1/resales/listings/count"
+      - "/api/v1/resales/orders/purchases"
       - "/healthz"
       - "/readyz"
       - "/metrics"
   destinationRule:
     enabled: true
 image:
-  repository: harbor.go-ti.shop/prod/goti-payment-go
+  repository: harbor.go-ti.shop/prod/goti-resale-go
   tag: prod-34-0dea0b2
   pullPolicy: IfNotPresent
 imagePullSecrets:

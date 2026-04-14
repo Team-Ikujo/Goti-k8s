@@ -1,4 +1,4 @@
-nameOverride: goti-ticketing-go
+nameOverride: goti-ticketing-v2
 service:
   type: ClusterIP
   port: 8080
@@ -50,7 +50,7 @@ gateway:
             prefix: "/api/v1/game-seats"
       route:
         - destination:
-            host: goti-ticketing-go-prod
+            host: goti-ticketing-v2-prod
             port:
               number: 8080
 autoscaling:
@@ -73,7 +73,7 @@ autoscaling:
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc:8080/prometheus
           metricName: http_rps_ticketing_go
-          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-ticketing-go"}[1m]))
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-ticketing-v2"}[1m]))
           threshold: "50"
 probes:
   liveness:
@@ -111,27 +111,27 @@ env:
   - name: TICKETING_DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: goti-ticketing-go-prod-secrets
+        name: goti-ticketing-v2-prod-secrets
         key: TICKETING_DATABASE_URL
   - name: TICKETING_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-ticketing-go-prod-secrets
+        name: goti-ticketing-v2-prod-secrets
         key: TICKETING_REDIS_URL
   - name: TICKETING_JWT_PUBLIC_KEY_PEM
     valueFrom:
       secretKeyRef:
-        name: goti-ticketing-go-prod-secrets
+        name: goti-ticketing-v2-prod-secrets
         key: TICKETING_JWT_PUBLIC_KEY_PEM
   - name: TICKETING_TICKETING_QR_SECRET
     valueFrom:
       secretKeyRef:
-        name: goti-ticketing-go-prod-secrets
+        name: goti-ticketing-v2-prod-secrets
         key: TICKETING_TICKETING_QR_SECRET
   - name: TICKETING_QUEUE_TOKEN_SECRET
     valueFrom:
       secretKeyRef:
-        name: goti-ticketing-go-prod-secrets
+        name: goti-ticketing-v2-prod-secrets
         key: TICKETING_QUEUE_TOKEN_SECRET
   # --- DB pool (SDD Step 5 / S4: RDS max_conn 300, 2026-04-14 상향) ---
   # 12 → 18: 3000 VU 부하에서 begin tx: context canceled 210건 관측.
@@ -147,11 +147,11 @@ env:
     value: "1800"
   # --- 서비스 간 통신 ---
   - name: TICKETING_SERVICES_STADIUM
-    value: "http://goti-stadium-go-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-stadium-v2-prod.goti.svc.cluster.local:8080"
   - name: TICKETING_SERVICES_PAYMENT
-    value: "http://goti-payment-go-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-payment-v2-prod.goti.svc.cluster.local:8080"
   - name: TICKETING_SERVICES_RESALE
-    value: "http://goti-resale-go-prod.goti.svc.cluster.local:8080"
+    value: "http://goti-resale-v2-prod.goti.svc.cluster.local:8080"
   # --- ticketing 도메인 스케줄러 (viper default 없음, 필수 주입) ---
   - name: TICKETING_TICKETING_HOLD_EXPIRY_INTERVAL_MS
     value: "1000"
@@ -165,10 +165,10 @@ env:
   - name: TICKETING_OTEL_ENDPOINT
     value: "http://otel-front-prod.monitoring.svc:4317"
   - name: TICKETING_OTEL_SERVICE_NAME
-    value: "goti-ticketing-go"
+    value: "goti-ticketing-v2"
   # OTel SDK 표준 환경변수 (Go SDK가 직접 참조)
   - name: OTEL_SERVICE_NAME
-    value: "goti-ticketing-go"
+    value: "goti-ticketing-v2"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "http://otel-front-prod.monitoring.svc:4317"
   - name: OTEL_RESOURCE_ATTRIBUTES
@@ -186,7 +186,7 @@ istioPolicy:
               - source:
                   principals:
                     - "cluster.local/ns/goti/sa/goti-payment-prod"
-                    - "cluster.local/ns/goti/sa/goti-payment-go-prod"
+                    - "cluster.local/ns/goti/sa/goti-payment-v2-prod"
             to:
               - operation:
                   paths: ["/api/v1/orders/*"]
@@ -197,7 +197,7 @@ istioPolicy:
               - source:
                   principals:
                     - "cluster.local/ns/goti/sa/goti-resale-prod"
-                    - "cluster.local/ns/goti/sa/goti-resale-go-prod"
+                    - "cluster.local/ns/goti/sa/goti-resale-v2-prod"
             to:
               - operation:
                   paths: ["/api/v1/tickets/resales/*", "/internal/*"]

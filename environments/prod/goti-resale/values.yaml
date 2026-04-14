@@ -112,7 +112,7 @@ istioPolicy:
               - source:
                   principals:
                     - "cluster.local/ns/goti/sa/goti-payment-prod"
-                    - "cluster.local/ns/goti/sa/goti-payment-go-prod"
+                    - "cluster.local/ns/goti/sa/goti-payment-v2-prod"
             to:
               - operation:
                   paths: ["/api/v1/resales/orders/*"]
@@ -123,7 +123,7 @@ istioPolicy:
               - source:
                   principals:
                     - "cluster.local/ns/goti/sa/goti-ticketing-prod"
-                    - "cluster.local/ns/goti/sa/goti-ticketing-go-prod"
+                    - "cluster.local/ns/goti/sa/goti-ticketing-v2-prod"
             to:
               - operation:
                   paths: ["/api/v1/resales/listings/count"]

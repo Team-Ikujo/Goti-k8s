@@ -55,30 +55,30 @@ spec:
           #   2. PR merge 시 이미지 태그만 업데이트 (replicaCount=0 유지)
           #   3. cutover 시점: Java values-aws.yaml replicaCount=0 + -go replicaCount=N
           #   4. ArgoCD auto-sync (prune+selfHeal) → rolling cutover
-          - service: ticketing-go
+          - service: ticketing-v2
             namespace: goti
-            valuesFile: environments/prod/goti-ticketing-go/values.yaml
-            cloudValuesFile: environments/prod/goti-ticketing-go/values-aws.yaml
-          - service: stadium-go
+            valuesFile: environments/prod/goti-ticketing-v2/values.yaml
+            cloudValuesFile: environments/prod/goti-ticketing-v2/values-aws.yaml
+          - service: stadium-v2
             namespace: goti
-            valuesFile: environments/prod/goti-stadium-go/values.yaml
-            cloudValuesFile: environments/prod/goti-stadium-go/values-aws.yaml
-          - service: queue-go
+            valuesFile: environments/prod/goti-stadium-v2/values.yaml
+            cloudValuesFile: environments/prod/goti-stadium-v2/values-aws.yaml
+          - service: queue-v2
             namespace: goti
-            valuesFile: environments/prod/goti-queue-go/values.yaml
-            cloudValuesFile: environments/prod/goti-queue-go/values-aws.yaml
-          - service: payment-go
+            valuesFile: environments/prod/goti-queue-v2/values.yaml
+            cloudValuesFile: environments/prod/goti-queue-v2/values-aws.yaml
+          - service: payment-v2
             namespace: goti
-            valuesFile: environments/prod/goti-payment-go/values.yaml
-            cloudValuesFile: environments/prod/goti-payment-go/values-aws.yaml
-          - service: resale-go
+            valuesFile: environments/prod/goti-payment-v2/values.yaml
+            cloudValuesFile: environments/prod/goti-payment-v2/values-aws.yaml
+          - service: resale-v2
             namespace: goti
-            valuesFile: environments/prod/goti-resale-go/values.yaml
-            cloudValuesFile: environments/prod/goti-resale-go/values-aws.yaml
-          - service: user-go
+            valuesFile: environments/prod/goti-resale-v2/values.yaml
+            cloudValuesFile: environments/prod/goti-resale-v2/values-aws.yaml
+          - service: user-v2
             namespace: goti
-            valuesFile: environments/prod/goti-user-go/values.yaml
-            cloudValuesFile: environments/prod/goti-user-go/values-aws.yaml
+            valuesFile: environments/prod/goti-user-v2/values.yaml
+            cloudValuesFile: environments/prod/goti-user-v2/values-aws.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod"

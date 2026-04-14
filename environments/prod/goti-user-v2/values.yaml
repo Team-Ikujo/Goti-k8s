@@ -1,6 +1,6 @@
 # TODO(jwks-automation): user-service JWT 키 회전 시 본 파일 inline jwks를
 # 모든 Go 서비스와 수동 동기화 필요. 메모리: project_jwks_automation_todo.md
-nameOverride: goti-user-go
+nameOverride: goti-user-v2
 service:
   type: ClusterIP
   port: 8080
@@ -41,7 +41,7 @@ gateway:
             prefix: "/api/v1/test"
       route:
         - destination:
-            host: goti-user-go-prod
+            host: goti-user-v2-prod
             port:
               number: 8080
 autoscaling:
@@ -56,7 +56,7 @@ autoscaling:
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc.cluster.local:8080/prometheus
           metricName: http_rps_user_go
-          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-user-go"}[1m]))
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-user-v2"}[1m]))
           threshold: "40"
 probes:
   liveness:
@@ -92,22 +92,22 @@ env:
   - name: USER_DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: goti-user-go-prod-secrets
+        name: goti-user-v2-prod-secrets
         key: USER_DATABASE_URL
   - name: USER_REDIS_URL
     valueFrom:
       secretKeyRef:
-        name: goti-user-go-prod-secrets
+        name: goti-user-v2-prod-secrets
         key: USER_REDIS_URL
   - name: USER_JWT_PRIVATE_KEY_PEM
     valueFrom:
       secretKeyRef:
-        name: goti-user-go-prod-secrets
+        name: goti-user-v2-prod-secrets
         key: USER_JWT_PRIVATE_KEY_PEM
   - name: USER_JWT_PUBLIC_KEY_PEM
     valueFrom:
       secretKeyRef:
-        name: goti-user-go-prod-secrets
+        name: goti-user-v2-prod-secrets
         key: USER_JWT_PUBLIC_KEY_PEM
   # Istio RequestAuthentication이 검증하는 issuer와 일치시켜야 함 (goti-*-prod 전 서비스).
   - name: USER_JWT_ISSUER
@@ -199,9 +199,9 @@ env:
   - name: USER_OTEL_ENDPOINT
     value: "http://otel-front-prod.monitoring.svc:4317"
   - name: USER_OTEL_SERVICE_NAME
-    value: "goti-user-go"
+    value: "goti-user-v2"
   - name: OTEL_SERVICE_NAME
-    value: "goti-user-go"
+    value: "goti-user-v2"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "http://otel-front-prod.monitoring.svc:4317"
   - name: OTEL_RESOURCE_ATTRIBUTES
