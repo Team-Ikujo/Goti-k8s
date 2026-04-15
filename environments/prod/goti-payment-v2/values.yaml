@@ -43,8 +43,7 @@ gateway:
 autoscaling:
   enabled: true
   # SDD-0007 PR-3: ticketing 결제 chain 동기 호출 흡수, prewarm + burst 대응.
-  # 2026-04-15: AWS 재기동 직후 Pending loop 해소 임시 축소 (원래 6, 부하 직전 원복)
-  minReplicas: 2
+  minReplicas: 1
   maxReplicas: 16
   keda:
     enabled: true
