@@ -42,7 +42,7 @@ gateway:
               number: 8080
 autoscaling:
   enabled: true
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 6
   keda:
     enabled: true
