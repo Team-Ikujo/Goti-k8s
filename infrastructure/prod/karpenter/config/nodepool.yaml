@@ -1,54 +1,54 @@
-# Karpenter NodePool — Spot-only burst capacity (SDD-0007 PR-2).
-# 기존 Spot NodeGroup(maxSize=8, t3.large only)의 burst 한계 보완.
-# Spot 중단 처리: application.yaml 의 settings.interruptionQueue (goti-prod-karpenter SQS) 사용.
-# 다중 instance type(6종) + 다중 AZ(3개)로 동시 회수 blast radius 제한.
-apiVersion: karpenter.sh/v1
-kind: NodePool
-metadata:
-  name: goti-app
-spec:
-  template:
-    metadata:
-      labels:
-        pool: app-spot
-    spec:
-      nodeClassRef:
-        group: karpenter.k8s.aws
-        kind: EC2NodeClass
-        name: goti-app
-      requirements:
-        - key: karpenter.sh/capacity-type
-          operator: In
-          # Spot 쿼터 초과 시 On-Demand fallback (테스트/부하직전 임시)
-          values: ["spot", "on-demand"]
-        - key: node.kubernetes.io/instance-type
-          operator: In
-          values:
-            # 주력 (4c/16G)
-            - t3a.xlarge
-            - t3.xlarge
-            - m5a.xlarge
-            - m5.xlarge
-            # CPU 집약 (4c/8G) — JSON marshal/JWT verify 등 ticketing 워크로드 적합
-            - c5a.xlarge
-            - c5.xlarge
-        - key: topology.kubernetes.io/zone
-          operator: In
-          values: ["ap-northeast-2a", "ap-northeast-2b", "ap-northeast-2c"]
-      taints:
-        # 기존 Spot NodeGroup과 동일 — 앱 Pod toleration 그대로 재사용
-        - key: node-role
-          value: spot
-          effect: NoSchedule
-  limits:
-    # 비용 폭증 방지 상한 — Karpenter가 limit 도달 시 신규 노드 생성 중지
-    cpu: "100"
-    memory: 400Gi
-  disruption:
-    # CR-004: 초기 안정화 단계는 WhenEmpty (Underutilized 재배치로 인한 Go/JVM 재기동 비용 회피).
-    # 2~4주 운영 후 비용 최적화 단계에서 WhenEmptyOrUnderutilized로 전환 검토.
-    consolidationPolicy: WhenEmpty
-    consolidateAfter: 30m
-    budgets:
-      # Karpenter 자발적 축출은 동시 1대만. spot 강제 회수와는 별개.
-      - nodes: "1"
+# # Karpenter NodePool — Spot-only burst capacity (SDD-0007 PR-2).
+# # 기존 Spot NodeGroup(maxSize=8, t3.large only)의 burst 한계 보완.
+# # Spot 중단 처리: application.yaml 의 settings.interruptionQueue (goti-prod-karpenter SQS) 사용.
+# # 다중 instance type(6종) + 다중 AZ(3개)로 동시 회수 blast radius 제한.
+# apiVersion: karpenter.sh/v1
+# kind: NodePool
+# metadata:
+#   name: goti-app
+# spec:
+#   template:
+#     metadata:
+#       labels:
+#         pool: app-spot
+#     spec:
+#       nodeClassRef:
+#         group: karpenter.k8s.aws
+#         kind: EC2NodeClass
+#         name: goti-app
+#       requirements:
+#         - key: karpenter.sh/capacity-type
+#           operator: In
+#           # Spot 쿼터 초과 시 On-Demand fallback (테스트/부하직전 임시)
+#           values: ["spot", "on-demand"]
+#         - key: node.kubernetes.io/instance-type
+#           operator: In
+#           values:
+#             # 주력 (4c/16G)
+#             - t3a.xlarge
+#             - t3.xlarge
+#             - m5a.xlarge
+#             - m5.xlarge
+#             # CPU 집약 (4c/8G) — JSON marshal/JWT verify 등 ticketing 워크로드 적합
+#             - c5a.xlarge
+#             - c5.xlarge
+#         - key: topology.kubernetes.io/zone
+#           operator: In
+#           values: ["ap-northeast-2a", "ap-northeast-2b", "ap-northeast-2c"]
+#       taints:
+#         # 기존 Spot NodeGroup과 동일 — 앱 Pod toleration 그대로 재사용
+#         - key: node-role
+#           value: spot
+#           effect: NoSchedule
+#   limits:
+#     # 비용 폭증 방지 상한 — Karpenter가 limit 도달 시 신규 노드 생성 중지
+#     cpu: "100"
+#     memory: 400Gi
+#   disruption:
+#     # CR-004: 초기 안정화 단계는 WhenEmpty (Underutilized 재배치로 인한 Go/JVM 재기동 비용 회피).
+#     # 2~4주 운영 후 비용 최적화 단계에서 WhenEmptyOrUnderutilized로 전환 검토.
+#     consolidationPolicy: WhenEmpty
+#     consolidateAfter: 30m
+#     budgets:
+#       # Karpenter 자발적 축출은 동시 1대만. spot 강제 회수와는 별개.
+#       - nodes: "1"
