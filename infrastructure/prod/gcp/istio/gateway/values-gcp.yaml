@@ -19,3 +19,10 @@ sharedGateway:
   hosts:
     - "go-ti.shop"
     - "*.go-ti.shop"
+  # 2026-04-15: cert-manager DNS-01 (Cloudflare) 로 발급한 wildcard cert 사용.
+  # Cloudflare SSL/TLS 는 Full(strict) 로 설정. 초기엔 letsencrypt-staging 으로 발급,
+  # 검증 후 prod 로 전환 (credentialName 은 동일 secret 이름 재사용).
+  tls:
+    enabled: true
+    mode: SIMPLE
+    credentialName: go-ti-shop-tls

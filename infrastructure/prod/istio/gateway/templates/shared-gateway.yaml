@@ -18,8 +18,21 @@ spec:
     - port:
         number: 443
         name: https
+        {{- if .Values.sharedGateway.tls }}
+        {{- if .Values.sharedGateway.tls.enabled }}
+        protocol: HTTPS
+        {{- else }}
         protocol: HTTP
+        {{- end }}
+        {{- else }}
+        protocol: HTTP
+        {{- end }}
       hosts:
         {{- range .Values.sharedGateway.hosts }}
         - {{ . | quote }}
         {{- end }}
+      {{- if and .Values.sharedGateway.tls .Values.sharedGateway.tls.enabled }}
+      tls:
+        mode: {{ .Values.sharedGateway.tls.mode | default "SIMPLE" }}
+        credentialName: {{ .Values.sharedGateway.tls.credentialName | quote }}
+      {{- end }}

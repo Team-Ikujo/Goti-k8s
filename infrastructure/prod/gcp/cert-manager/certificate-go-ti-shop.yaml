@@ -1,0 +1,26 @@
+# Wildcard TLS for go-ti.shop + apex
+# Secret 'go-ti-shop-tls' is consumed by Istio Gateway (istio-ingress ns, credentialName)
+#
+# Initial issuance uses letsencrypt-staging for validation (rate-limit safe).
+# After staging cert shows 'Ready=True', flip issuerRef.name → letsencrypt-prod
+# and cert-manager will re-issue with a trusted cert automatically.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: go-ti-shop-wildcard
+  namespace: istio-ingress
+spec:
+  secretName: go-ti-shop-tls
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+  commonName: go-ti.shop
+  dnsNames:
+    - go-ti.shop
+    - "*.go-ti.shop"
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always
+  duration: 2160h   # 90d (LE 기본)
+  renewBefore: 720h # 30d
