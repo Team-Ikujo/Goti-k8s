@@ -1,0 +1,62 @@
+# Overprovision pause Deployment (SDD-0007 PR-2).
+# Why: Karpenter 새 노드 프로비저닝 60~90s 지연을 burst 전에 흡수.
+# pause pod가 노드 1대를 미리 선점 → 실제 워크로드 pod 도착 시 priority 차이로 즉시 밀려나며 자리 양보.
+# 비용: spot t3a.xlarge 1대 ≈ $0.04/hr × 24h = $1/day.
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: goti-overprovision
+value: -1
+globalDefault: false
+description: "Karpenter burst overprovision용 — 실제 워크로드보다 항상 낮은 우선순위"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: goti-overprovision
+  # CR-002: Application destination.namespace=karpenter 와 일치 (manifest namespace 우선이지만 tracking 통일)
+  namespace: karpenter
+  labels:
+    app: goti-overprovision
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: goti-overprovision
+  template:
+    metadata:
+      labels:
+        app: goti-overprovision
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      priorityClassName: goti-overprovision
+      # CR-001: 반드시 Karpenter NodePool에만 스케줄. 기존 Spot NodeGroup에 가면
+      # Karpenter burst가 트리거되지 않아 overprovision 의도 무효화.
+      nodeSelector:
+        pool: app-spot
+      tolerations:
+        - key: node-role
+          operator: Equal
+          value: spot
+          effect: NoSchedule
+      containers:
+        - name: pause
+          image: registry.k8s.io/pause:3.10
+          # CPU 1 core + 512Mi 메모리 선점 → ticketing pod 1대 자리 확보
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 65532
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
