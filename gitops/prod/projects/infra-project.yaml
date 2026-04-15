@@ -60,6 +60,9 @@ spec:
     # KEDA
     - group: "apiregistration.k8s.io"
       kind: APIService
+    # Overprovisioning (Karpenter warm capacity)
+    - group: "scheduling.k8s.io"
+      kind: PriorityClass
   # Istio, ArgoCD 리소스 타입이 다양하므로 namespace 경계로 격리
   namespaceResourceWhitelist:
     # Core
