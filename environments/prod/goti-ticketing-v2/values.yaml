@@ -62,7 +62,7 @@ autoscaling:
   enabled: true
   # SDD-0007 PR-3: scale-up 반응성 튜닝. min 12 prewarm, max 24.
   # DB 예산: MaxConns 10 × 24 = 240 < pgbouncer pool 300 안전.
-  minReplicas: 4
+  minReplicas: 2
   maxReplicas: 24
   keda:
     enabled: true
