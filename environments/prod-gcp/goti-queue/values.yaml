@@ -5,11 +5,9 @@ replicaCount: 0
 # 메모리: project_jwks_automation_todo.md
 nameOverride: goti-queue
 image:
-  repository: "harbor.go-ti.shop/prod/goti-queue-go"
-  tag: "prod-47-942b299" # linux/amd64 buildx 재빌드 (기존 bootstrap-20260413은 arm64로 잘못 푸시됨). CD 실행 시 gcp-N-SHA 로 auto-update
+  repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-queue-go"
+  tag: "gcp-1-1bfe89e" # linux/amd64 buildx 재빌드 (기존 bootstrap-20260413은 arm64로 잘못 푸시됨). CD 실행 시 gcp-N-SHA 로 auto-update
   pullPolicy: IfNotPresent
-imagePullSecrets:
-  - name: harbor-creds
 service: # GKE Workload Identity → Artifact Registry 자동 인증
   type: ClusterIP
   port: 8080

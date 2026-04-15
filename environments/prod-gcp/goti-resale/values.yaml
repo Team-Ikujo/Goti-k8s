@@ -1,11 +1,9 @@
 nameOverride: goti-resale
 replicaCount: 0
 image:
-  repository: "harbor.go-ti.shop/prod/goti-resale-go"
-  tag: "prod-47-942b299"
+  repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-resale-go"
+  tag: "gcp-1-1bfe89e"
   pullPolicy: IfNotPresent
-imagePullSecrets:
-  - name: harbor-creds
 service: # GKE Workload Identity → Artifact Registry 자동 인증
   type: ClusterIP
   port: 8080
