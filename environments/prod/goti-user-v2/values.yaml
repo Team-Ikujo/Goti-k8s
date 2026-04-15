@@ -46,8 +46,7 @@ gateway:
               number: 8080
 autoscaling:
   enabled: true
-  # 2026-04-15: AWS 재기동 직후 Pending loop 해소 임시 축소 (원래 3, 부하 직전 원복)
-  minReplicas: 2
+  minReplicas: 3
   maxReplicas: 12
   keda:
     enabled: true
