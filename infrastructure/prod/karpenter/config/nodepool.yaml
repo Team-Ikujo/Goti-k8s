@@ -19,7 +19,8 @@ spec:
       requirements:
         - key: karpenter.sh/capacity-type
           operator: In
-          values: ["spot"]
+          # Spot 쿼터 초과 시 On-Demand fallback (테스트/부하직전 임시)
+          values: ["spot", "on-demand"]
         - key: node.kubernetes.io/instance-type
           operator: In
           values:
