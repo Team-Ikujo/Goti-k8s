@@ -35,6 +35,8 @@ spec:
       server: "https://kubernetes.default.svc"
     - namespace: falco
       server: "https://kubernetes.default.svc"
+    - namespace: cert-manager
+      server: "https://kubernetes.default.svc"
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
@@ -56,6 +58,9 @@ spec:
       kind: StorageClass
     - group: "apiregistration.k8s.io"
       kind: APIService
+    # cert-manager (cluster-scoped)
+    - group: "cert-manager.io"
+      kind: ClusterIssuer
   namespaceResourceWhitelist:
     - group: ""
       kind: Service
@@ -125,3 +130,14 @@ spec:
       kind: PodDisruptionBudget
     - group: "autoscaling"
       kind: HorizontalPodAutoscaler
+    # cert-manager (namespace-scoped)
+    - group: "cert-manager.io"
+      kind: Certificate
+    - group: "cert-manager.io"
+      kind: CertificateRequest
+    - group: "cert-manager.io"
+      kind: Issuer
+    - group: "cert-manager.io"
+      kind: Order
+    - group: "cert-manager.io"
+      kind: Challenge
