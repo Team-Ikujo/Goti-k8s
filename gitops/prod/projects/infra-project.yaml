@@ -33,6 +33,10 @@ spec:
       server: "https://kubernetes.default.svc"
     - namespace: falco
       server: "https://kubernetes.default.svc"
+    - namespace: cert-manager
+      server: "https://kubernetes.default.svc"
+    - namespace: istio-ingress
+      server: "https://kubernetes.default.svc"
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
@@ -63,6 +67,9 @@ spec:
     # Overprovisioning (Karpenter warm capacity)
     - group: "scheduling.k8s.io"
       kind: PriorityClass
+    # cert-manager (cluster-scoped issuers)
+    - group: "cert-manager.io"
+      kind: ClusterIssuer
   # Istio, ArgoCD 리소스 타입이 다양하므로 namespace 경계로 격리
   namespaceResourceWhitelist:
     # Core
@@ -148,3 +155,14 @@ spec:
     # Autoscaling
     - group: "autoscaling"
       kind: HorizontalPodAutoscaler
+    # cert-manager (namespace-scoped)
+    - group: "cert-manager.io"
+      kind: Certificate
+    - group: "cert-manager.io"
+      kind: CertificateRequest
+    - group: "cert-manager.io"
+      kind: Issuer
+    - group: "cert-manager.io"
+      kind: Order
+    - group: "cert-manager.io"
+      kind: Challenge
