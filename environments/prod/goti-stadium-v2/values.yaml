@@ -49,23 +49,38 @@ gateway:
 # 윈도우 좁히기 또는 desiredReplicas/threshold 차등화 검토.
 autoscaling:
   enabled: true
+  # SDD-0007 PR-3: ticketing 5분 캐시 도입으로 부하 경감, cron만 확장
   minReplicas: 2
-  maxReplicas: 10
+  maxReplicas: 12
   keda:
     enabled: true
-    cooldownPeriod: 300
+    pollingInterval: 10
+    cooldownPeriod: 120
+    advanced:
+      horizontalPodAutoscalerConfig:
+        behavior:
+          scaleUp:
+            stabilizationWindowSeconds: 15
+            policies:
+              - { type: Pods, value: 8, periodSeconds: 15 }
+              - { type: Percent, value: 200, periodSeconds: 15 }
+            selectPolicy: Max
+          scaleDown:
+            stabilizationWindowSeconds: 300
+            policies:
+              - { type: Percent, value: 25, periodSeconds: 60 }
     triggers:
       - type: cron
         metadata:
           timezone: "Asia/Seoul"
-          start: "30 10 * * *"
+          start: "20 09 * * *"
           end: "0 13 * * *"
           desiredReplicas: "4"
       - type: prometheus
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc.cluster.local:8080/prometheus
           metricName: http_rps_stadium_go
-          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-stadium-v2"}[1m]))
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-stadium-v2"}[45s]))
           threshold: "50"
 # TODO(verify): /healthz가 DB/Redis ping 포함 시 RDS 풀 초기화에 3~5s 소요
 # 가능 → liveness 재시작 루프 위험. 코드 확인 후 필요 시 liveness만 10s로 조정.
