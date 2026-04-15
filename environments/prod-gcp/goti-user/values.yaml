@@ -1,11 +1,9 @@
 nameOverride: goti-user
 replicaCount: 0
 image:
-  repository: "harbor.go-ti.shop/prod/goti-user-go"
-  tag: "prod-41-862c91c"
+  repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-user-go"
+  tag: "gcp-1-1bfe89e"
   pullPolicy: IfNotPresent
-imagePullSecrets:
-  - name: harbor-creds
 service: # GKE Workload Identity → Artifact Registry 자동 인증
   type: ClusterIP
   port: 8080
