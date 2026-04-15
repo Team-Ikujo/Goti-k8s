@@ -63,13 +63,13 @@ autoscaling:
           scaleUp:
             stabilizationWindowSeconds: 15
             policies:
-              - { type: Pods, value: 8, periodSeconds: 15 }
-              - { type: Percent, value: 200, periodSeconds: 15 }
+              - {type: Pods, value: 8, periodSeconds: 15}
+              - {type: Percent, value: 200, periodSeconds: 15}
             selectPolicy: Max
           scaleDown:
             stabilizationWindowSeconds: 300
             policies:
-              - { type: Percent, value: 25, periodSeconds: 60 }
+              - {type: Percent, value: 25, periodSeconds: 60}
     triggers:
       - type: cron
         metadata:
@@ -214,7 +214,7 @@ istioPolicy:
     enabled: true
 image:
   repository: harbor.go-ti.shop/prod/goti-stadium-go
-  tag: prod-41-862c91c
+  tag: prod-47-942b299
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
