@@ -12,7 +12,7 @@ metadata:
 spec:
   secretName: go-ti-shop-tls
   issuerRef:
-    name: letsencrypt-staging
+    name: letsencrypt-prod
     kind: ClusterIssuer
   commonName: go-ti.shop
   dnsNames:
