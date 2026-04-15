@@ -101,3 +101,9 @@ redis:
       kyverno.io/exclude-image-tag-policy: "true"
       kyverno.io/exclude-label-policy: "true"
       kyverno.io/exclude-resource-limits: "true"
+    # EBS PV가 AZ 2a에 고정되어 있고 2a 노드는 spot 전용이므로 spot toleration 필요
+    tolerations:
+      - key: node-role
+        operator: Equal
+        value: spot
+        effect: NoSchedule
