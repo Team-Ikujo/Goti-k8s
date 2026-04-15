@@ -51,7 +51,7 @@ autoscaling:
   enabled: true
   # SDD-0007 PR-3: ticketing 5분 캐시 도입으로 부하 경감, cron만 확장
   # 2026-04-15: AWS 재기동 직후 Pending loop 해소 임시 축소 (원래 2, 부하 직전 원복)
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 12
   keda:
     enabled: true
