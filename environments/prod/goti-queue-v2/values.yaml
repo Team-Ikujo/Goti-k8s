@@ -77,7 +77,8 @@ autoscaling:
           timezone: "Asia/Seoul"
           start: "20 09 * * *"
           end: "0 13 * * *"
-          desiredReplicas: "8"
+          # 2026-04-15: AWS 재기동 spot capacity 부족 임시 하향 (원래 8, 부하 직전 원복)
+          desiredReplicas: "3"
       - type: prometheus
         metadata:
           serverAddress: http://mimir-prod-query-frontend.monitoring.svc.cluster.local:8080/prometheus
