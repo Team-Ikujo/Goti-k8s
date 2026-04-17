@@ -123,6 +123,31 @@ env:
       secretKeyRef:
         name: goti-user-prod-gcp-secrets
         key: GOOGLE_REDIRECT_URI
+  # --- SMS (CoolSMS/Nurigo) ---
+  # Go 코드가 os.Getenv("SMS_*")로 직접 읽으므로 USER_ 접두사 없음.
+  # AWS는 envFrom으로 bulk load되지만 GCP는 개별 명시 필요.
+  - name: SMS_ENABLED
+    value: "true"
+  - name: SMS_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: SMS_API_KEY
+  - name: SMS_API_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: SMS_API_SECRET
+  - name: SMS_API_SENDER
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: SMS_API_SENDER
+  - name: SMS_API_DOMAIN
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: SMS_API_DOMAIN
   # --- OTel ---
   - name: USER_OTEL_ENABLED
     value: "true"
