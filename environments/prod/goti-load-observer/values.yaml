@@ -63,6 +63,13 @@ env:
     value: "60s"
   - name: POLL_INTERVAL_REDIS
     value: "30s"
+  # Cloudflare Worker → /__worker-metrics/ingest shared secret.
+  # SSM /prod/load-observer/WORKER_INGEST_TOKEN 에 동일 값 필요.
+  - name: WORKER_INGEST_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: goti-load-observer-prod-secrets
+        key: WORKER_INGEST_TOKEN
 
 podAnnotations:
   sidecar.istio.io/inject: "true"
@@ -70,7 +77,22 @@ podAnnotations:
   traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
 
 gateway:
-  enabled: false
+  # Cloudflare Worker → /__worker-metrics/ingest 수신용 VirtualService.
+  # aws-api.go-ti.shop 로 들어온 trraffic 중 이 prefix 만 load-observer 로 라우팅.
+  # (gcp-api.go-ti.shop 는 GCP 쪽 cluster 의 동일 VS 가 별도로 처리)
+  enabled: true
+  hosts:
+    - "aws-api.go-ti.shop"
+  gatewayRef: "istio-system/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/__worker-metrics/"
+      route:
+        - destination:
+            host: goti-load-observer-prod
+            port:
+              number: 9090
 
 podSecurityContext:
   runAsNonRoot: true
