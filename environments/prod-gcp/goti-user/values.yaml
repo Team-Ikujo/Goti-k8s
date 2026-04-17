@@ -2,7 +2,7 @@ nameOverride: goti-user
 replicaCount: 2
 image:
   repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-user-go"
-  tag: "gcp-3-a47c425"
+  tag: "gcp-4-3a6560c"
   pullPolicy: IfNotPresent
 service: # GKE Workload Identity → Artifact Registry 자동 인증
   type: ClusterIP
