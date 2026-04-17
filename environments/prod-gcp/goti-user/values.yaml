@@ -75,6 +75,10 @@ env:
       secretKeyRef:
         name: goti-user-prod-gcp-secrets
         key: JWT_RSA_PRIVATE_KEY
+  # JWT iss claim. istioPolicy.requestAuthentication.issuer와 반드시 일치해야 한다.
+  # K8s values가 SoT → Goti-go configs/user.yaml은 issuer 필드 없음 (env만 신뢰).
+  - name: USER_JWT_ISSUER
+    value: "goti-user-service"
   # --- OAuth (Secret에서 주입) ---
   # Go 코드가 os.Getenv("OAUTH_..")로 직접 읽으므로 USER_ 접두사 없음.
   # Secret 키는 Terraform config 네이밍(KAKAO_CLIENT_ID / KAKAO_SECRET 등)을 그대로 사용.
