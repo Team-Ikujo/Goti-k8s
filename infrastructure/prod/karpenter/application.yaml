@@ -21,7 +21,8 @@ spec:
             eks.amazonaws.com/role-arn: "arn:aws:iam::707925622666:role/goti-prod-karpenter-role"
         settings:
           clusterName: goti-prod
-          clusterEndpoint: "https://14C4EFEEB6DB918B4B79B868A168AF6F.gr7.ap-northeast-2.eks.amazonaws.com"
+          # clusterEndpoint는 의도적으로 미지정 — Karpenter가 eks:DescribeCluster로 동적 조회
+          # (하드코딩 시 클러스터 재생성으로 endpoint hash가 바뀌면 노드 join 실패)
           # terraform output → SSM /prod/karpenter/QUEUE_NAME
           # 패턴: <cluster_name>-karpenter
           interruptionQueue: "goti-prod-karpenter"
