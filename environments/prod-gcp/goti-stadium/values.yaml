@@ -148,4 +148,9 @@ istioPolicy:
           - "./*"
           - "monitoring/*"
 autoscaling:
-  enabled: false
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 60
+  keda:
+    enabled: false
