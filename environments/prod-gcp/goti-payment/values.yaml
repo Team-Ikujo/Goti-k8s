@@ -2,7 +2,7 @@ nameOverride: goti-payment
 replicaCount: 2
 image:
   repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-payment-go"
-  tag: "gcp-6-977130c"
+  tag: "gcp-9-bc2e881"
   pullPolicy: IfNotPresent
 service: # GKE Workload Identity → Artifact Registry 자동 인증
   type: ClusterIP
