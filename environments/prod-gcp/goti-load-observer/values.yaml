@@ -48,6 +48,12 @@ env:
       secretKeyRef:
         name: goti-load-observer-prod-gcp-secrets
         key: LOAD_OBSERVER_REDIS_ADDR
+  # Memorystore AUTH 활성 — Go config.go 의 REDIS_PASSWORD env 로 주입
+  - name: REDIS_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: goti-load-observer-prod-gcp-secrets
+        key: LOAD_OBSERVER_REDIS_PASSWORD
   - name: SERVER_PORT
     value: "9090"
   - name: POLL_INTERVAL_DB
@@ -73,7 +79,7 @@ gateway:
   enabled: true
   hosts:
     - "gcp-api.go-ti.shop"
-  gatewayRef: "istio-system/goti-shared-gateway"
+  gatewayRef: "istio-ingress/goti-shared-gateway"
   httpRoutes:
     - match:
         - uri:
