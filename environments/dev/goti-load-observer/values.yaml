@@ -4,7 +4,7 @@ replicaCount: 1
 
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-load-observer"
-  tag: "dev-10-7795425"  # CD가 자동 업데이트
+  tag: "dev-11-a37b622"  # CD가 자동 업데이트
   pullPolicy: Always
 
 imagePullSecrets:
