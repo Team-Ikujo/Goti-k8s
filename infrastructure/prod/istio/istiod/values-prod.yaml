@@ -3,7 +3,9 @@ istiod:
   replicaCount: 2
   autoscaleEnabled: true
   autoscaleMin: 2
-  autoscaleMax: 5
+  # 부하테스트 중단 임시 축소 (2026-04-18): 5 → 2. 부하 재개 시 5로 복구.
+  # 부하 없는 상태에서 HPA가 5까지 띄워 core 노드 CPU 압박 유발.
+  autoscaleMax: 2
   resources:
     requests:
       cpu: 100m
