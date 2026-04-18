@@ -19,7 +19,9 @@ metadata:
   labels:
     app: goti-overprovision
 spec:
-  replicas: 1
+  # 부하테스트 중단 임시 비활성화 (2026-04-18): 1 → 0. 부하 재개 시 1로 복구.
+  # Karpenter burst 흡수 목적인데 burst 자체가 없는 상태에서 1 vCPU/512Mi 상시 점유는 낭비.
+  replicas: 0
   selector:
     matchLabels:
       app: goti-overprovision
