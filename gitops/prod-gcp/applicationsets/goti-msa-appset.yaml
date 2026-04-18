@@ -26,6 +26,10 @@ spec:
           - service: queue
             namespace: goti
             valuesFile: environments/prod-gcp/goti-queue/values.yaml
+          # SDD-0005 D5b — Redis outbox stream → RDS 영속 consumer
+          - service: outbox-worker
+            namespace: goti
+            valuesFile: environments/prod-gcp/goti-outbox-worker/values.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod-gcp"

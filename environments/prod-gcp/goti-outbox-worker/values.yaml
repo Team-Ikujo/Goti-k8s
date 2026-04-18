@@ -1,0 +1,115 @@
+nameOverride: goti-outbox-worker
+# outbox consumer 는 단일 consumer group 이므로 HPA 대신 고정 replica.
+# lag 상승 시 수동으로 replicaCount 를 조정하거나 KEDA(outbox_lag_seconds) 도입 예정.
+replicaCount: 1
+image:
+  repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-outbox-worker-go"
+  tag: "gcp-9-bc2e881"
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 9090
+  name: http
+serviceMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+  interval: 15s
+  release: kube-prometheus-stack-prod-gcp
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 300m
+    memory: 128Mi
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # Memorystore Redis TLS+AUTH — Istio mTLS와 충돌하므로 sidecar 우회
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+env:
+  # --- 인프라 (Secret에서 주입) ---
+  - name: OUTBOX_WORKER_DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-outbox-worker-prod-gcp-secrets
+        key: DATASOURCE_URL
+  - name: OUTBOX_WORKER_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-outbox-worker-prod-gcp-secrets
+        key: REDIS_URL
+  # --- OTel ---
+  - name: OUTBOX_WORKER_OTEL_ENABLED
+    value: "true"
+  - name: OUTBOX_WORKER_OTEL_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+  - name: OUTBOX_WORKER_OTEL_SERVICE_NAME
+    value: "goti-outbox-worker"
+  - name: OTEL_SERVICE_NAME
+    value: "goti-outbox-worker"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+configMap:
+  enabled: false
+# outbox worker 는 HTTP ingress 없음 — Gateway/HTTPRoute 미사용.
+gateway:
+  enabled: false
+# 수신 트래픽 없음 — 외부 호출 대상 아님.
+autoscaling:
+  enabled: false
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: gcp-store
+    kind: ClusterSecretStore
+  remoteRef:
+    # ticketing 서비스의 시크릿을 공유 (같은 PG, 같은 Redis).
+    nameRegexp: "^goti-prod-ticketing-"
+    nameRewriteSource: "^goti-prod-ticketing-(.*)$"
+# --- Istio 보안/네트워크 정책 ---
+istioPolicy:
+  # HTTP inbound 없음 — AuthorizationPolicy / RequestAuthentication / JWT 모두 불필요.
+  authorizationPolicy:
+    enabled: false
+  requestAuthentication:
+    enabled: false
+  jwtAuthorizationPolicy:
+    enabled: false
+  # outbound 만 필요 (Redis / PG / OTel collector)
+  destinationRule:
+    enabled: false
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
