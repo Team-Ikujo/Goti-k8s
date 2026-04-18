@@ -91,9 +91,13 @@ externalSecret:
     name: gcp-store
     kind: ClusterSecretStore
   remoteRef:
-    # ticketing 서비스의 시크릿을 공유 (같은 PG, 같은 Redis).
-    nameRegexp: "^goti-prod-ticketing-"
-    nameRewriteSource: "^goti-prod-ticketing-(.*)$"
+    # base 로 공통 goti-prod-server-* (REDIS_URL 등) 수집 후
+    # override 로 ticketing 전용 goti-prod-ticketing-* (DATASOURCE_URL 등) 덮어씀.
+    # ticketing 서비스와 동일한 PG + Redis 사용.
+    nameRegexp: "^goti-prod-server-"
+    nameRewriteSource: "^goti-prod-server-(.*)$"
+    overrideNameRegexp: "^goti-prod-ticketing-"
+    overrideNameRewriteSource: "^goti-prod-ticketing-(.*)$"
 # --- Istio 보안/네트워크 정책 ---
 istioPolicy:
   # HTTP inbound 없음 — AuthorizationPolicy / RequestAuthentication / JWT 모두 불필요.
