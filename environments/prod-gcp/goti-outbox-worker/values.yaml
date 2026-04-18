@@ -65,6 +65,10 @@ env:
       secretKeyRef:
         name: goti-outbox-worker-prod-gcp-secrets
         key: REDIS_URL
+  # viper 서비스별 기본값 (serviceName+"_service") 가 "outbox-worker_service" 로 잘못
+  # 잡혀 orders/order_items 를 찾지 못함. ticketing 과 동일 schema 로 명시.
+  - name: OUTBOX_WORKER_DATABASE_SCHEMA
+    value: "ticketing_service"
   # --- OTel ---
   - name: OUTBOX_WORKER_OTEL_ENABLED
     value: "true"
