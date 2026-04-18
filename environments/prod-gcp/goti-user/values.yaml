@@ -152,6 +152,9 @@ env:
       secretKeyRef:
         name: goti-user-prod-gcp-secrets
         key: SMS_API_DOMAIN
+  # --- 부하테스트 전용 (OAuth/SMS 우회 회원가입 + 로그인). EKS prod 동일 설정. ---
+  - name: USER_TEST_USER_ENABLED
+    value: "true"
   # --- OTel ---
   - name: USER_OTEL_ENABLED
     value: "true"
