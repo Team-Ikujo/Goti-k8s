@@ -4,7 +4,7 @@ nameOverride: goti-outbox-worker
 replicaCount: 1
 image:
   repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-outbox-worker-go"
-  tag: "gcp-11-9f2431b"
+  tag: "gcp-13-bcf3720"
   pullPolicy: IfNotPresent
 service:
   type: ClusterIP
