@@ -1,27 +1,21 @@
 nameOverride: goti-load-observer
-
 replicaCount: 1
-
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-load-observer"
-  tag: "dev-9-ee6198a"  # fix: DB poll active 경기 필터 추가
+  tag: "dev-12-cc57b0f" # fix: DB poll active 경기 필터 추가
   pullPolicy: Always
-
 imagePullSecrets:
   - name: ecr-creds
-
 service:
   type: ClusterIP
   port: 9090
   name: metrics
-
 serviceMonitor:
   enabled: true
   port: metrics
   interval: 30s
   path: /metrics
   release: kube-prometheus-stack-prod
-
 probes:
   liveness:
     httpGet:
@@ -37,7 +31,6 @@ probes:
     initialDelaySeconds: 10
     periodSeconds: 10
     failureThreshold: 3
-
 resources:
   requests:
     cpu: 20m
@@ -45,7 +38,6 @@ resources:
   limits:
     cpu: 100m
     memory: 64Mi
-
 env:
   - name: DB_DSN
     valueFrom:
@@ -70,12 +62,10 @@ env:
       secretKeyRef:
         name: goti-load-observer-prod-secrets
         key: WORKER_INGEST_TOKEN
-
 podAnnotations:
   sidecar.istio.io/inject: "true"
   # ElastiCache Redis는 TLS+AUTH 사용 — Istio mTLS와 충돌하므로 sidecar 우회
   traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
-
 gateway:
   # Cloudflare Worker → /__worker-metrics/ingest 수신용 VirtualService.
   # aws-api.go-ti.shop 로 들어온 trraffic 중 이 prefix 만 load-observer 로 라우팅.
@@ -93,12 +83,10 @@ gateway:
             host: goti-load-observer-prod
             port:
               number: 9090
-
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 65532
   fsGroup: 65532
-
 securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
@@ -106,10 +94,8 @@ securityContext:
     drop: ["ALL"]
   seccompProfile:
     type: RuntimeDefault
-
 configMap:
   enabled: false
-
 externalSecret:
   enabled: true
   refreshInterval: "1h"
@@ -118,7 +104,6 @@ externalSecret:
     kind: ClusterSecretStore
   remoteRef:
     path: /prod/load-observer
-
 istioPolicy:
   authorizationPolicy:
     enabled: true
