@@ -1,10 +1,8 @@
 # SG1: 0% weight 첫 배포 — replicaCount: 0 (Java goti-stadium-prod 무영향 보장)
 replicaCount: 1
 image:
-  repository: "harbor.go-ti.shop/prod/goti-stadium-go"
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-stadium-go"
   pullPolicy: IfNotPresent
-imagePullSecrets:
-  - name: harbor-creds
 externalSecret:
   enabled: true
   refreshInterval: "1h"
@@ -25,7 +23,6 @@ istioPolicy:
           - "./*"
           - "monitoring/*"
           - "~/*.amazonaws.com"
-
 # Cutover: Go 활성화
 gateway:
   enabled: true
