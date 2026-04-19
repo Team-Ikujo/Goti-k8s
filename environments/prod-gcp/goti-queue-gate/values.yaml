@@ -1,26 +1,20 @@
 nameOverride: goti-queue-gate
-
 replicaCount: 1
-
 image:
   repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-queue-gate"
   tag: "bootstrap-20260413"
   pullPolicy: IfNotPresent
-
 imagePullSecrets: []
-
 service:
   type: ClusterIP
   port: 8080
   name: http
-
 serviceMonitor:
   enabled: true
   port: http
   path: /metrics
   interval: 15s
   release: kube-prometheus-stack-prod-gcp
-
 probes:
   liveness:
     httpGet:
@@ -36,7 +30,6 @@ probes:
     initialDelaySeconds: 3
     periodSeconds: 5
     failureThreshold: 3
-
 resources:
   requests:
     cpu: 50m
@@ -44,7 +37,6 @@ resources:
   limits:
     cpu: 200m
     memory: 128Mi
-
 env:
   - name: QUEUEGATE_REDIS_URL
     valueFrom:
@@ -56,12 +48,10 @@ env:
       secretKeyRef:
         name: goti-queue-gate-prod-gcp-secrets
         key: QUEUEGATE_GATE_QUEUE_URL
-
 podAnnotations:
   sidecar.istio.io/inject: "true"
   # Memorystore Redis TLS+AUTH — Istio mTLS와 충돌하므로 sidecar 우회
   traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
-
 gateway:
   enabled: true
   hosts:
@@ -78,12 +68,27 @@ gateway:
             host: goti-queue-gate-prod-gcp
             port:
               number: 8080
-
+      corsPolicy:
+        allowOrigins:
+          - exact: https://go-ti.shop
+          - exact: https://www.go-ti.shop
+        allowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+        allowHeaders:
+          - Authorization
+          - Content-Type
+          - X-Requested-With
+        allowCredentials: true
+        maxAge: 24h
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 65532
   fsGroup: 65532
-
 securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
@@ -91,10 +96,8 @@ securityContext:
     drop: ["ALL"]
   seccompProfile:
     type: RuntimeDefault
-
 configMap:
   enabled: false
-
 externalSecret:
   enabled: true
   refreshInterval: "1h"
@@ -104,10 +107,8 @@ externalSecret:
   remoteRef:
     nameRegexp: "^goti-prod-queue-gate-"
     nameRewriteSource: "^goti-prod-queue-gate-(.*)$"
-
 autoscaling:
   enabled: false
-
 istioPolicy:
   authorizationPolicy:
     enabled: false
