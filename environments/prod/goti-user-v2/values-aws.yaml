@@ -2,6 +2,7 @@ replicaCount: 4
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-user-go"
   pullPolicy: IfNotPresent
+  tag: prod-48-0a4e690
 externalSecret:
   enabled: true
   refreshInterval: "1h"
