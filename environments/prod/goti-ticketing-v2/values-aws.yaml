@@ -1,4 +1,4 @@
-replicaCount: 2
+replicaCount: 1
 image:
   repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-ticketing-go"
   pullPolicy: IfNotPresent
@@ -23,3 +23,6 @@ istioPolicy:
 # Cutover: Go 활성화
 gateway:
   enabled: true
+resources:
+  requests:
+    cpu: 300m
