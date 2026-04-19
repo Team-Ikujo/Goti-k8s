@@ -1,25 +1,19 @@
 nameOverride: goti-security-dashboard
-
 # SQLite + RWO PVC는 동시 마운트 불가 → Recreate 전략 필수
 deploymentStrategy:
   type: Recreate
-
 image:
   repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-security-dashboard-go"
-  tag: "gcp-0-init"
+  tag: "gcp-1-73aeffa"
   pullPolicy: IfNotPresent
-
 # GKE Workload Identity → Artifact Registry 자동 인증
 imagePullSecrets: []
-
 service:
   type: ClusterIP
   port: 8100
   name: http
-
 podAnnotations:
   sidecar.istio.io/inject: "true"
-
 probes:
   liveness:
     httpGet:
@@ -34,7 +28,6 @@ probes:
       port: http
     initialDelaySeconds: 15
     periodSeconds: 10
-
 resources:
   requests:
     cpu: 100m
@@ -42,22 +35,18 @@ resources:
   limits:
     cpu: 500m
     memory: 256Mi
-
 # SQLite 영속 저장소 (GCP pd-balanced)
 persistence:
   enabled: true
   storageClassName: "gcp-pd-balanced"
   size: "5Gi"
-
 extraVolumeMounts:
   - name: data
     mountPath: /data
-
 extraVolumes:
   - name: data
     persistentVolumeClaim:
       claimName: goti-security-dashboard-prod-gcp-data
-
 env:
   - name: DATABASE_DIR
     value: "/data"
@@ -114,11 +103,9 @@ gateway:
           - X-Requested-With
         allowCredentials: true
         maxAge: 24h
-
 # ExternalSecret 비활성화: UPSTAGE_API_KEY 유료 API 제외로 주입할 secret 없음.
 externalSecret:
   enabled: false
-
 # --- Istio 보안/네트워크 정책 ---
 # guardrail / mouse-macro 는 현재 GCP에 이관되지 않음 → POST 허용 블록 제거.
 # ingress-gateway(브라우저) GET/OPTIONS만 허용.
