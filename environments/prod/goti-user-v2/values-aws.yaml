@@ -1,9 +1,7 @@
 replicaCount: 4
 image:
-  repository: "harbor.go-ti.shop/prod/goti-user-go"
+  repository: "707925622666.dkr.ecr.ap-northeast-2.amazonaws.com/goti-user-go"
   pullPolicy: IfNotPresent
-imagePullSecrets:
-  - name: harbor-creds
 externalSecret:
   enabled: true
   refreshInterval: "1h"
@@ -21,7 +19,6 @@ istioPolicy:
           - "./*"
           - "monitoring/*"
           - "~/*.amazonaws.com"
-
 # Cutover: Go 활성화
 gateway:
   enabled: true
