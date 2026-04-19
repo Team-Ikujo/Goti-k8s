@@ -30,6 +30,10 @@ spec:
           - service: outbox-worker
             namespace: goti
             valuesFile: environments/prod-gcp/goti-outbox-worker/values.yaml
+          # AI 매크로 탐지 대시보드 API (Streamlit Cloud → gcp-api.go-ti.shop 경유)
+          - service: security-dashboard
+            namespace: goti
+            valuesFile: environments/prod-gcp/goti-security-dashboard/values.yaml
   template:
     metadata:
       name: "goti-{{service}}-prod-gcp"
