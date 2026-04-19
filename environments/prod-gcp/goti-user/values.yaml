@@ -188,6 +188,23 @@ gateway:
             host: goti-user-prod-gcp
             port:
               number: 8080
+      corsPolicy:
+        allowOrigins:
+          - exact: https://go-ti.shop
+          - exact: https://www.go-ti.shop
+        allowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+        allowHeaders:
+          - Authorization
+          - Content-Type
+          - X-Requested-With
+        allowCredentials: true
+        maxAge: 24h
 autoscaling:
   enabled: true
   minReplicas: 3
