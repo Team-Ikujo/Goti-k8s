@@ -44,6 +44,9 @@ spec:
             notRequestPrincipals: ["*"]
       to:
         - operation:
+            # CORS preflight 는 브라우저가 JWT 없이 보내므로 OPTIONS 는 DENY 제외.
+            # 실제 GET/POST 요청은 jwtAuthorizationPolicy 또는 애플리케이션 단에서 권한 검증.
+            notMethods: ["OPTIONS"]
             notPaths:
               {{- range $excludePaths }}
               - {{ . | quote }}
