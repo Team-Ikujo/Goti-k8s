@@ -63,10 +63,8 @@ env:
     value: "/data"
   - name: PORT
     value: "8100"
-
-envFrom:
-  - secretRef:
-      name: goti-security-dashboard-prod-gcp-secrets
+# UPSTAGE_API_KEY는 유료 API라 주입 제외.
+# /api/v1/analysis/* 엔드포인트는 호출 시 500 반환 (다른 경로는 정상 작동).
 
 # Streamlit Cloud → gcp-api.go-ti.shop 경유 read 엔드포인트 호출
 # /api/v1/events/* 는 POST 호출자(guardrail/mouse-macro)가 GCP에 없어 현재 미노출.
@@ -117,17 +115,9 @@ gateway:
         allowCredentials: true
         maxAge: 24h
 
+# ExternalSecret 비활성화: UPSTAGE_API_KEY 유료 API 제외로 주입할 secret 없음.
 externalSecret:
-  enabled: true
-  refreshInterval: "1h"
-  secretStoreRef:
-    name: gcp-store
-    kind: ClusterSecretStore
-  remoteRef:
-    nameRegexp: "^goti-prod-server-"
-    nameRewriteSource: "^goti-prod-server-(.*)$"
-    overrideNameRegexp: "^goti-prod-security-dashboard-"
-    overrideNameRewriteSource: "^goti-prod-security-dashboard-(.*)$"
+  enabled: false
 
 # --- Istio 보안/네트워크 정책 ---
 # guardrail / mouse-macro 는 현재 GCP에 이관되지 않음 → POST 허용 블록 제거.
