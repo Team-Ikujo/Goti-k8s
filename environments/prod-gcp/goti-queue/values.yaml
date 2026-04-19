@@ -65,6 +65,7 @@ gateway:
           - Authorization
           - Content-Type
           - X-Requested-With
+          - X-GR-BS
         allowCredentials: true
         maxAge: 24h
 autoscaling:
