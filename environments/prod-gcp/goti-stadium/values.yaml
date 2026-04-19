@@ -99,6 +99,23 @@ gateway:
             host: goti-stadium-prod-gcp
             port:
               number: 8080
+      corsPolicy:
+        allowOrigins:
+          - exact: https://go-ti.shop
+          - exact: https://www.go-ti.shop
+        allowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+        allowHeaders:
+          - Authorization
+          - Content-Type
+          - X-Requested-With
+        allowCredentials: true
+        maxAge: 24h
 externalSecret:
   enabled: true
   refreshInterval: "1h"
