@@ -1,121 +1,203 @@
 # Goti-k8s
 
-Goti 티켓팅 서비스의 Kubernetes GitOps 레포지토리.
+> Goti 티켓팅 플랫폼의 **GitOps 레포지토리**.
+> ArgoCD ApplicationSet + Istio Service Mesh + Helm Library Chart로 3개 클러스터(Kind dev / AWS EKS / GCP GKE)를 단일 소스로 선언적 운영한다.
 
-## 전제조건
+---
 
-- [Kind](https://kind.sigs.k8s.io/) v0.31+
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) v1.34+
-- [Helm](https://helm.sh/) v3.14+
-- Docker Desktop 또는 Docker Engine
+## 프로젝트 요약
 
-## 빠른 시작
+- **관리 대상**: MSA 서비스 7종 + 마이그레이션 v2 5종 + 모니터링 스택 7종
+- **클러스터 수**: 3 (dev-kind · prod-aws-eks · prod-gcp-gke)
+- **GitOps 엔진**: ArgoCD v3.3 + ApplicationSet (List · Matrix Generator)
+- **Service Mesh**: Istio 1.29 (sidecar + STRICT mTLS + AuthorizationPolicy)
+- **핵심 디자인**: Library Chart(`goti-common`) + 3단 values overlay + Sync Wave 부트스트랩
 
-```bash
-# 1. 클러스터 생성 + 전체 스택 설치 (원커맨드)
-make up
+---
 
-# 2. 포트포워딩 (Grafana, Prometheus, goti-server)
-make port-forward
+## 왜 이런 구조인가
 
-# 3. 상태 확인
-make status
+티켓팅 서비스는 한 순간의 트래픽 피크가 전체 시스템을 흔들기 때문에, 배포/롤백은 **사람의 개입 없이 Git 커밋만으로** 완결되어야 한다.
+또 Multi-Cloud에서 7개 MSA를 관리하려면 **Chart 중복 없이 환경·클라우드별 편차만 오버라이드**할 수 있어야 한다.
 
-# 4. 클러스터 삭제
-make down
+이 두 요구사항을 다음 설계로 해결했다:
+
+1. **goti-common** (Helm Library Chart) — Deployment / Service / Istio 정책 / HPA 템플릿 공유
+2. **환경 × 클라우드 values overlay** — `values.yaml` → `values-aws.yaml` → 최종 merged
+3. **ApplicationSet** — 7개 MSA를 List Generator로, 모니터링 스택 7개를 Matrix Generator로 자동 생성
+4. **Sync Wave** — AppProject → Infrastructure → ApplicationSet 순서 보장
+
+---
+
+## 아키텍처
+
+```
+                  ┌───────────────── Git (Goti-k8s) ─────────────────┐
+                  │ charts · environments · gitops · clusters · infra│
+                  └───────────────────────┬──────────────────────────┘
+                                          │
+               ┌──────────────────────────┼──────────────────────────┐
+               ▼                          ▼                          ▼
+      ┌────────────────┐         ┌────────────────┐         ┌────────────────┐
+      │   Kind (dev)   │         │  AWS EKS prod  │         │  GCP GKE prod  │
+      │  4 nodes (1CP) │         │  Karpenter +   │         │  Regional +    │
+      │  Istio + ArgoCD│         │  IRSA + Harbor │         │  WIF + Artif.  │
+      └────────────────┘         └────────────────┘         └────────────────┘
+             │                          │                          │
+             └───────── ApplicationSet + Sync Wave 자동 ────────────┘
 ```
 
-## 접속 정보 (dev-kind)
+---
 
-| 서비스 | URL | 비고 |
-|--------|-----|------|
-| ArgoCD | http://localhost:30080 | admin / (초기 비밀번호) |
-| Grafana | http://localhost:3000 | admin / admin |
-| Prometheus | http://localhost:9090 | - |
-| goti-server | http://localhost:8080 | port-forward 필요 |
-| Istio Gateway | http://localhost:31080 | - |
-
-## 디렉토리 구조
+## 디렉토리
 
 ```
 Goti-k8s/
-├── .github/                    # 이슈/PR 템플릿
-├── kind/                       # Kind 클러스터 설정
-│   └── cluster-config.yaml
-├── infrastructure/             # 인프라 Helm 래퍼
-│   ├── argocd/
-│   └── istio/                  # Istio 서비스 메시
-│       ├── base/               # CRDs
-│       ├── istiod/             # Control Plane
-│       └── gateway/            # Ingress Gateway
 ├── charts/                     # Helm Charts
-│   ├── goti-common/            # Library Chart (공통 템플릿)
-│   └── goti-server/            # Application Chart
-├── environments/               # 환경별 values
-│   └── dev/
-│       ├── goti-server/
-│       └── monitoring/
+│   ├── goti-common/            #   Library Chart — 공통 템플릿
+│   ├── goti-server/            #   Application Chart — MSA 7 + v2 5
+│   ├── swagger-ui/             #   통합 Swagger 드롭다운 UI
+│   └── synthetic-traffic/      #   K6 CronJob (smoke traffic)
+├── environments/               # 환경별 values overlay
+│   ├── dev/                    #   Kind
+│   ├── prod/                   #   AWS (values.yaml + values-aws.yaml)
+│   └── prod-gcp/               #   GCP (Workload Identity / Secret Manager)
 ├── gitops/                     # ArgoCD 리소스
-│   ├── projects/               # AppProject
-│   └── applicationsets/        # ApplicationSet
-├── clusters/                   # 클러스터별 부트스트랩
-│   └── dev/bootstrap/
-├── scripts/                    # 자동화 스크립트
+│   └── {dev,prod,prod-gcp}/
+│       ├── projects/           #   AppProject (RBAC / resource whitelist)
+│       └── applicationsets/    #   MSA / Monitoring / Istio Policy
+├── clusters/                   # 클러스터별 부트스트랩 진입점
+│   └── {dev,prod,prod-gcp}/bootstrap/
+│       ├── root-appsets.yaml   #   Sync Wave -2 / -1 / 0
+│       ├── argocd-install.yaml #   ArgoCD Helm
+│       └── istio-install.yaml  #   Istio CRD 사전 적용
+├── infrastructure/             # 인프라 Helm 래퍼
+│   ├── dev/                    #   ESO mock · Strimzi · OTEL Operator
+│   ├── istio/                  #   Istio base / istiod / gateway
+│   └── prod/                   #   Karpenter · Harbor · cert-manager
+├── kind/cluster-config.yaml    # Kind 4노드 설정
+├── manifests/
+│   └── ecr-credential-renewer.yaml  # CronJob (6시간마다 ECR 토큰 갱신)
+├── scripts/                    # setup / teardown / validate / db-seed
 ├── Makefile
 └── README.md
 ```
 
-## 아키텍처
+---
 
-- **GitOps**: ArgoCD ApplicationSet (하이브리드 패턴)
-- **서비스 메시**: Istio (sidecar injection + mTLS)
-- **모니터링**: Prometheus + Grafana + Loki + Tempo + Alloy
-- **Helm 패턴**: Library Chart (goti-common) + Application Chart
+## 주요 차트
 
-## Helm Commands
+| Chart | 타입 | 역할 |
+|-------|------|------|
+| `goti-common` | **Library** | Deployment, Service, VirtualService, DestinationRule, AuthorizationPolicy, RequestAuthentication, Sidecar, HPA(+KEDA), PDB, ServiceMonitor 템플릿 |
+| `goti-server` | Application | 모든 MSA 공통 Chart — `goti-common`을 include하고 values만 교체 |
+| `swagger-ui` | Application | 7개 서비스 OpenAPI 통합 드롭다운 |
+| `synthetic-traffic` | Application | K6 CronJob으로 배포 직후 상시 smoke |
 
-```bash
-# Lint
-make lint
+---
 
-# Template 렌더링 + dry-run 검증
-make validate
+## Values Overlay 전략 (3단계)
 
-# 캐시 정리
-make clean
+```
+charts/goti-server/values.yaml                      # ① Chart 기본값
+  + environments/{env}/{service}/values.yaml        # ② 환경 공통 (replica, autoscaling, routing)
+  + environments/{env}/{service}/values-{cloud}.yaml# ③ 클라우드 특화 (image registry, secret store)
+                        ↓  Helm merge
+                최종 manifest
 ```
 
-## 트러블슈팅
+이 구조 덕분에 Java → Go 마이그레이션 같은 Blue/Green 전환도 **values 토글 한 줄**로 처리된다:
 
-### ArgoCD 초기 비밀번호
-```bash
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```yaml
+# Java 버전
+replicaCount: 0
+autoscaling.enabled: false
+# Go 버전
+replicaCount: 4
+autoscaling.enabled: true
 ```
 
-### Pod 상태 확인
-```bash
-kubectl get pods -A
-kubectl describe pod <pod-name> -n <namespace>
-kubectl logs <pod-name> -n <namespace>
+---
+
+## ApplicationSet 패턴
+
+### 1) List Generator — MSA 7종을 단일 선언으로
+```yaml
+generators:
+  - list:
+      elements:
+        - { service: user,     valuesFile: environments/prod/goti-user/values.yaml }
+        - { service: stadium,  valuesFile: environments/prod/goti-stadium/values.yaml }
+        # ... 7개
+template:
+  metadata:
+    name: "goti-{{service}}-prod"
+  spec:
+    source:
+      path: charts/goti-server
+      helm:
+        valueFiles:
+          - "../../{{valuesFile}}"
+          - "../../{{cloudValuesFile}}"
 ```
 
-### Istio sidecar 상태 확인
-```bash
-istioctl analyze -n goti
-kubectl get pods -n goti -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[*].name}{"\n"}{end}'
+### 2) Matrix Generator — 모니터링 스택 자동 조립
+`(env) × (component)` 매트릭스로 Prometheus / Loki / Tempo / Mimir / Pyroscope / OTEL Collector / Alertmanager를 한번에 동기화.
+
+### 3) Sync Wave 부트스트랩
+```
+Wave -2 : AppProject (RBAC / 화이트리스트)
+Wave -1 : Infrastructure (Istio CRD · ESO · cert-manager)
+Wave  0 : ApplicationSet (MSA · 모니터링 · Istio Policy)
 ```
 
-### ArgoCD Application 동기화
-```bash
-# 개별 앱 동기화
-kubectl -n argocd patch application <app-name> --type merge -p '{"operation":{"initiatedBy":{"username":"admin"},"sync":{}}}'
+---
 
-# 또는 ArgoCD CLI
-argocd app sync <app-name>
-```
+## 운영 자동화
+
+- **ECR Credential Renewer**: 6시간 주기 CronJob이 ECR 토큰을 재발급해 `ecr-creds` Secret을 갱신. ArgoCD·Pod이 ImagePullBackOff에 빠지지 않는다.
+- **DB Seeder**: `scripts/db-seed/` — 테스트 데이터(사용자·경기·좌석)를 idempotent하게 초기화.
+- **Validate**: `scripts/validate/` — Helm lint / template dry-run으로 PR 전 차트 검증.
+
+---
+
+## 핵심 설계 결정
+
+| # | 결정 | 효과 |
+|---|------|------|
+| 1 | Library Chart로 공통 템플릿 통합 | 서비스별 Chart 경량화, 정책 변경이 단일 커밋으로 전파 |
+| 2 | 3단 values overlay | 환경·클라우드 편차만 격리, DRY 유지 |
+| 3 | ApplicationSet List + Matrix | 7개 MSA + 7개 모니터링 스택을 선언 한 곳으로 |
+| 4 | Sync Wave 부트스트랩 | CRD 선행, ESO 중간, 앱 마지막 — 순서 꼬임 제거 |
+| 5 | Java ↔ Go 병렬 배포 + 토글 | 마이그레이션 리스크 최소화, 즉시 롤백 가능 |
+| 6 | STRICT mTLS + AuthorizationPolicy | 모든 in-mesh 트래픽 암호화 + JWT DENY 정책 |
+| 7 | ServerSideApply + Force Sync 금지 | 대형 manifest diff 안정화, drift 방지 (ADR 명문화) |
+
+---
+
+## 기술 스택
+
+**GitOps** ArgoCD v3.3 · ApplicationSet · AppProject · Helm v3
+**Service Mesh** Istio 1.29 · Gateway API · AuthorizationPolicy · RequestAuthentication
+**Scaling** KEDA · HPA · Karpenter · Cluster Autoscaler
+**Secrets** External Secrets Operator (AWS SSM · GCP Secret Manager)
+**Observability** kube-prometheus-stack · Loki · Tempo · Mimir · Pyroscope · OTEL Collector
+**Security** Kyverno · NetworkPolicy · PodSecurity labels
+
+---
+
+## 연관 레포
+
+| 레포 | 역할 |
+|------|------|
+| [Goti-Terraform](../Goti-Terraform) | 클러스터·DB·네트워크 프로비저닝 |
+| [Goti-monitoring](../Goti-monitoring) | 모니터링 스택 values / 대시보드 |
+| [Goti-go](../Goti-go) / [Goti-server](../Goti-server) | 애플리케이션 |
+
+---
 
 ## 컨벤션
 
-- Commit: `[TYPE] 설명 (#이슈번호)` (FEAT, BUG, REFACTOR, TEST, DOCS, CHORE)
-- Branch: `feature/*`, `chore/*`, `hotfix/*`
-- PR 템플릿: `.github/PULL_REQUEST_TEMPLATE.md` 참고
+- **Commit**: `[TYPE] 설명 (#이슈번호)` — TYPE ∈ {FEAT, BUG, REFACTOR, TEST, DOCS, CHORE}
+- **Branch**: `feature/*`, `chore/*`, `hotfix/*`
+- **PR 템플릿**: `.github/pull_request_template.md`
