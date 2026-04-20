@@ -7,7 +7,7 @@
 
 ## 프로젝트 요약
 
-- **관리 대상**: MSA 서비스 7종 + 마이그레이션 v2 5종 + 모니터링 스택 7종
+- **관리 대상**: MSA 서비스 7종 + 모니터링 스택 7종
 - **클러스터 수**: 3 (dev-kind · prod-aws-eks · prod-gcp-gke)
 - **GitOps 엔진**: ArgoCD v3.3 + ApplicationSet (List · Matrix Generator)
 - **Service Mesh**: Istio 1.29 (sidecar + STRICT mTLS + AuthorizationPolicy)
@@ -55,7 +55,7 @@
 Goti-k8s/
 ├── charts/                     # Helm Charts
 │   ├── goti-common/            #   Library Chart — 공통 템플릿
-│   ├── goti-server/            #   Application Chart — MSA 7 + v2 5
+│   ├── goti-server/            #   Application Chart — MSA 7
 │   ├── swagger-ui/             #   통합 Swagger 드롭다운 UI
 │   └── synthetic-traffic/      #   K6 CronJob (smoke traffic)
 ├── environments/               # 환경별 values overlay
@@ -106,16 +106,7 @@ charts/goti-server/values.yaml                      # ① Chart 기본값
                 최종 manifest
 ```
 
-이 구조 덕분에 Java → Go 마이그레이션 같은 Blue/Green 전환도 **values 토글 한 줄**로 처리된다:
-
-```yaml
-# Java 버전
-replicaCount: 0
-autoscaling.enabled: false
-# Go 버전
-replicaCount: 4
-autoscaling.enabled: true
-```
+이 구조 덕분에 환경·클라우드 편차(이미지 레지스트리, Secret Store, replica 수, Gateway 소속 namespace)가 **오버레이 한 파일**에만 격리된다. 예컨대 AWS 는 IRSA + SSM, GCP 는 Workload Identity + Secret Manager 로 서로 다른 Secret 주입 경로를 가지지만, 같은 Chart 와 같은 기본 values 를 공유한다.
 
 ---
 
@@ -169,9 +160,8 @@ Wave  0 : ApplicationSet (MSA · 모니터링 · Istio Policy)
 | 2 | 3단 values overlay | 환경·클라우드 편차만 격리, DRY 유지 |
 | 3 | ApplicationSet List + Matrix | 7개 MSA + 7개 모니터링 스택을 선언 한 곳으로 |
 | 4 | Sync Wave 부트스트랩 | CRD 선행, ESO 중간, 앱 마지막 — 순서 꼬임 제거 |
-| 5 | Java ↔ Go 병렬 배포 + 토글 | 마이그레이션 리스크 최소화, 즉시 롤백 가능 |
-| 6 | STRICT mTLS + AuthorizationPolicy | 모든 in-mesh 트래픽 암호화 + JWT DENY 정책 |
-| 7 | ServerSideApply + Force Sync 금지 | 대형 manifest diff 안정화, drift 방지 (ADR 명문화) |
+| 5 | STRICT mTLS + AuthorizationPolicy | 모든 in-mesh 트래픽 암호화 + JWT DENY 정책 |
+| 6 | ServerSideApply + Force Sync 금지 | 대형 manifest diff 안정화, drift 방지 (ADR 명문화) |
 
 ---
 
@@ -192,7 +182,7 @@ Wave  0 : ApplicationSet (MSA · 모니터링 · Istio Policy)
 |------|------|
 | [Goti-Terraform](../Goti-Terraform) | 클러스터·DB·네트워크 프로비저닝 |
 | [Goti-monitoring](../Goti-monitoring) | 모니터링 스택 values / 대시보드 |
-| [Goti-go](../Goti-go) / [Goti-server](../Goti-server) | 애플리케이션 |
+| [Goti-server](../Goti-server) | 애플리케이션 (Spring Boot MSA) |
 
 ---
 
