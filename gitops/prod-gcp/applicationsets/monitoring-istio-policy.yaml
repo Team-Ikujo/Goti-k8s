@@ -1,0 +1,35 @@
+# monitoring namespace Istio 정책 (prod-gcp)
+# infra 프로젝트(istio-mesh-policy)가 아닌 monitoring 프로젝트가 관리
+# → monitoring namespace 생성 이후 배포 보장
+# chart 는 prod 공용 사용 (AWS/GCP 정책 동일)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-istio-policy-gcp
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+spec:
+  project: monitoring
+  source:
+    repoURL: "https://github.com/Team-Ikujo/Goti-k8s.git"
+    targetRevision: main
+    path: "infrastructure/prod/istio/mesh-policy/monitoring-policy"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

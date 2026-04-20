@@ -1,0 +1,256 @@
+# TODO(jwks-automation): user-service JWT 키 회전 시 본 파일 line ~163의
+# inline jwks를 모든 Go 서비스(현재 6개)와 수동 동기화 필요. Phase 6.5 4서비스
+# 확대 전 ConfigMap 또는 RequestAuthentication.jwksUri 참조 방식으로 자동화.
+# 메모리: project_jwks_automation_todo.md
+nameOverride: goti-stadium-v2
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+serviceMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+  interval: 15s
+  release: kube-prometheus-stack-prod-gcp
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 256Mi
+pdb:
+  enabled: true
+  minAvailable: 1
+# CRITICAL: Java goti-stadium VS와 동일 (host, path) 조합 → Istio
+# MULTIPLE_VIRTUAL_SERVICES_FOR_HOST. cutover 전까지 gateway.enabled=false로 유지.
+# cutover 시 Java values의 gateway.enabled=false로 전환 후 본 파일 true.
+# Swagger 라우팅은 Go 미구현 전제로 누락 — Java 전용 유지.
+gateway:
+  enabled: false
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+    - gcp-api.go-ti.shop
+  gatewayRef: "istio-ingress/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/stadiums"
+        - uri:
+            prefix: "/api/v1/baseball-teams"
+      route:
+        - destination:
+            host: goti-stadium-v2-prod
+            port:
+              number: 8080
+# TODO(tuning): cron 윈도우/replica/threshold는 ticketing-go 값 그대로 복제.
+# stadium은 read-heavy 메타 서비스(Redis 캐시 hit율 높음)이므로 부하 관측 후
+# 윈도우 좁히기 또는 desiredReplicas/threshold 차등화 검토.
+autoscaling:
+  enabled: true
+  # SDD-0007 PR-3: ticketing 5분 캐시 도입으로 부하 경감, cron만 확장
+  # 2026-04-15: AWS 재기동 직후 Pending loop 해소 임시 축소 (원래 2, 부하 직전 원복)
+  minReplicas: 2
+  maxReplicas: 12
+  keda:
+    enabled: true
+    pollingInterval: 10
+    cooldownPeriod: 120
+    advanced:
+      horizontalPodAutoscalerConfig:
+        behavior:
+          scaleUp:
+            stabilizationWindowSeconds: 15
+            policies:
+              - {type: Pods, value: 8, periodSeconds: 15}
+              - {type: Percent, value: 200, periodSeconds: 15}
+            selectPolicy: Max
+          scaleDown:
+            stabilizationWindowSeconds: 300
+            policies:
+              - {type: Percent, value: 25, periodSeconds: 60}
+    triggers:
+      - type: cron
+        metadata:
+          timezone: "Asia/Seoul"
+          start: "20 09 * * *"
+          end: "0 13 * * *"
+          # 2026-04-15: AWS 재기동 spot capacity 부족 임시 하향 (원래 4, 부하 직전 원복)
+          desiredReplicas: "2"
+      - type: prometheus
+        metadata:
+          serverAddress: http://mimir-prod-gcp-query-frontend.monitoring.svc.cluster.local:8080/prometheus
+          metricName: http_rps_stadium_go
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-stadium-v2"}[45s]))
+          threshold: "50"
+# TODO(verify): /healthz가 DB/Redis ping 포함 시 RDS 풀 초기화에 3~5s 소요
+# 가능 → liveness 재시작 루프 위험. 코드 확인 후 필요 시 liveness만 10s로 조정.
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # ElastiCache Redis TLS — Istio sidecar 우회
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379,5432"
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+securityContext:
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+# 환경변수: STADIUM_ prefix (Viper가 config.Load("stadium")에서 자동 생성)
+# envFrom 사용하지 않음 — 개별 매핑으로 명시적 관리
+env:
+  # --- 인프라 (Secret에서 주입) ---
+  # --- DATABASE via PgBouncer (ADR 0013) ---
+  # TODO: 서비스별 dedicated user 복구 — 현재는 master goti 단일 사용 (pgbouncer 멀티유저 설정 후 복구)
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: pgbouncer-secret
+        key: db-user-password
+  - name: STADIUM_DATABASE_URL
+    value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti_stadium sslmode=disable"
+  - name: STADIUM_DATABASE_PGBOUNCER_COMPAT
+    value: "true"
+  - name: STADIUM_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-stadium-v2-prod-gcp-secrets
+        key: STADIUM_REDIS_URL
+  - name: STADIUM_JWT_PUBLIC_KEY_PEM
+    valueFrom:
+      secretKeyRef:
+        name: goti-stadium-v2-prod-gcp-secrets
+        key: STADIUM_JWT_PUBLIC_KEY_PEM
+  # --- DB pool (SDD Step 5 / S4: RDS max_conn=200, 6서비스 공유) ---
+  # 3 → 8: 부하테스트에서 seat_selection p95 60s 확인 (2026-04-14 queue-oneshot).
+  # 4 replicas × 8 = 32. ticketing 96 + others 45 = 173, RDS 여유 27.
+  - name: STADIUM_DATABASE_MAX_CONNS
+    value: "8"
+  - name: STADIUM_DATABASE_MIN_CONNS
+    value: "5"
+  - name: STADIUM_DATABASE_MAX_CONN_IDLE_TIME_SEC
+    value: "30"
+  - name: STADIUM_DATABASE_MAX_CONN_LIFETIME_SEC
+    value: "1800"
+  # --- OTel ---
+  - name: STADIUM_OTEL_ENABLED
+    value: "true"
+  # FQDN .cluster.local 명시 — Istio sidecar/DNS proxy 환경 resolve 안전성
+  - name: STADIUM_OTEL_ENDPOINT
+    value: "http://otel-front-prod-gcp.monitoring.svc:4317"
+  - name: STADIUM_OTEL_SERVICE_NAME
+    value: "goti-stadium-v2"
+  # OTel SDK 표준 환경변수 (Go SDK가 직접 참조)
+  - name: OTEL_SERVICE_NAME
+    value: "goti-stadium-v2"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-front-prod-gcp.monitoring.svc:4317"
+  - name: OTEL_RESOURCE_ATTRIBUTES
+    value: "service.namespace=goti,deployment.environment.name=prod-gcp"
+configMap:
+  enabled: false
+# --- Istio 보안/네트워크 정책 ---
+istioPolicy:
+  # ticketing(Java) + ticketing-go(Go) 양쪽 호출자 허용 (Phase 6.5 공존 기간)
+  # TODO(phase 7 / Step 4b): Java ticketing deprecation 후 from-ticketing 규칙
+  # 제거. Java SA 잔존 시 공격 표면 확대.
+  authorizationPolicy:
+    enabled: true
+    allowFrom:
+      - name: from-ticketing
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-ticketing-prod-gcp"]
+            to:
+              - operation:
+                  paths: ["/api/v1/stadiums*", "/api/v1/baseball-teams*"]
+                  methods: ["GET"]
+      - name: from-ticketing-go
+        rules:
+          - from:
+              - source:
+                  principals: ["cluster.local/ns/goti/sa/goti-ticketing-v2-prod-gcp"]
+            to:
+              - operation:
+                  paths: ["/api/v1/stadiums*", "/api/v1/baseball-teams*"]
+                  methods: ["GET"]
+  # TODO(consistency): Java goti-stadium values에는 issuer 미설정. JWT iss claim
+  # 실제 발급 값 확인 후 Java values에도 동일 issuer 추가해 일관성 확보.
+  requestAuthentication:
+    enabled: true
+    issuer: "goti-user-service"
+    jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"tXlfiSkDgSujDP6wUyQc57RrUGkTK6x3Fe-W5VhZhBumzDDoRNglcZ3C9AY_iF9GdlZOgcUdKLEVplLuEZGQpHUdA5CwgzQkwNXs242Mgo6QyHGdbDXZXEhe42vl1gcdgnahY7UQLcWGUr6--Fuc5G2LMW6rlTGwagT05SKzGRbTRef3gt8D8_hdsp654vnrdW2ReRQltnffHR9XL8buuKIduGW5vfiCVtNRFsaiT_o0SA86a5gK9qmXUGJIDPLc9onZ3v6G8gtFOES4MmR0elT2VTf22tM0GeIhnDOrjVRBa5I-M6c4OTMDrmeHKhUJygj-rjfNT5effpQzUz0_Xw"}]}'
+  # 의도: stadium은 public read API (경기장/팀 메타데이터 조회) — 비로그인 접근 허용.
+  # AuthorizationPolicy.allowFrom으로 mesh 내부 호출자(GET only) 별도 제한.
+  # 향후 쓰기 메서드 추가 시 chart의 jwtAuthorizationPolicy에 method 분리 필요.
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/api/v1/stadiums*"
+      - "/api/v1/baseball-teams*"
+      - "/healthz"
+      - "/readyz"
+      - "/metrics"
+  destinationRule:
+    enabled: true
+image:
+  repository: asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-stadium-go
+  tag: prod-47-942b299
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: artifact-registry-creds
+
+# --- cloud override (AWS values-aws.yaml 구조 + GCP 토큰으로 변환) ---
+# SG1: 0% weight 첫 배포 — replicaCount: 0 (Java goti-stadium-prod 무영향 보장)
+replicaCount: 1
+image:
+  repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-stadium-go"
+  pullPolicy: IfNotPresent
+  tag: prod-48-0a4e690
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: gcp-store
+    kind: ClusterSecretStore
+  remoteRef:
+    nameRegexp: "^goti-prod-server-"
+    nameRewriteSource: "^goti-prod-server-(.*)$"
+    overrideNameRegexp: "^goti-prod-stadium-v2-"
+    overrideNameRewriteSource: "^goti-prod-stadium-v2-(.*)$"
+# TODO(ticketing-go-sync): "~/*.googleapis.com"는 Istio Sidecar hosts 비표준
+# (`~`는 sidecar 자체 namespace 의미). 외부 도메인은 "*.googleapis.com" 형식이 표준.
+# ticketing-go-aws.values도 동일 패턴 사용 중이므로 함께 동기 수정 필요.
+istioPolicy:
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "~/*.googleapis.com"
+# Cutover: Go 활성화
+gateway:
+  enabled: true

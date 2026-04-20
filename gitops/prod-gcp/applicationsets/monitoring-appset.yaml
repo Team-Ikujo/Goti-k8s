@@ -1,5 +1,5 @@
-# AWS prod monitoring-appset.yaml과 동일한 구조
-# 차이점: mimir-values.yaml → mimir-values-gcp.yaml (GCS 백엔드)
+# prod-gcp 전체 모니터링 스택 — AWS prod와 1:1 parity (showcase 브랜치)
+# values-stacks/prod-gcp/*.yaml 참조 (mimir/opencost/kps/loki 는 GCP용 오버라이드, 나머지는 prod 복사본)
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -13,53 +13,62 @@ spec:
               elements:
                 - env: prod-gcp
           - list:
-              # 전체 모니터링 스택 일시 비활성화 — 2026-04-13 bring-up
-              # 원인: SSD_TOTAL_GB=300 (free→paid 전환 직후 quota), CPU 압박
-              # server/Go 서비스 동작 검증 우선. quota 증설 후 순차 복구:
-              #   1) SSD 500GB+ 승인 → kube-prometheus-stack, loki 복구
-              #   2) SSD 1000GB+ 승인 → tempo, mimir, pyroscope 복구
-              #   3) otel-collector: app OTel 송신 정상화 후 복구
-              elements: []
-                # - component: kube-prometheus-stack
-                #   chartRepo: https://prometheus-community.github.io/helm-charts
-                #   chartName: kube-prometheus-stack
-                #   chartVersion: "82.4.3"
-                #   valuesFile: values-stacks/prod/kube-prometheus-stack-values.yaml
-                # - component: prometheus-blackbox-exporter
-                #   chartRepo: https://prometheus-community.github.io/helm-charts
-                #   chartName: prometheus-blackbox-exporter
-                #   chartVersion: "9.5.0"
-                #   valuesFile: values-stacks/prod/blackbox-exporter-values.yaml
-                # - component: loki
-                #   chartRepo: https://grafana.github.io/helm-charts
-                #   chartName: loki
-                #   chartVersion: "6.53.0"
-                #   valuesFile: values-stacks/prod/loki-values.yaml
-                # - component: tempo
-                #   chartRepo: https://grafana-community.github.io/helm-charts
-                #   chartName: tempo
-                #   chartVersion: "1.24.4"
-                #   valuesFile: values-stacks/prod/tempo-values.yaml
-                # - component: mimir
-                #   chartRepo: https://grafana.github.io/helm-charts
-                #   chartName: mimir-distributed
-                #   chartVersion: "6.0.5"
-                #   valuesFile: values-stacks/prod-gcp/mimir-values.yaml
-                # - component: pyroscope
-                #   chartRepo: https://grafana.github.io/helm-charts
-                #   chartName: pyroscope
-                #   chartVersion: "1.18.1"
-                #   valuesFile: values-stacks/prod/pyroscope-values.yaml
-                # - component: otel-collector-front
-                #   chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
-                #   chartName: opentelemetry-collector
-                #   chartVersion: "0.147.1"
-                #   valuesFile: values-stacks/prod/otel-collector-front-values.yaml
-                # - component: otel-collector-back
-                #   chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
-                #   chartName: opentelemetry-collector
-                #   chartVersion: "0.147.1"
-                #   valuesFile: values-stacks/prod/otel-collector-back-values.yaml
+              elements:
+                - component: kube-prometheus-stack
+                  chartRepo: https://prometheus-community.github.io/helm-charts
+                  chartName: kube-prometheus-stack
+                  chartVersion: "82.4.3"
+                  valuesFile: values-stacks/prod-gcp/kube-prometheus-stack-values.yaml
+                - component: prometheus-blackbox-exporter
+                  chartRepo: https://prometheus-community.github.io/helm-charts
+                  chartName: prometheus-blackbox-exporter
+                  chartVersion: "9.5.0"
+                  valuesFile: values-stacks/prod-gcp/blackbox-exporter-values.yaml
+                - component: loki
+                  chartRepo: https://grafana.github.io/helm-charts
+                  chartName: loki
+                  chartVersion: "6.53.0"
+                  valuesFile: values-stacks/prod-gcp/loki-values.yaml
+                - component: tempo
+                  chartRepo: https://grafana-community.github.io/helm-charts
+                  chartName: tempo
+                  chartVersion: "1.24.4"
+                  valuesFile: values-stacks/prod-gcp/tempo-values.yaml
+                - component: mimir
+                  chartRepo: https://grafana.github.io/helm-charts
+                  chartName: mimir-distributed
+                  chartVersion: "6.0.5"
+                  valuesFile: values-stacks/prod-gcp/mimir-values.yaml
+                - component: pyroscope
+                  chartRepo: https://grafana.github.io/helm-charts
+                  chartName: pyroscope
+                  chartVersion: "1.18.1"
+                  valuesFile: values-stacks/prod-gcp/pyroscope-values.yaml
+                - component: otel-collector-front
+                  chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
+                  chartName: opentelemetry-collector
+                  chartVersion: "0.147.1"
+                  valuesFile: values-stacks/prod-gcp/otel-collector-front-values.yaml
+                - component: otel-collector-back
+                  chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
+                  chartName: opentelemetry-collector
+                  chartVersion: "0.147.1"
+                  valuesFile: values-stacks/prod-gcp/otel-collector-back-values.yaml
+                - component: otel-collector-s3
+                  chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
+                  chartName: opentelemetry-collector
+                  chartVersion: "0.147.1"
+                  valuesFile: values-stacks/prod-gcp/otel-collector-s3-values.yaml
+                - component: otel-collector-logs
+                  chartRepo: https://open-telemetry.github.io/opentelemetry-helm-charts
+                  chartName: opentelemetry-collector
+                  chartVersion: "0.147.1"
+                  valuesFile: values-stacks/prod-gcp/otel-collector-logs-values.yaml
+                - component: opencost
+                  chartRepo: https://opencost.github.io/opencost-helm-chart
+                  chartName: opencost
+                  chartVersion: "2.5.12"
+                  valuesFile: values-stacks/prod-gcp/opencost-values.yaml
   template:
     metadata:
       name: "{{component}}-{{env}}"

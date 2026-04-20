@@ -1,0 +1,118 @@
+nameOverride: goti-mouse-macro
+# GCP(GKE) — Artifact Registry (Workload Identity)
+replicaCount: 1
+image:
+  repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-mouse"
+  tag: "gcp-1-placeholder"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+  name: http
+
+# Workload Identity: GCS 모델 버킷 접근용 GSA 바인딩
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: "goti-prod-mouse-macro@project-7b8317dd-9b4d-4f5f-ba2.iam.gserviceaccount.com"
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000   # Dockerfile: useradd -u 1000 appuser
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true  # /tmp은 emptyDir로 마운트됨
+  capabilities:
+    drop: ["ALL"]
+
+autoscaling:
+  enabled: false
+
+probes:
+  liveness:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 15
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 10
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+gateway:
+  enabled: true
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+    - "gcp-api.go-ti.shop"
+  gatewayRef: "istio-ingress/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/mouse/predict"
+      rewrite:
+        uri: "/predict"
+      route:
+        - destination:
+            host: goti-mouse-macro-prod-gcp
+            port:
+              number: 8000
+
+env:
+  - name: GCP_REGION
+    value: "asia-northeast3"
+  - name: GCS_MODEL_PREFIX
+    value: ""
+  - name: DASHBOARD_SERVER_URL
+    value: "http://goti-security-dashboard-prod-gcp.goti.svc.cluster.local:8100"
+
+envFrom:
+  - secretRef:
+      name: goti-mouse-macro-prod-gcp-secrets
+
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: gcp-store
+    kind: ClusterSecretStore
+  remoteRef:
+    nameRegexp: "^goti-prod-server-"
+    nameRewriteSource: "^goti-prod-server-(.*)$"
+    overrideNameRegexp: "^goti-prod-mouse-macro-"
+    overrideNameRewriteSource: "^goti-prod-mouse-macro-(.*)$"
+
+istioPolicy:
+  authorizationPolicy:
+    enabled: false
+  requestAuthentication:
+    enabled: false
+  jwtAuthorizationPolicy:
+    enabled: false
+  destinationRule:
+    enabled: false
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "~/*.googleapis.com"

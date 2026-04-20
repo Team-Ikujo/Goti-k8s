@@ -1,0 +1,291 @@
+# TODO(jwks-automation): user-service JWT 키 회전 시 본 파일 inline jwks를
+# 모든 Go 서비스와 수동 동기화 필요. 메모리: project_jwks_automation_todo.md
+nameOverride: goti-user-v2
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+serviceMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+  interval: 15s
+  release: kube-prometheus-stack-prod-gcp
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 256Mi
+pdb:
+  enabled: true
+  minAvailable: 1
+# CRITICAL: Java goti-user VS와 동일 (host, path) 조합 → Istio
+# MULTIPLE_VIRTUAL_SERVICES_FOR_HOST. gateway.enabled=false로 유지.
+# cutover 시 Java values의 gateway.enabled=false로 전환 후 본 파일 true.
+# Swagger 라우팅은 Go 미구현 전제로 누락 — Java 전용 유지.
+gateway:
+  enabled: false
+  hosts:
+    - "go-ti.shop"
+    - "api.go-ti.shop"
+    - gcp-api.go-ti.shop
+  gatewayRef: "istio-ingress/goti-shared-gateway"
+  httpRoutes:
+    - match:
+        - uri:
+            prefix: "/api/v1/auth"
+        - uri:
+            prefix: "/api/v1/members"
+        - uri:
+            prefix: "/api/v1/test"
+      route:
+        - destination:
+            host: goti-user-v2-prod
+            port:
+              number: 8080
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 12
+  keda:
+    enabled: true
+    pollingInterval: 10
+    cooldownPeriod: 120
+    advanced:
+      horizontalPodAutoscalerConfig:
+        behavior:
+          scaleUp:
+            stabilizationWindowSeconds: 15
+            policies:
+              - {type: Pods, value: 8, periodSeconds: 15}
+              - {type: Percent, value: 200, periodSeconds: 15}
+            selectPolicy: Max
+          scaleDown:
+            stabilizationWindowSeconds: 300
+            policies:
+              - {type: Percent, value: 25, periodSeconds: 60}
+    triggers:
+      - type: prometheus
+        metadata:
+          serverAddress: http://mimir-prod-gcp-query-frontend.monitoring.svc.cluster.local:8080/prometheus
+          metricName: http_rps_user_go
+          query: sum(rate(http_server_request_duration_seconds_count{service_name="goti-user-v2"}[45s]))
+          threshold: "40"
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379,5432"
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+securityContext:
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+# 환경변수: USER_ prefix
+env:
+  # --- 인프라 (Secret에서 주입) ---
+  # --- DATABASE via PgBouncer (ADR 0013) ---
+  # TODO: 서비스별 dedicated user 복구 — 현재는 master goti 단일 사용 (pgbouncer 멀티유저 설정 후 복구)
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: pgbouncer-secret
+        key: db-user-password
+  - name: USER_DATABASE_URL
+    value: "host=pgbouncer.goti.svc port=5432 user=goti password=$(DB_PASSWORD) dbname=goti_user sslmode=disable"
+  - name: USER_DATABASE_PGBOUNCER_COMPAT
+    value: "true"
+  - name: USER_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-v2-prod-gcp-secrets
+        key: USER_REDIS_URL
+  - name: USER_JWT_PRIVATE_KEY_PEM
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-v2-prod-gcp-secrets
+        key: USER_JWT_PRIVATE_KEY_PEM
+  - name: USER_JWT_PUBLIC_KEY_PEM
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-v2-prod-gcp-secrets
+        key: USER_JWT_PUBLIC_KEY_PEM
+  # Istio RequestAuthentication이 검증하는 issuer와 일치시켜야 함 (goti-*-prod 전 서비스).
+  - name: USER_JWT_ISSUER
+    value: "goti-user-service"
+  # --- DB pool (SDD Step 5 / S4) ---
+  - name: USER_DATABASE_MAX_CONNS
+    value: "3"
+  - name: USER_DATABASE_MIN_CONNS
+    value: "5"
+  - name: USER_DATABASE_MAX_CONN_IDLE_TIME_SEC
+    value: "30"
+  - name: USER_DATABASE_MAX_CONN_LIFETIME_SEC
+    value: "1800"
+  # --- 애플리케이션 ---
+  - name: USER_TEST_USER_ENABLED
+    value: "true"
+  # --- OAuth (기존 Java secret 재사용; Go는 os.Getenv("OAUTH_..")로 직접 읽음) ---
+  - name: OAUTH_GOOGLE_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: GOOGLE_CLIENT
+  - name: OAUTH_GOOGLE_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: GOOGLE_SECRET
+  - name: OAUTH_GOOGLE_REDIRECT_URI
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: GOOGLE_REDIRECT_URI
+  - name: OAUTH_KAKAO_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: KAKAO_CLIENT
+  - name: OAUTH_KAKAO_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: KAKAO_SECRET
+  - name: OAUTH_KAKAO_REDIRECT_URI
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: KAKAO_REDIRECT_URI
+  - name: OAUTH_NAVER_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: NAVER_CLIENT
+  - name: OAUTH_NAVER_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: NAVER_SECRET
+  - name: OAUTH_NAVER_REDIRECT_URI
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: NAVER_REDIRECT_URI
+  # --- SMS (CoolSMS) ---
+  - name: SMS_ENABLED
+    value: "true"
+  - name: SMS_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: SMS_API_KEY
+  - name: SMS_API_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: SMS_API_SECRET
+  - name: SMS_API_SENDER
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: SMS_API_SENDER
+  - name: SMS_API_DOMAIN
+    valueFrom:
+      secretKeyRef:
+        name: goti-user-prod-gcp-secrets
+        key: SMS_API_DOMAIN
+  # --- OTel ---
+  - name: USER_OTEL_ENABLED
+    value: "true"
+  - name: USER_OTEL_ENDPOINT
+    value: "http://otel-front-prod-gcp.monitoring.svc:4317"
+  - name: USER_OTEL_SERVICE_NAME
+    value: "goti-user-v2"
+  - name: OTEL_SERVICE_NAME
+    value: "goti-user-v2"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-front-prod-gcp.monitoring.svc:4317"
+  - name: OTEL_RESOURCE_ATTRIBUTES
+    value: "service.namespace=goti,deployment.environment.name=prod-gcp"
+configMap:
+  enabled: false
+# --- Istio 보안/네트워크 정책 ---
+istioPolicy:
+  # user 서비스는 Gateway로만 접근 (다른 서비스로부터 호출 받지 않음)
+  authorizationPolicy:
+    enabled: true
+    allowFrom: []
+  requestAuthentication:
+    enabled: true
+    issuer: "goti-user-service"
+    jwks: '{"keys":[{"alg":"RS256","kty":"RSA","kid":"goti-jwt-key-1","e":"AQAB","use":"sig","n":"tXlfiSkDgSujDP6wUyQc57RrUGkTK6x3Fe-W5VhZhBumzDDoRNglcZ3C9AY_iF9GdlZOgcUdKLEVplLuEZGQpHUdA5CwgzQkwNXs242Mgo6QyHGdbDXZXEhe42vl1gcdgnahY7UQLcWGUr6--Fuc5G2LMW6rlTGwagT05SKzGRbTRef3gt8D8_hdsp654vnrdW2ReRQltnffHR9XL8buuKIduGW5vfiCVtNRFsaiT_o0SA86a5gK9qmXUGJIDPLc9onZ3v6G8gtFOES4MmR0elT2VTf22tM0GeIhnDOrjVRBa5I-M6c4OTMDrmeHKhUJygj-rjfNT5effpQzUz0_Xw"}]}'
+  jwtAuthorizationPolicy:
+    enabled: true
+    excludePaths:
+      - "/api/v1/auth"
+      - "/api/v1/auth/*"
+      - "/api/v1/test"
+      - "/api/v1/test/*"
+      - "/healthz"
+      - "/readyz"
+      - "/metrics"
+      - "/.well-known"
+      - "/.well-known/*"
+  destinationRule:
+    enabled: true
+image:
+  repository: asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-user-go
+  tag: prod-47-942b299
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: artifact-registry-creds
+
+# --- cloud override (AWS values-aws.yaml 구조 + GCP 토큰으로 변환) ---
+replicaCount: 4
+image:
+  repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-user-go"
+  pullPolicy: IfNotPresent
+  tag: prod-48-0a4e690
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: gcp-store
+    kind: ClusterSecretStore
+  remoteRef:
+    nameRegexp: "^goti-prod-server-"
+    nameRewriteSource: "^goti-prod-server-(.*)$"
+    overrideNameRegexp: "^goti-prod-user-v2-"
+    overrideNameRewriteSource: "^goti-prod-user-v2-(.*)$"
+istioPolicy:
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "~/*.googleapis.com"
+# Cutover: Go 활성화
+gateway:
+  enabled: true

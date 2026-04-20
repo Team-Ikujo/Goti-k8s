@@ -1,0 +1,107 @@
+nameOverride: goti-guardrail
+# GCP(GKE) — Artifact Registry (Workload Identity 로 자동 인증)
+replicaCount: 1
+image:
+  repository: "asia-northeast3-docker.pkg.dev/project-7b8317dd-9b4d-4f5f-ba2/goti-prod-registry/goti-guardrail"
+  tag: "gcp-1-placeholder"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+  name: http
+
+serviceMonitor:
+  enabled: true
+  port: http
+  path: /metrics
+  interval: 15s
+  release: kube-prometheus-stack-prod-gcp
+
+probes:
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+env:
+  - name: GUARDRAIL_ENABLED
+    value: "false"                # 부하테스트 시 봇 탐지 비활성화 — 테스트 후 제거
+  - name: GUARDRAIL_REDIS_URL
+    valueFrom:
+      secretKeyRef:
+        name: goti-guardrail-prod-gcp-secrets
+        key: GUARDRAIL_REDIS_URL
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  # Memorystore Redis TLS+AUTH — Istio mTLS 충돌 방지
+  traffic.sidecar.istio.io/excludeOutboundPorts: "6379"
+
+gateway:
+  enabled: false  # Guardrail은 Istio ExtAuthz로 연동 (VirtualService 불필요)
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  fsGroup: 65534
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+configMap:
+  enabled: false
+
+autoscaling:
+  enabled: false
+
+externalSecret:
+  enabled: true
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: gcp-store
+    kind: ClusterSecretStore
+  remoteRef:
+    nameRegexp: "^goti-prod-server-"
+    nameRewriteSource: "^goti-prod-server-(.*)$"
+    overrideNameRegexp: "^goti-prod-guardrail-"
+    overrideNameRewriteSource: "^goti-prod-guardrail-(.*)$"
+
+# --- Istio 보안/네트워크 정책 ---
+istioPolicy:
+  # ExtAuthz 서버로 동작 — 자체 AuthorizationPolicy 불필요, Istio mesh 레벨에서 처리
+  authorizationPolicy:
+    enabled: false
+  destinationRule:
+    enabled: true
+  sidecar:
+    enabled: true
+    egress:
+      - hosts:
+          - "istio-system/*"
+          - "./*"
+          - "monitoring/*"
+          - "~/*.googleapis.com"

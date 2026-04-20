@@ -1,0 +1,10 @@
+image:
+  repository: nginx
+  tag: "1.27-alpine"
+
+hosts:
+  - "go-ti.shop"
+  - "api.go-ti.shop"
+  - "gcp-api.go-ti.shop"
+
+gatewayRef: "istio-ingress/goti-shared-gateway"
