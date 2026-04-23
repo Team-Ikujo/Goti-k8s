@@ -44,6 +44,16 @@ tolerations:
     effect: NoSchedule
 
 # Falcosidekick — 알림 전송 (Discord webhook) — DISABLED
+#
+# [복원 시 권장 패턴] 평문 URL 대신 ExternalSecret 경유:
+#   1. infrastructure/prod/gcp/external-secrets/alertmanager-discord-externalsecret.yaml
+#      패턴으로 `falco-discord-webhook` ExternalSecret 생성 (monitoring 또는 falco ns)
+#   2. 이 chart에서 existingSecret 또는 envFrom 으로 주입:
+#        falcosidekick:
+#          config:
+#            existingSecret: "falco-discord-webhook"
+#      (Helm chart가 existingSecret 지원 여부 확인 필요. 미지원 시 envFrom 활용)
+#   3. DO NOT commit real webhook URL.
 falcosidekick:
   enabled: false
   resources:
@@ -55,7 +65,7 @@ falcosidekick:
       memory: 128Mi
   config:
     discord:
-      webhookurl: "<REDACTED_DISCORD_WEBHOOK>"
+      webhookurl: "<DISCORD_WEBHOOK_URL>"  # 복원 시 ExternalSecret 으로 주입
       minimumpriority: warning
 
 # ============================================================================
