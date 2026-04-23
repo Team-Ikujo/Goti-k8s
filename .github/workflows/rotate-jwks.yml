@@ -1,0 +1,152 @@
+name: Rotate JWKS
+
+# ADR-0010 Rev 2 (Option E) — JWKS 배포 자동화.
+#
+# 동작:
+#   SSM /prod/server/JWT_RSA_PUBLIC_KEY (PEM) + /prod/server/JWT_KID
+#     → scripts/pem-to-jwks.py로 JWKS JSON 생성
+#     → scripts/patch-jwks.sh로 8개 values.yaml 치환
+#     → diff 있으면 PR 생성, 없으면 no-op 종료
+#
+# 트리거:
+#   - workflow_dispatch: 수동 실행 (키 회전 즉시 반영용)
+#   - repository_dispatch(jwks-rotate): 외부 이벤트 (Terraform apply 완료 훅 등)
+#   - schedule: 하루 1회 (drift 감지 안전망)
+#
+# 이전 실패 예방:
+#   - SSM `--output text`는 개행을 리터럴 `\n`으로 흘림 → pem-to-jwks.py에서 복원
+#   - yq는 포맷 재작성으로 idempotent 깨짐 → sed line-replace 사용
+#   - PEM은 SecureString이라 `--with-decryption` 필수
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types:
+      - jwks-rotate
+  schedule:
+    # 매일 03:00 KST (UTC 18:00) — 트래픽 적은 시간
+    - cron: '0 18 * * *'
+
+env:
+  PEM_PARAMETER: /prod/server/JWT_RSA_PUBLIC_KEY
+  KID_PARAMETER: /prod/server/JWT_KID
+  JWCRYPTO_VERSION: '1.5.6'
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: AWS 인증 (SSM read)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Python 환경 준비
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: jwcrypto 설치
+        run: pip install "jwcrypto==${JWCRYPTO_VERSION}"
+
+      - name: SSM에서 PEM + KID 조회
+        id: ssm
+        run: |
+          PEM=$(aws ssm get-parameter \
+            --name "$PEM_PARAMETER" \
+            --with-decryption \
+            --query Parameter.Value \
+            --output text)
+          KID=$(aws ssm get-parameter \
+            --name "$KID_PARAMETER" \
+            --query Parameter.Value \
+            --output text)
+
+          if [[ -z "$PEM" || -z "$KID" ]]; then
+            echo "error: SSM 값 비어있음 (PEM 길이=${#PEM}, KID=$KID)" >&2
+            exit 1
+          fi
+
+          # PEM 임시 파일로 (pem-to-jwks.py가 개행 리터럴 자동 복원)
+          PEM_FILE=$(mktemp)
+          printf '%s' "$PEM" > "$PEM_FILE"
+
+          echo "pem_file=$PEM_FILE" >> "$GITHUB_OUTPUT"
+          echo "kid=$KID" >> "$GITHUB_OUTPUT"
+          echo "::add-mask::$KID"
+
+      - name: JWKS 생성
+        id: jwks
+        run: |
+          JWKS=$(python scripts/pem-to-jwks.py \
+            "${{ steps.ssm.outputs.pem_file }}" \
+            --kid "${{ steps.ssm.outputs.kid }}")
+          # 다른 step에 넘기기 위해 output 사용 (JWKS 자체는 비밀 아님 — 공개키 기반)
+          echo "jwks<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$JWKS" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: values.yaml 8개 치환
+        env:
+          JWKS: ${{ steps.jwks.outputs.jwks }}
+        run: ./scripts/patch-jwks.sh
+
+      - name: diff 검사
+        id: diff
+        run: |
+          if git diff --quiet environments/prod/*/values.yaml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "변경 없음 — JWKS가 이미 최신. 종료."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --stat environments/prod/*/values.yaml
+          fi
+
+      - name: PR 생성
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GIT_PAT }}
+        run: |
+          DATE=$(date '+%Y-%m-%d %H:%M')
+          BRANCH="rotate-jwks/$(date +%s)"
+          TITLE="chore(jwks): rotate JWKS from SSM ($DATE)"
+
+          BODY_FILE=$(mktemp)
+          cat > "$BODY_FILE" <<'EOF'
+          ## JWKS 자동 회전
+
+          `/prod/server/JWT_RSA_PUBLIC_KEY` (SSM) 기준으로 JWKS를 재생성해 8개 서비스 values.yaml을 동기화합니다.
+
+          ### 변경 내용
+          - `environments/prod/goti-{payment,queue,resale,stadium,stadium-go,ticketing,ticketing-go,user}/values.yaml`
+          - 필드: `istioPolicy.requestAuthentication.jwks`
+
+          ### 검증
+          - [x] PEM → JWKS 바이트 변환 (scripts/pem-to-jwks.py, jwcrypto 기반)
+          - [x] 8파일 single-line jwks 필드만 치환 (scripts/patch-jwks.sh, sed line-replace)
+          - [ ] 리뷰어: `helm template` 8서비스 error 0 확인 후 머지
+
+          자동화 설계: ADR-0010 Rev 2 (Option E).
+          EOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add environments/prod/*/values.yaml
+          git commit -m "$TITLE"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "$TITLE" \
+            --body-file "$BODY_FILE" \
+            --base main \
+            --head "$BRANCH" \
+            --label "rotate-jwks"
