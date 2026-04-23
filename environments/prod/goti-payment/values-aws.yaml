@@ -1,7 +1,7 @@
 replicaCount: 0
 image:
   repository: "harbor.go-ti.shop/prod/goti-payment"
-  tag: "prod-52-c0a6964"
+  tag: "prod-53-a630ef6"
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: harbor-creds
