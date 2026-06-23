@@ -1,0 +1,42 @@
+name: EC2 Master Node
+
+on:
+  workflow_dispatch:
+
+jobs:
+  get:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Get Master Instance ID
+        id: instance
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:eksctl-version,Values=v0.205.0" \
+            "Name=tag:eksctl.cluster.k8s.io/v1alpha1/cluster-name,Values=goti-prod" \
+            --query "Reservations[].Instances[].InstanceId" \
+            --output text 2>&1)
+          echo "instance_id=$(echo $INSTANCE_ID | head -1)" >> "$GITHUB_OUTPUT"
+          if [ -n "$INSTANCE_ID" ]; then
+            echo "MASTER_INSTANCE_ID=$INSTANCE_ID"
+          else
+            echo "MASTER_INSTANCE_ID=NOT_FOUND"
+          fi
+
+      - name: Send Command via EC2 Instance Connect
+        if: steps.instance.outputs.instance_id != 'NOT_FOUND'
+        run: |
+          INSTANCE_ID="${{ steps.instance.outputs.instance_id }}"
+          KID=$(cat /tmp/ssh_key_id.txt 2>/dev/null | head -1)
+          [ -z "$KID" ] && KID="CLOUD"
+          echo "TARGET_INSTANCE=$INSTANCE_ID"
+          echo "KEY_ID=$KID"
+          ssh -i /tmp/bastion_key -o ProxyCommand="aws ec2-instance-connect open-tunnel --instance-id $INSTANCE_ID" ubuntu@$INSTANCE_ID "hostname" 2>&1
