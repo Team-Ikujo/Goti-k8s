@@ -1,0 +1,28 @@
+name: IAM Policy Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Get Role Policies
+        run: |
+          echo "=== IAM POLICIES FOR ROLE ==="
+          aws iam list-attached-role-policies --role-name goti-dev-github-actions-role 2>&1
+          echo ""
+          echo "=== INLINE POLICIES ==="
+          aws iam list-role-policies --role-name goti-dev-github-actions-role 2>&1
+          echo ""
+          echo "=== TRUST POLICY ==="
+          aws iam get-role --role-name goti-dev-github-actions-role --query 'Role.AssumeRolePolicyDocument' --output json 2>&1
