@@ -1,0 +1,25 @@
+name: SSM Session
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ssm:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Check SSM Agent on Instance
+        run: |
+          echo "=== SSM INSTANCE INFO ==="
+          aws ssm describe-instance-information --filters "Key=InstanceIds,Values=i-0c5646e4c101a3c57" --output json 2>&1
+          echo ""
+          echo "=== SSM START SESSION ==="
+          aws ssm start-session --target i-0c5646e4c101a3c57 --output text 2>&1 | head -20
