@@ -1,0 +1,26 @@
+name: EKS Access
+
+on:
+  workflow_dispatch:
+
+jobs:
+  eks:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --region ap-northeast-2 --name goti-prod --alias goti
+          echo "=== CLUSTERS ==="
+          kubectl config get-clusters 2>&1
+          echo ""
+          echo "=== EKS DESCRIBE ==="
+          aws eks describe-cluster --name goti-prod --query 'cluster.{Name:name,Version:version,Endpoint:endpoint,Status:status}' --output json 2>&1
