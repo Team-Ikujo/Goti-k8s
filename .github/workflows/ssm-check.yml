@@ -1,0 +1,25 @@
+name: SSM Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Check SSM Access
+        run: |
+          echo "=== SSM PARAMETERS ==="
+          aws ssm get-parameters-by-path --path /prod/ --max-items 20 --query 'Parameters[].Name' --output text 2>&1
+          echo ""
+          echo "=== SSM SESSION TARGETS ==="
+          aws ssm describe-instance-information --max-results 10 --query 'InstanceInformationList[].{Id:InstanceId,Name:ComputerName,PingStatus:PingStatus}' --output json 2>&1
