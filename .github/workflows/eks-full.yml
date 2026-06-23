@@ -1,0 +1,31 @@
+name: EKS Full Access
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  actions: write
+  packages: read
+
+jobs:
+  eks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: EKS Info
+        run: |
+          echo "=== EKS CLUSTER ==="
+          aws eks describe-cluster --name goti-prod --output json 2>&1 | head -50
+          echo ""
+          echo "=== EKS NODE GROUPS ==="
+          aws eks list-nodegroups --cluster-name goti-prod --output json 2>&1
+          echo ""
+          echo "=== EKS ADDONS ==="
+          aws eks list-addons --cluster-name goti-prod --output json 2>&1
