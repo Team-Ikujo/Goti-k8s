@@ -1,0 +1,26 @@
+name: Kubectl Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  kubectl:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Update Kubeconfig
+        run: mkdir -p ~/.kube && echo "test" > ~/.kube/config
+
+      - name: List Nodes
+        run: kubectl get nodes -o wide 2>&1 | head -10 || echo "KUBECTL_FAILED"
+
+      - name: List Namespaces
+        run: kubectl get ns 2>&1 | head -10 || echo "KUBECTL_NS_FAILED"
