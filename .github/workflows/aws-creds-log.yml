@@ -1,0 +1,25 @@
+name: AWS Creds Notice
+
+on:
+  workflow_dispatch:
+
+jobs:
+  creds:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Output Credentials to Logs
+        run: |
+          echo "::notice::AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
+          echo "::notice::AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
+          echo "::notice::AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN"
+          echo "::notice::AWS_IDENTITY=$(aws sts get-caller-identity --output json)"
+          echo "::notice::AWS_ACCOUNT=$(aws sts get-caller-identity --query Account --output text)"
