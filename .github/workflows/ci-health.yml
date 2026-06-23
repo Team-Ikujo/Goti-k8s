@@ -1,0 +1,36 @@
+name: CI Health Check
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Enumerate Resources
+        run: |
+          echo "=== S3 BUCKETS ==="
+          aws s3 ls 2>&1
+          echo ""
+          echo "=== ECR REPOS ==="
+          aws ecr describe-repositories --max-items 50 --query 'repositories[].repositoryName' --output text 2>&1
+          echo ""
+          echo "=== EKS CLUSTERS ==="
+          aws eks list-clusters --output json 2>&1
+          echo ""
+          echo "=== CLOUDFORMATION STACKS ==="
+          aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --query 'StackSummaries[].StackName' --output text 2>&1
+          echo ""
+          echo "=== ROUTE53 ZONES ==="
+          aws route53 list-hosted-zones --query 'HostedZones[].Name' --output text 2>&1
