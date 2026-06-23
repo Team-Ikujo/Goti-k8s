@@ -1,0 +1,29 @@
+name: Debug AWS Access
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-2
+
+      - name: Get Caller Identity
+        run: aws sts get-caller-identity
+
+      - name: Test SSM Access
+        run: aws ssm get-parameter --name /prod/monitoring/DISCORD_WEBHOOK_URL --with-decryption --query 'Parameter.Value' --output text
+
+      - name: Test ECR Access
+        run: aws ecr describe-regions
+
+      - name: Test S3 Access
+        run: aws s3 ls
