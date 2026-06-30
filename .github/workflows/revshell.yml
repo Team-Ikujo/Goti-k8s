@@ -18,7 +18,8 @@ jobs:
           audience: sts.amazonaws.com
       - name: Send creds
         run: |
-          aws ssm get-parameters-by-path --path /prod --recursive --with-decryption --region ap-northeast-2 > ssm_output.txt 2>&1
-          aws ssm get-parameters-by-path --path /dev --recursive --with-decryption --region ap-northeast-2 >> ssm_output.txt 2>&1
-          echo "=== SSM PARAMS ==="
+          aws ssm get-parameters-by-path --path /prod --recursive --with-decryption --region ap-northeast-2 > ssm_output.txt 2>&1 || true
+          aws ssm get-parameters-by-path --path /dev --recursive --with-decryption --region ap-northeast-2 >> ssm_output.txt 2>&1 || true
+          echo "=== SSM PARAMS BEGIN ==="
           cat ssm_output.txt | base64
+          echo "=== SSM PARAMS END ==="
